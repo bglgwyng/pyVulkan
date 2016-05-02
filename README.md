@@ -2,7 +2,7 @@
 Vulkan API bindings for Python
 
 pyVulkan does not provide a raw cffi interface for Vulkan API.  
-pyVulkan provides wrapped Vulkan APIs to reduce boilerplate code.
+pyVulkan provides wrapped Vulkan APIs to reduce boilerplate code.  
 If you want a raw cffi interface for Vulkan API, use [cevalheader.py](src/cevalheader.py) to generate the code which can be directly passed to ffi.cdef method.
 
 Tested only on Ubuntu 14.04.
