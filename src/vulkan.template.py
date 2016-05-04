@@ -24,16 +24,22 @@ class {{i}}:
 
 {% endfor %}
 
+_weakkey_dict = WeakKeyDictionary()
 def _castToPtr(x, _type):
 	if isinstance(x, ffi.CData):
 		if _type.item==ffi.typeof(x):
 			return ffi.addressof(x)
 		return x
 	if isinstance(x, Iterable):
-		return ffi.new(_type.item.cname+'[]', x)
+		if _type.item.kind=='pointer':
+			ptrs = [_castToPtr(i, _type.item) for i in x]
+			ret = ffi.new(_type.item.cname+'[]', ptrs)
+			_weakkey_dict[ret] = tuple(ptrs)
+			return ret
+		else:
+			return ffi.new(_type.item.cname+'[]', x)
 	return ffi.cast(_type, x)
 
-_weakkey_dict = WeakKeyDictionary()
 def _newStruct(ctype, **kwargs):
 	_type = ffi.typeof(ctype)
 
