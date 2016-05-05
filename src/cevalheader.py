@@ -32,7 +32,6 @@ def cEvalExpression(header_file, cpp_args = []):
         def _(exp):
             if isinstance(exp, c_ast.ID):
                 if exp.name in enum_dict:
-                    print exp.name, enum_dict
                     v = int(_(enum_dict[exp.name]).value)
                 else:
                     v = getattr(lib, exp.name)
@@ -92,12 +91,13 @@ def cEvalExpression(header_file, cpp_args = []):
                 self.visit(v)
 
         def visit_FileAST(self, node):
-            for i, v in node.children():
-                self.visit(v)
-                print generator.visit(v)
-                if not isinstance(v, c_ast.FuncDef):
-                    ffi.cdef(generator.visit(v)+';')
-            
+            new_ext = []
+            for i in node.ext:
+                self.visit(i)
+                if not isinstance(i, c_ast.FuncDef):
+                    ffi.cdef(generator.visit(i)+';')
+                    new_ext += [i]
+            node.ext = new_ext
 
     Visitor().visit(ast)
 
