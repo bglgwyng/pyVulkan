@@ -4,9 +4,9 @@ from cffi import *
 def cEvalExpression(header_file, cpp_args = []):
 
     ignores = ['__attribute__(x)', '__extension__', '__inline', '__restrict']
-    ['-DVK_PROTOTYPES', '-DEXTERNAL_SPV']
-#    +['-D'+i+'=' for i in ignores]
+    
     ast = parse_file(header_file, use_cpp = True, cpp_args = cpp_args+['-D'+i+'=' for i in ignores])
+    generator = c_generator.CGenerator()
 
     ffi = FFI()
     lib = ffi.dlopen(None)
@@ -32,14 +32,13 @@ def cEvalExpression(header_file, cpp_args = []):
         def _(exp):
             if isinstance(exp, c_ast.ID):
                 if exp.name in enum_dict:
+                    print exp.name, enum_dict
                     v = int(_(enum_dict[exp.name]).value)
-                    #return _(enum_dict[exp.name])
                 else:
                     v = getattr(lib, exp.name)
                     assert v
             elif isinstance(exp, c_ast.UnaryOp):
                 if exp.op=='sizeof':
-                    #print generator.visit(exp)
                     v = ffi.sizeof(generator.visit(exp.expr))
                 else:
                     if not exp.op in unary_ops:
@@ -85,8 +84,20 @@ def cEvalExpression(header_file, cpp_args = []):
             enum_dict = {i.name:i.value for i in enums}
             for i in enums:
                 if i.value:
-                    if not isinstance(i.value, c_ast.Constant):
+                    if not isinstance(i.value, c_ast.Constant) and not isinstance(i.value, c_ast.ID):
                         i.value = evalExpression(i.value, enum_dict)
+
+        def visit_Typedef(self, node):
+            for i, v in node.children():
+                self.visit(v)
+
+        def visit_FileAST(self, node):
+            for i, v in node.children():
+                self.visit(v)
+                print generator.visit(v)
+                if not isinstance(v, c_ast.FuncDef):
+                    ffi.cdef(generator.visit(v)+';')
+            
 
     Visitor().visit(ast)
 
