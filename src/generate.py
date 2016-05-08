@@ -141,18 +141,24 @@ class Visitor(c_ast.NodeVisitor):
 
 		for i, v in node.children():
 			if isinstance(v.type, c_ast.TypeDecl):
-				_type = ffi.typeof(v.name)
-				
-				if _type.kind=='primitive':
-					pass
-				elif  _type.kind=='struct':
-					structs[v.name] = _type.fields
-				elif  _type.kind=='union':
-					structs[v.name] = _type.fields
-				elif _type.kind=='enum':
-					enums[v.name] = _type
+
+				if v.name.startswith('Vk'):
+					_type = ffi.typeof(v.name)
+					
+					if _type.kind=='primitive':
+						pass
+					elif  _type.kind=='struct':
+						if _type.fields:
+							structs[v.name] = _type.fields
+					elif  _type.kind=='union':
+						if _type.fields:					
+							structs[v.name] = _type.fields
+					elif _type.kind=='enum':
+						enums[v.name] = _type
 					
 			elif isinstance(v.type, c_ast.FuncDecl):
+				if not v.name.startswith('vk'):
+					continue
 				_type = ffi.typeof('PFN_'+v.name)
 				
 				_, funcdecl = v.children()[0]

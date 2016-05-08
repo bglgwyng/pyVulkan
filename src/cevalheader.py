@@ -95,6 +95,8 @@ def cEvalExpression(header_file, cpp_args = []):
             for i in node.ext:
                 self.visit(i)
                 if not isinstance(i, c_ast.FuncDef):
+                    if 'extern' in i.storage:
+                        continue
                     ffi.cdef(generator.visit(i)+';')
                     new_ext += [i]
             node.ext = new_ext
