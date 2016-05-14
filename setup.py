@@ -2,9 +2,11 @@ from setuptools import setup, find_packages
 
 install_requires = ['cffi>=1.5.2']
 
+print find_packages()
+
 setup(
     name='pyVulkan',
-    version='0.2',
+    version='0.3',
     description='vulkan API bindings for Python',
     author='latte10am',
     author_email='latte10am@gmail.com',
@@ -12,7 +14,7 @@ setup(
     package_data={'': ['*.h']},
     install_requires=install_requires,
     url = 'http://pyopengl.sourceforge.net',
-    license = 'BSD',
+    license = 'BSD',    
     keywords = 'Graphics,3D,Vulkan,cffi',
     classifiers = [
         """License :: OSI Approved :: BSD License""",
