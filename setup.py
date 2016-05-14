@@ -4,7 +4,7 @@ install_requires = ['cffi>=1.5.2']
 
 setup(
     name='pyVulkan',
-    version='0.1',
+    version='0.2',
     description='vulkan API bindings for Python',
     author='latte10am',
     author_email='latte10am@gmail.com',
