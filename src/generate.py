@@ -130,6 +130,7 @@ types = {}
 structs = {}
 enums = {}
 funcs = {}
+exts = {}
 
 generator = c_generator.CGenerator()
 
@@ -195,7 +196,11 @@ class Visitor(c_ast.NodeVisitor):
 					else:
 						result = None
 
-				funcs[v.name] = (exception_handler, result, result_length, args, inner_args, new_vars)
+				tmp = (exception_handler, result, result_length, args, inner_args, new_vars)
+				if v.name[-1].isupper():
+					exts[v.name] = tmp
+				else:
+					funcs[v.name] = tmp
 				continue
 				
 Visitor().visit(ast)
@@ -218,7 +223,11 @@ def gensType(x):
 from jinja2 import *
 import os
 env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file__))), trim_blocks = True)
-gencommon = env.get_template('vulkan.template.py')
 
+genvulkan = env.get_template('vulkan.template.py')
 with open('../pyVulkan/_vulkan.py', 'w') as f:
-	f.write(gencommon.render(structs = structs, field_defaults = {'sType':gensType}, enums = enums, exceptions = genExceptions(), funcs = funcs))
+	f.write(genvulkan.render(structs = structs, field_defaults = {'sType':gensType}, enums = enums, exceptions = genExceptions(), funcs = funcs))
+
+genextwrapper = env.get_template('extwrapper.template.py')
+with open('../pyVulkan/extwrapper.py', 'w') as f:
+	f.write(genextwrapper.render(exts = exts))

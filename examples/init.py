@@ -1,4 +1,5 @@
 from pyVulkan import *
+import pyVulkan.extwrapper
 import sdl2
 import ctypes
 
@@ -65,9 +66,30 @@ app_info = VkApplicationInfo(pApplicationName = app_name,
                             engineVersion = 0,
                             apiVersion = VK_MAKE_VERSION(1, 0, 0))
 
-instance_info = VkInstanceCreateInfo(pApplicationInfo = app_info)
+instance_layers = []
+extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
+
+instance_info = VkInstanceCreateInfo(pApplicationInfo = app_info,
+                                    enabledLayerCount = len(instance_layers),
+                                    ppEnabledLayerNames = instance_layers,
+                                    enabledExtensionCount = len(extensions),
+                                    ppEnabledExtensionNames = extensions)
+
 
 inst = vkCreateInstance(instance_info, None)
+
+def getExtensionProc(name):
+    return pyVulkan.extwrapper.__dict__[name+'Wrapper'](vkGetInstanceProcAddr(inst, name))
+
+vkCreateXlibSurfaceKHR = getExtensionProc('vkCreateXlibSurfaceKHR')
+vkGetPhysicalDeviceSurfaceSupportKHR = getExtensionProc( 'vkGetPhysicalDeviceSurfaceSupportKHR')
+vkGetPhysicalDeviceSurfaceFormatsKHR = getExtensionProc('vkGetPhysicalDeviceSurfaceFormatsKHR')
+vkGetPhysicalDeviceSurfaceCapabilitiesKHR = getExtensionProc('vkGetPhysicalDeviceSurfaceCapabilitiesKHR')
+vkGetPhysicalDeviceSurfacePresentModesKHR = getExtensionProc('vkGetPhysicalDeviceSurfacePresentModesKHR')
+vkCreateSwapchainKHR = getExtensionProc('vkCreateSwapchainKHR')
+vkGetSwapchainImagesKHR = getExtensionProc('vkGetSwapchainImagesKHR')
+vkAcquireNextImageKHR = getExtensionProc('vkAcquireNextImageKHR')
+vkQueuePresentKHR = getExtensionProc('vkQueuePresentKHR')
 
 gpu = vkEnumeratePhysicalDevices(inst)[0]
 
@@ -89,6 +111,7 @@ wm_info = sdl2.SDL_SysWMinfo()
 sdl2.SDL_VERSION(wm_info.version)
 sdl2.SDL_GetWindowWMInfo(window, ctypes.byref(wm_info))
 assert wm_info.subsystem==sdl2.SDL_SYSWM_X11
+
 
 surface = vkCreateXlibSurfaceKHR(inst, VkXlibSurfaceCreateInfoKHR(dpy = wm_info.info.x11.display, window = wm_info.info.x11.window), None)
 
