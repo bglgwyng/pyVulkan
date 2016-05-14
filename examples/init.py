@@ -21,7 +21,7 @@ def memory_type_from_properties(typeBits, requirements_mask):
 
     assert False
 
-def set_image_layout(image, aspectMask, old_image_layout, new_image_layout, srcAccessMask):
+def set_image_layout(image, aspect_mask, old_image_layout, new_image_layout, src_access_mask):
 
     global setup_cmd
 
@@ -37,12 +37,11 @@ def set_image_layout(image, aspectMask, old_image_layout, new_image_layout, srcA
 
         vkBeginCommandBuffer(setup_cmd, cmd_buf_info);
 
-
-    image_memory_barrier = VkImageMemoryBarrier(srcAccessMask = srcAccessMask,
+    image_memory_barrier = VkImageMemoryBarrier(srcAccessMask = src_access_mask,
                                                 oldLayout = old_image_layout,
                                                 newLayout = new_image_layout,
                                                 image = image,
-                                                subresourceRange = [aspectMask, 0, 1, 0, 1]);
+                                                subresourceRange = [aspect_mask, 0, 1, 0, 1]);
 
     dst_stage_masks = {VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:VK_ACCESS_TRANSFER_READ_BIT,
                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
@@ -51,7 +50,6 @@ def set_image_layout(image, aspectMask, old_image_layout, new_image_layout, srcA
 
     if new_image_layout in dst_stage_masks:
         image_memory_barrier.dstAccessMask = dst_stage_masks[new_image_layout]
-
     
     src_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
     dest_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
@@ -66,17 +64,37 @@ app_info = VkApplicationInfo(pApplicationName = app_name,
                             engineVersion = 0,
                             apiVersion = VK_MAKE_VERSION(1, 0, 0))
 
-instance_layers = []
+def _getInstanceLayers():
+    instance_validation_layers_alts = [["VK_LAYER_LUNARG_standard_validation"],
+                                    ["VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_parameter_validation",
+                                    "VK_LAYER_LUNARG_device_limits", "VK_LAYER_LUNARG_object_tracker",
+                                    "VK_LAYER_LUNARG_image", "VK_LAYER_LUNARG_core_validation",
+                                    "VK_LAYER_LUNARG_swapchain", "VK_LAYER_GOOGLE_unique_objects"]]
+    instance_layer_names = [ffi.string(i.layerName) for _, i in enumerate(vkEnumerateInstanceLayerProperties())];
+    return next((i for i in instance_validation_layers_alts if set(i).issubset(instance_layer_names)), [])
+
+instance_layers = _getInstanceLayers()
 extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
+
+@ffi.callback('VkBool32(VkFlags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *, const char *, void *)')
+def dbgFunc(*args):
+    print ffi.string(args[-2])
+    return True
+
+debug_info = VkDebugReportCallbackCreateInfoEXT(pfnCallback = dbgFunc,
+                                                flags = VK_DEBUG_REPORT_ERROR_BIT_EXT|VK_DEBUG_REPORT_WARNING_BIT_EXT)
 
 instance_info = VkInstanceCreateInfo(pApplicationInfo = app_info,
                                     enabledLayerCount = len(instance_layers),
                                     ppEnabledLayerNames = instance_layers,
                                     enabledExtensionCount = len(extensions),
-                                    ppEnabledExtensionNames = extensions)
+                                    ppEnabledExtensionNames = extensions,
+                                    pNext = ffi.addressof(debug_info))
 
 
 inst = vkCreateInstance(instance_info, None)
+
+
 
 def getExtensionProc(name):
     return pyVulkan.extwrapper.__dict__[name+'Wrapper'](vkGetInstanceProcAddr(inst, name))
@@ -90,6 +108,12 @@ vkCreateSwapchainKHR = getExtensionProc('vkCreateSwapchainKHR')
 vkGetSwapchainImagesKHR = getExtensionProc('vkGetSwapchainImagesKHR')
 vkAcquireNextImageKHR = getExtensionProc('vkAcquireNextImageKHR')
 vkQueuePresentKHR = getExtensionProc('vkQueuePresentKHR')
+vkDestroySwapchainKHR = getExtensionProc('vkDestroySwapchainKHR')
+vkDestroySurfaceKHR = getExtensionProc('vkDestroySurfaceKHR')
+vkCreateDebugReportCallbackEXT = getExtensionProc('vkCreateDebugReportCallbackEXT')
+vkDestroyDebugReportCallbackEXT = getExtensionProc('vkDestroyDebugReportCallbackEXT')
+
+debug_callback = vkCreateDebugReportCallbackEXT(inst, debug_info, None)
 
 gpu = vkEnumeratePhysicalDevices(inst)[0]
 
@@ -142,11 +166,15 @@ queue_info = VkDeviceQueueCreateInfo(queueFamilyIndex = graphics_queue_node_inde
                                     queueCount = 1,
                                     pQueuePriorities = [0.0])
 
+device_layers = [i for i in [ffi.string(i.layerName) for i in vkEnumerateDeviceLayerProperties(gpu)] if i in instance_layers]
+extensions = [ffi.string(i.extensionName) for i in vkEnumerateDeviceExtensionProperties(gpu, None)]
 device_info = VkDeviceCreateInfo(queueCreateInfoCount = 1,
                                 pQueueCreateInfos = queue_info,
-                                pEnabledFeatures = VkPhysicalDeviceFeatures(shaderClipDistance = VK_TRUE))
-
-setup_cmd == VK_NULL_HANDLE
+                                pEnabledFeatures = VkPhysicalDeviceFeatures(shaderClipDistance = VK_TRUE),
+                                enabledLayerCount = len(device_layers),
+                                ppEnabledLayerNames = device_layers,
+                                enabledExtensionCount = len(extensions),
+                                ppEnabledExtensionNames = extensions)
 
 device = vkCreateDevice(gpu, device_info, None)
 
@@ -214,7 +242,9 @@ swapchain = vkCreateSwapchainKHR(device, swapchain_info, None)
 
 swapchain_images = vkGetSwapchainImagesKHR(device, swapchain)
 
-views = [vkCreateImageView(device, VkImageViewCreateInfo(format = format_,
+def _getView(image):
+    set_image_layout(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 0)
+    return vkCreateImageView(device, VkImageViewCreateInfo(format = format_,
                                                         components = {'r':VK_COMPONENT_SWIZZLE_R,
                                                                     'g':VK_COMPONENT_SWIZZLE_G,
                                                                     'b':VK_COMPONENT_SWIZZLE_B,
@@ -226,7 +256,10 @@ views = [vkCreateImageView(device, VkImageViewCreateInfo(format = format_,
                                                                             'layerCount':1},
                                                         viewType = VK_IMAGE_VIEW_TYPE_2D,
                                                         flags = 0,
-                                                        image = i), None) for i in swapchain_images]
+                                                        image = image), None)
+
+
+views = [_getView(i) for i in swapchain_images]
 
 current_buffer = 0
 
@@ -277,14 +310,22 @@ attachments = [VkAttachmentDescription(format = format_,
                                     stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                                     stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                                     initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                    finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)]
+                                    finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL),
+            VkAttachmentDescription(format = depth_format,
+                                 samples = VK_SAMPLE_COUNT_1_BIT,
+                                 loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                                 storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                 stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                                 stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                 initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                                 finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)]
 
 color_reference = VkAttachmentReference(attachment = 0, layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 depth_reference = VkAttachmentReference(attachment = 1, layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
        
 subpass = VkSubpassDescription(pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 colorAttachmentCount = 1,
-                                pColorAttachments = color_reference,
+                                pColorAttachments = [color_reference],
                                 pDepthStencilAttachment = depth_reference)
 
 rp_info = VkRenderPassCreateInfo(attachmentCount = len(attachments),
@@ -301,17 +342,19 @@ framebuffers = [vkCreateFramebuffer(device, VkFramebufferCreateInfo(renderPass =
                                                                     height = height,
                                                                     layers = 1), None) for i, v in enumerate(views)]
 
-if setup_cmd:
-    vkEndCommandBuffer(setup_cmd);
+def flush_init_cmd():
+    global setup_cmd
+    if setup_cmd:
+        vkEndCommandBuffer(setup_cmd);
 
-    submit_info = VkSubmitInfo(commandBufferCount = 1, pCommandBuffers = [setup_cmd])
+        submit_info = VkSubmitInfo(commandBufferCount = 1, pCommandBuffers = [setup_cmd])
 
-    vkQueueSubmit(queue, 1, submit_info, None);
-    vkQueueWaitIdle(queue);
+        vkQueueSubmit(queue, 1, submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(queue);
 
-    vkFreeCommandBuffers(device, cmd_pool, 1, [setup_cmd]);
+        vkFreeCommandBuffers(device, cmd_pool, 1, [setup_cmd]);
 
-    setup_cmd = VK_NULL_HANDLE
+        setup_cmd = VK_NULL_HANDLE
 
 cmd_buf_hinfo = VkCommandBufferInheritanceInfo(occlusionQueryEnable = VK_FALSE)
 cmd_buf_info = VkCommandBufferBeginInfo(pInheritanceInfo = cmd_buf_hinfo)
@@ -321,15 +364,19 @@ vkEndCommandBuffer(draw_cmd)
 
 
 def draw():
-
-    global setup_cmd
-    global current_buffer
+    vkDeviceWaitIdle(device);
 
     present_complete_semaphore = vkCreateSemaphore(device, VkSemaphoreCreateInfo(), None);
     
     current_buffer = vkAcquireNextImageKHR(device, swapchain, ffi.cast('uint64_t', -1),
                                       present_complete_semaphore,
                                       None)
+
+    set_image_layout(swapchain_images[current_buffer], VK_IMAGE_ASPECT_COLOR_BIT,
+                          VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                          VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0)
+
+    flush_init_cmd()
 
     cmd_buf_hinfo = VkCommandBufferInheritanceInfo(occlusionQueryEnable = VK_FALSE)
     cmd_buf_info = VkCommandBufferBeginInfo(pInheritanceInfo = cmd_buf_hinfo)
@@ -347,7 +394,20 @@ def draw():
 
     vkCmdBeginRenderPass(draw_cmd, rp_begin, VK_SUBPASS_CONTENTS_INLINE)
     vkCmdEndRenderPass(draw_cmd)
-    
+
+    pre_present_barrier = VkImageMemoryBarrier(srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                                            dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+                                            oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                            newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                                            srcQueueFamilyIndex = ffi.cast('uint32_t', VK_QUEUE_FAMILY_IGNORED),
+                                            dstQueueFamilyIndex = ffi.cast('uint32_t', VK_QUEUE_FAMILY_IGNORED),
+                                            subresourceRange = [VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1],
+                                            image = swapchain_images[current_buffer])
+
+    vkCmdPipelineBarrier(draw_cmd, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                         VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, None, 0,
+                         None, 1, pre_present_barrier);
+
     vkEndCommandBuffer(draw_cmd);
 
     submit_info = VkSubmitInfo(waitSemaphoreCount = 1,
@@ -357,7 +417,7 @@ def draw():
                             pCommandBuffers = [draw_cmd])
 
     
-    vkQueueSubmit(queue, 1, [submit_info], None)
+    vkQueueSubmit(queue, 1, [submit_info], VK_NULL_HANDLE)
     vkQueueWaitIdle(queue)
     
     present = VkPresentInfoKHR(swapchainCount = 1,
@@ -365,7 +425,7 @@ def draw():
                             pImageIndices = [current_buffer])
 
     vkQueuePresentKHR(queue, present)
-
+    
     vkDestroySemaphore(device, present_complete_semaphore, None)
 
 #main loop
@@ -387,6 +447,8 @@ while running:
 
 #cleanup
 
+vkFreeMemory(device, depth_mem, None)
+
 for i in framebuffers:
     vkDestroyFramebuffer(device, i, None);
 
@@ -407,7 +469,9 @@ vkDestroyImage(device, depth_image, None);
 vkDestroySwapchainKHR(device, swapchain, None);
 
 vkDestroyDevice(device, None);
-    
+
+vkDestroyDebugReportCallbackEXT(inst, debug_callback, None)
+
 vkDestroySurfaceKHR(inst, surface, None);
 vkDestroyInstance(inst, None);
 

@@ -1080,6 +1080,7 @@ class VkFilter:
 	VK_FILTER_RANGE_SIZE = 2
 	VK_FILTER_END_RANGE = 1
 	VK_FILTER_BEGIN_RANGE = 0
+	VK_FILTER_CUBIC_IMG = 1000015000
 	VK_FILTER_LINEAR = 1
 	VK_FILTER_NEAREST = 0
 	
@@ -1087,6 +1088,7 @@ VK_FILTER_MAX_ENUM = VkFilter.VK_FILTER_MAX_ENUM
 VK_FILTER_RANGE_SIZE = VkFilter.VK_FILTER_RANGE_SIZE
 VK_FILTER_END_RANGE = VkFilter.VK_FILTER_END_RANGE
 VK_FILTER_BEGIN_RANGE = VkFilter.VK_FILTER_BEGIN_RANGE
+VK_FILTER_CUBIC_IMG = VkFilter.VK_FILTER_CUBIC_IMG
 VK_FILTER_LINEAR = VkFilter.VK_FILTER_LINEAR
 VK_FILTER_NEAREST = VkFilter.VK_FILTER_NEAREST
 
@@ -1275,6 +1277,8 @@ VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS = VkSubpassContents.VK_SUBPASS_CON
 VK_SUBPASS_CONTENTS_INLINE = VkSubpassContents.VK_SUBPASS_CONTENTS_INLINE
 
 class VkFormatFeatureFlagBits:
+	VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM = 2147483647
+	VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG = 8192
 	VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT = 4096
 	VK_FORMAT_FEATURE_BLIT_DST_BIT = 2048
 	VK_FORMAT_FEATURE_BLIT_SRC_BIT = 1024
@@ -1289,6 +1293,8 @@ class VkFormatFeatureFlagBits:
 	VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT = 2
 	VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = 1
 	
+VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_FLAG_BITS_MAX_ENUM
+VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG
 VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
 VK_FORMAT_FEATURE_BLIT_DST_BIT = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_BLIT_DST_BIT
 VK_FORMAT_FEATURE_BLIT_SRC_BIT = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_BLIT_SRC_BIT
@@ -1304,6 +1310,7 @@ VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_
 VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = VkFormatFeatureFlagBits.VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
 
 class VkImageUsageFlagBits:
+	VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT = 128
 	VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT = 64
 	VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT = 32
@@ -1313,6 +1320,7 @@ class VkImageUsageFlagBits:
 	VK_IMAGE_USAGE_TRANSFER_DST_BIT = 2
 	VK_IMAGE_USAGE_TRANSFER_SRC_BIT = 1
 	
+VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM = VkImageUsageFlagBits.VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM
 VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT = VkImageUsageFlagBits.VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
 VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT = VkImageUsageFlagBits.VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT
 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT = VkImageUsageFlagBits.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -1323,12 +1331,14 @@ VK_IMAGE_USAGE_TRANSFER_DST_BIT = VkImageUsageFlagBits.VK_IMAGE_USAGE_TRANSFER_D
 VK_IMAGE_USAGE_TRANSFER_SRC_BIT = VkImageUsageFlagBits.VK_IMAGE_USAGE_TRANSFER_SRC_BIT
 
 class VkImageCreateFlagBits:
+	VK_IMAGE_CREATE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT = 16
 	VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT = 8
 	VK_IMAGE_CREATE_SPARSE_ALIASED_BIT = 4
 	VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT = 2
 	VK_IMAGE_CREATE_SPARSE_BINDING_BIT = 1
 	
+VK_IMAGE_CREATE_FLAG_BITS_MAX_ENUM = VkImageCreateFlagBits.VK_IMAGE_CREATE_FLAG_BITS_MAX_ENUM
 VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT = VkImageCreateFlagBits.VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
 VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT = VkImageCreateFlagBits.VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
 VK_IMAGE_CREATE_SPARSE_ALIASED_BIT = VkImageCreateFlagBits.VK_IMAGE_CREATE_SPARSE_ALIASED_BIT
@@ -1336,6 +1346,7 @@ VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT = VkImageCreateFlagBits.VK_IMAGE_CREATE_SPA
 VK_IMAGE_CREATE_SPARSE_BINDING_BIT = VkImageCreateFlagBits.VK_IMAGE_CREATE_SPARSE_BINDING_BIT
 
 class VkSampleCountFlagBits:
+	VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_SAMPLE_COUNT_64_BIT = 64
 	VK_SAMPLE_COUNT_32_BIT = 32
 	VK_SAMPLE_COUNT_16_BIT = 16
@@ -1344,6 +1355,7 @@ class VkSampleCountFlagBits:
 	VK_SAMPLE_COUNT_2_BIT = 2
 	VK_SAMPLE_COUNT_1_BIT = 1
 	
+VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM = VkSampleCountFlagBits.VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM
 VK_SAMPLE_COUNT_64_BIT = VkSampleCountFlagBits.VK_SAMPLE_COUNT_64_BIT
 VK_SAMPLE_COUNT_32_BIT = VkSampleCountFlagBits.VK_SAMPLE_COUNT_32_BIT
 VK_SAMPLE_COUNT_16_BIT = VkSampleCountFlagBits.VK_SAMPLE_COUNT_16_BIT
@@ -1353,23 +1365,27 @@ VK_SAMPLE_COUNT_2_BIT = VkSampleCountFlagBits.VK_SAMPLE_COUNT_2_BIT
 VK_SAMPLE_COUNT_1_BIT = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT
 
 class VkQueueFlagBits:
+	VK_QUEUE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_QUEUE_SPARSE_BINDING_BIT = 8
 	VK_QUEUE_TRANSFER_BIT = 4
 	VK_QUEUE_COMPUTE_BIT = 2
 	VK_QUEUE_GRAPHICS_BIT = 1
 	
+VK_QUEUE_FLAG_BITS_MAX_ENUM = VkQueueFlagBits.VK_QUEUE_FLAG_BITS_MAX_ENUM
 VK_QUEUE_SPARSE_BINDING_BIT = VkQueueFlagBits.VK_QUEUE_SPARSE_BINDING_BIT
 VK_QUEUE_TRANSFER_BIT = VkQueueFlagBits.VK_QUEUE_TRANSFER_BIT
 VK_QUEUE_COMPUTE_BIT = VkQueueFlagBits.VK_QUEUE_COMPUTE_BIT
 VK_QUEUE_GRAPHICS_BIT = VkQueueFlagBits.VK_QUEUE_GRAPHICS_BIT
 
 class VkMemoryPropertyFlagBits:
+	VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT = 16
 	VK_MEMORY_PROPERTY_HOST_CACHED_BIT = 8
 	VK_MEMORY_PROPERTY_HOST_COHERENT_BIT = 4
 	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT = 2
 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 1
 	
+VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM = VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM
 VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT = VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT
 VK_MEMORY_PROPERTY_HOST_CACHED_BIT = VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_CACHED_BIT
 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT = VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -1377,11 +1393,14 @@ VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT = VkMemoryPropertyFlagBits.VK_MEMORY_PROPERT
 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 
 class VkMemoryHeapFlagBits:
+	VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = 1
 	
+VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM = VkMemoryHeapFlagBits.VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM
 VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = VkMemoryHeapFlagBits.VK_MEMORY_HEAP_DEVICE_LOCAL_BIT
 
 class VkPipelineStageFlagBits:
+	VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_PIPELINE_STAGE_ALL_COMMANDS_BIT = 65536
 	VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT = 32768
 	VK_PIPELINE_STAGE_HOST_BIT = 16384
@@ -1400,6 +1419,7 @@ class VkPipelineStageFlagBits:
 	VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT = 2
 	VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT = 1
 	
+VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM = VkPipelineStageFlagBits.VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM
 VK_PIPELINE_STAGE_ALL_COMMANDS_BIT = VkPipelineStageFlagBits.VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
 VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT = VkPipelineStageFlagBits.VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT
 VK_PIPELINE_STAGE_HOST_BIT = VkPipelineStageFlagBits.VK_PIPELINE_STAGE_HOST_BIT
@@ -1419,36 +1439,45 @@ VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT = VkPipelineStageFlagBits.VK_PIPELINE_STAGE_
 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT = VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
 
 class VkImageAspectFlagBits:
+	VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_IMAGE_ASPECT_METADATA_BIT = 8
 	VK_IMAGE_ASPECT_STENCIL_BIT = 4
 	VK_IMAGE_ASPECT_DEPTH_BIT = 2
 	VK_IMAGE_ASPECT_COLOR_BIT = 1
 	
+VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM = VkImageAspectFlagBits.VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM
 VK_IMAGE_ASPECT_METADATA_BIT = VkImageAspectFlagBits.VK_IMAGE_ASPECT_METADATA_BIT
 VK_IMAGE_ASPECT_STENCIL_BIT = VkImageAspectFlagBits.VK_IMAGE_ASPECT_STENCIL_BIT
 VK_IMAGE_ASPECT_DEPTH_BIT = VkImageAspectFlagBits.VK_IMAGE_ASPECT_DEPTH_BIT
 VK_IMAGE_ASPECT_COLOR_BIT = VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT
 
 class VkSparseImageFormatFlagBits:
+	VK_SPARSE_IMAGE_FORMAT_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT = 4
 	VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT = 2
 	VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT = 1
 	
+VK_SPARSE_IMAGE_FORMAT_FLAG_BITS_MAX_ENUM = VkSparseImageFormatFlagBits.VK_SPARSE_IMAGE_FORMAT_FLAG_BITS_MAX_ENUM
 VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT = VkSparseImageFormatFlagBits.VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT
 VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT = VkSparseImageFormatFlagBits.VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT
 VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT = VkSparseImageFormatFlagBits.VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT
 
 class VkSparseMemoryBindFlagBits:
+	VK_SPARSE_MEMORY_BIND_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_SPARSE_MEMORY_BIND_METADATA_BIT = 1
 	
+VK_SPARSE_MEMORY_BIND_FLAG_BITS_MAX_ENUM = VkSparseMemoryBindFlagBits.VK_SPARSE_MEMORY_BIND_FLAG_BITS_MAX_ENUM
 VK_SPARSE_MEMORY_BIND_METADATA_BIT = VkSparseMemoryBindFlagBits.VK_SPARSE_MEMORY_BIND_METADATA_BIT
 
 class VkFenceCreateFlagBits:
+	VK_FENCE_CREATE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_FENCE_CREATE_SIGNALED_BIT = 1
 	
+VK_FENCE_CREATE_FLAG_BITS_MAX_ENUM = VkFenceCreateFlagBits.VK_FENCE_CREATE_FLAG_BITS_MAX_ENUM
 VK_FENCE_CREATE_SIGNALED_BIT = VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT
 
 class VkQueryPipelineStatisticFlagBits:
+	VK_QUERY_PIPELINE_STATISTIC_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT = 1024
 	VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT = 512
 	VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT = 256
@@ -1461,6 +1490,7 @@ class VkQueryPipelineStatisticFlagBits:
 	VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT = 2
 	VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT = 1
 	
+VK_QUERY_PIPELINE_STATISTIC_FLAG_BITS_MAX_ENUM = VkQueryPipelineStatisticFlagBits.VK_QUERY_PIPELINE_STATISTIC_FLAG_BITS_MAX_ENUM
 VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT = VkQueryPipelineStatisticFlagBits.VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT
 VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT = VkQueryPipelineStatisticFlagBits.VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
 VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT = VkQueryPipelineStatisticFlagBits.VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT
@@ -1474,26 +1504,31 @@ VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT = VkQueryPipelineStati
 VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT = VkQueryPipelineStatisticFlagBits.VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
 
 class VkQueryResultFlagBits:
+	VK_QUERY_RESULT_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_QUERY_RESULT_PARTIAL_BIT = 8
 	VK_QUERY_RESULT_WITH_AVAILABILITY_BIT = 4
 	VK_QUERY_RESULT_WAIT_BIT = 2
 	VK_QUERY_RESULT_64_BIT = 1
 	
+VK_QUERY_RESULT_FLAG_BITS_MAX_ENUM = VkQueryResultFlagBits.VK_QUERY_RESULT_FLAG_BITS_MAX_ENUM
 VK_QUERY_RESULT_PARTIAL_BIT = VkQueryResultFlagBits.VK_QUERY_RESULT_PARTIAL_BIT
 VK_QUERY_RESULT_WITH_AVAILABILITY_BIT = VkQueryResultFlagBits.VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
 VK_QUERY_RESULT_WAIT_BIT = VkQueryResultFlagBits.VK_QUERY_RESULT_WAIT_BIT
 VK_QUERY_RESULT_64_BIT = VkQueryResultFlagBits.VK_QUERY_RESULT_64_BIT
 
 class VkBufferCreateFlagBits:
+	VK_BUFFER_CREATE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_BUFFER_CREATE_SPARSE_ALIASED_BIT = 4
 	VK_BUFFER_CREATE_SPARSE_RESIDENCY_BIT = 2
 	VK_BUFFER_CREATE_SPARSE_BINDING_BIT = 1
 	
+VK_BUFFER_CREATE_FLAG_BITS_MAX_ENUM = VkBufferCreateFlagBits.VK_BUFFER_CREATE_FLAG_BITS_MAX_ENUM
 VK_BUFFER_CREATE_SPARSE_ALIASED_BIT = VkBufferCreateFlagBits.VK_BUFFER_CREATE_SPARSE_ALIASED_BIT
 VK_BUFFER_CREATE_SPARSE_RESIDENCY_BIT = VkBufferCreateFlagBits.VK_BUFFER_CREATE_SPARSE_RESIDENCY_BIT
 VK_BUFFER_CREATE_SPARSE_BINDING_BIT = VkBufferCreateFlagBits.VK_BUFFER_CREATE_SPARSE_BINDING_BIT
 
 class VkBufferUsageFlagBits:
+	VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT = 256
 	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT = 128
 	VK_BUFFER_USAGE_INDEX_BUFFER_BIT = 64
@@ -1504,6 +1539,7 @@ class VkBufferUsageFlagBits:
 	VK_BUFFER_USAGE_TRANSFER_DST_BIT = 2
 	VK_BUFFER_USAGE_TRANSFER_SRC_BIT = 1
 	
+VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = VkBufferUsageFlagBits.VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM
 VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT = VkBufferUsageFlagBits.VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT = VkBufferUsageFlagBits.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 VK_BUFFER_USAGE_INDEX_BUFFER_BIT = VkBufferUsageFlagBits.VK_BUFFER_USAGE_INDEX_BUFFER_BIT
@@ -1515,15 +1551,18 @@ VK_BUFFER_USAGE_TRANSFER_DST_BIT = VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFE
 VK_BUFFER_USAGE_TRANSFER_SRC_BIT = VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_SRC_BIT
 
 class VkPipelineCreateFlagBits:
+	VK_PIPELINE_CREATE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_PIPELINE_CREATE_DERIVATIVE_BIT = 4
 	VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT = 2
 	VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT = 1
 	
+VK_PIPELINE_CREATE_FLAG_BITS_MAX_ENUM = VkPipelineCreateFlagBits.VK_PIPELINE_CREATE_FLAG_BITS_MAX_ENUM
 VK_PIPELINE_CREATE_DERIVATIVE_BIT = VkPipelineCreateFlagBits.VK_PIPELINE_CREATE_DERIVATIVE_BIT
 VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT = VkPipelineCreateFlagBits.VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT
 VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT = VkPipelineCreateFlagBits.VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT
 
 class VkShaderStageFlagBits:
+	VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_SHADER_STAGE_ALL = 2147483647
 	VK_SHADER_STAGE_ALL_GRAPHICS = 31
 	VK_SHADER_STAGE_COMPUTE_BIT = 32
@@ -1533,6 +1572,7 @@ class VkShaderStageFlagBits:
 	VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT = 2
 	VK_SHADER_STAGE_VERTEX_BIT = 1
 	
+VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM = VkShaderStageFlagBits.VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM
 VK_SHADER_STAGE_ALL = VkShaderStageFlagBits.VK_SHADER_STAGE_ALL
 VK_SHADER_STAGE_ALL_GRAPHICS = VkShaderStageFlagBits.VK_SHADER_STAGE_ALL_GRAPHICS
 VK_SHADER_STAGE_COMPUTE_BIT = VkShaderStageFlagBits.VK_SHADER_STAGE_COMPUTE_BIT
@@ -1543,38 +1583,47 @@ VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT = VkShaderStageFlagBits.VK_SHADER_STAGE
 VK_SHADER_STAGE_VERTEX_BIT = VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT
 
 class VkCullModeFlagBits:
+	VK_CULL_MODE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_CULL_MODE_FRONT_AND_BACK = 3
 	VK_CULL_MODE_BACK_BIT = 2
 	VK_CULL_MODE_FRONT_BIT = 1
 	VK_CULL_MODE_NONE = 0
 	
+VK_CULL_MODE_FLAG_BITS_MAX_ENUM = VkCullModeFlagBits.VK_CULL_MODE_FLAG_BITS_MAX_ENUM
 VK_CULL_MODE_FRONT_AND_BACK = VkCullModeFlagBits.VK_CULL_MODE_FRONT_AND_BACK
 VK_CULL_MODE_BACK_BIT = VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT
 VK_CULL_MODE_FRONT_BIT = VkCullModeFlagBits.VK_CULL_MODE_FRONT_BIT
 VK_CULL_MODE_NONE = VkCullModeFlagBits.VK_CULL_MODE_NONE
 
 class VkColorComponentFlagBits:
+	VK_COLOR_COMPONENT_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_COLOR_COMPONENT_A_BIT = 8
 	VK_COLOR_COMPONENT_B_BIT = 4
 	VK_COLOR_COMPONENT_G_BIT = 2
 	VK_COLOR_COMPONENT_R_BIT = 1
 	
+VK_COLOR_COMPONENT_FLAG_BITS_MAX_ENUM = VkColorComponentFlagBits.VK_COLOR_COMPONENT_FLAG_BITS_MAX_ENUM
 VK_COLOR_COMPONENT_A_BIT = VkColorComponentFlagBits.VK_COLOR_COMPONENT_A_BIT
 VK_COLOR_COMPONENT_B_BIT = VkColorComponentFlagBits.VK_COLOR_COMPONENT_B_BIT
 VK_COLOR_COMPONENT_G_BIT = VkColorComponentFlagBits.VK_COLOR_COMPONENT_G_BIT
 VK_COLOR_COMPONENT_R_BIT = VkColorComponentFlagBits.VK_COLOR_COMPONENT_R_BIT
 
 class VkDescriptorPoolCreateFlagBits:
+	VK_DESCRIPTOR_POOL_CREATE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT = 1
 	
+VK_DESCRIPTOR_POOL_CREATE_FLAG_BITS_MAX_ENUM = VkDescriptorPoolCreateFlagBits.VK_DESCRIPTOR_POOL_CREATE_FLAG_BITS_MAX_ENUM
 VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT = VkDescriptorPoolCreateFlagBits.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
 
 class VkAttachmentDescriptionFlagBits:
+	VK_ATTACHMENT_DESCRIPTION_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT = 1
 	
+VK_ATTACHMENT_DESCRIPTION_FLAG_BITS_MAX_ENUM = VkAttachmentDescriptionFlagBits.VK_ATTACHMENT_DESCRIPTION_FLAG_BITS_MAX_ENUM
 VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT = VkAttachmentDescriptionFlagBits.VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT
 
 class VkAccessFlagBits:
+	VK_ACCESS_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_ACCESS_MEMORY_WRITE_BIT = 65536
 	VK_ACCESS_MEMORY_READ_BIT = 32768
 	VK_ACCESS_HOST_WRITE_BIT = 16384
@@ -1593,6 +1642,7 @@ class VkAccessFlagBits:
 	VK_ACCESS_INDEX_READ_BIT = 2
 	VK_ACCESS_INDIRECT_COMMAND_READ_BIT = 1
 	
+VK_ACCESS_FLAG_BITS_MAX_ENUM = VkAccessFlagBits.VK_ACCESS_FLAG_BITS_MAX_ENUM
 VK_ACCESS_MEMORY_WRITE_BIT = VkAccessFlagBits.VK_ACCESS_MEMORY_WRITE_BIT
 VK_ACCESS_MEMORY_READ_BIT = VkAccessFlagBits.VK_ACCESS_MEMORY_READ_BIT
 VK_ACCESS_HOST_WRITE_BIT = VkAccessFlagBits.VK_ACCESS_HOST_WRITE_BIT
@@ -1612,83 +1662,98 @@ VK_ACCESS_INDEX_READ_BIT = VkAccessFlagBits.VK_ACCESS_INDEX_READ_BIT
 VK_ACCESS_INDIRECT_COMMAND_READ_BIT = VkAccessFlagBits.VK_ACCESS_INDIRECT_COMMAND_READ_BIT
 
 class VkDependencyFlagBits:
+	VK_DEPENDENCY_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_DEPENDENCY_BY_REGION_BIT = 1
 	
+VK_DEPENDENCY_FLAG_BITS_MAX_ENUM = VkDependencyFlagBits.VK_DEPENDENCY_FLAG_BITS_MAX_ENUM
 VK_DEPENDENCY_BY_REGION_BIT = VkDependencyFlagBits.VK_DEPENDENCY_BY_REGION_BIT
 
 class VkCommandPoolCreateFlagBits:
+	VK_COMMAND_POOL_CREATE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT = 2
 	VK_COMMAND_POOL_CREATE_TRANSIENT_BIT = 1
 	
+VK_COMMAND_POOL_CREATE_FLAG_BITS_MAX_ENUM = VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_FLAG_BITS_MAX_ENUM
 VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT = VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
 VK_COMMAND_POOL_CREATE_TRANSIENT_BIT = VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
 
 class VkCommandPoolResetFlagBits:
+	VK_COMMAND_POOL_RESET_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT = 1
 	
+VK_COMMAND_POOL_RESET_FLAG_BITS_MAX_ENUM = VkCommandPoolResetFlagBits.VK_COMMAND_POOL_RESET_FLAG_BITS_MAX_ENUM
 VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT = VkCommandPoolResetFlagBits.VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT
 
 class VkCommandBufferUsageFlagBits:
+	VK_COMMAND_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT = 4
 	VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT = 2
 	VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT = 1
 	
+VK_COMMAND_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = VkCommandBufferUsageFlagBits.VK_COMMAND_BUFFER_USAGE_FLAG_BITS_MAX_ENUM
 VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT = VkCommandBufferUsageFlagBits.VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT
 VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT = VkCommandBufferUsageFlagBits.VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
 VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT = VkCommandBufferUsageFlagBits.VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
 
 class VkQueryControlFlagBits:
+	VK_QUERY_CONTROL_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_QUERY_CONTROL_PRECISE_BIT = 1
 	
+VK_QUERY_CONTROL_FLAG_BITS_MAX_ENUM = VkQueryControlFlagBits.VK_QUERY_CONTROL_FLAG_BITS_MAX_ENUM
 VK_QUERY_CONTROL_PRECISE_BIT = VkQueryControlFlagBits.VK_QUERY_CONTROL_PRECISE_BIT
 
 class VkCommandBufferResetFlagBits:
+	VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = 1
 	
+VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM = VkCommandBufferResetFlagBits.VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM
 VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = VkCommandBufferResetFlagBits.VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT
 
 class VkStencilFaceFlagBits:
+	VK_STENCIL_FACE_FLAG_BITS_MAX_ENUM = 2147483647
 	VK_STENCIL_FRONT_AND_BACK = 3
 	VK_STENCIL_FACE_BACK_BIT = 2
 	VK_STENCIL_FACE_FRONT_BIT = 1
 	
+VK_STENCIL_FACE_FLAG_BITS_MAX_ENUM = VkStencilFaceFlagBits.VK_STENCIL_FACE_FLAG_BITS_MAX_ENUM
 VK_STENCIL_FRONT_AND_BACK = VkStencilFaceFlagBits.VK_STENCIL_FRONT_AND_BACK
 VK_STENCIL_FACE_BACK_BIT = VkStencilFaceFlagBits.VK_STENCIL_FACE_BACK_BIT
 VK_STENCIL_FACE_FRONT_BIT = VkStencilFaceFlagBits.VK_STENCIL_FACE_FRONT_BIT
 
 class VkColorSpaceKHR:
-	VK_COLORSPACE_MAX_ENUM = 2147483647
-	VK_COLORSPACE_RANGE_SIZE = 1
-	VK_COLORSPACE_END_RANGE = 0
-	VK_COLORSPACE_BEGIN_RANGE = 0
+	VK_COLOR_SPACE_MAX_ENUM_KHR = 2147483647
+	VK_COLOR_SPACE_RANGE_SIZE_KHR = 1
+	VK_COLOR_SPACE_END_RANGE_KHR = 0
+	VK_COLOR_SPACE_BEGIN_RANGE_KHR = 0
 	VK_COLORSPACE_SRGB_NONLINEAR_KHR = 0
 	
-VK_COLORSPACE_MAX_ENUM = VkColorSpaceKHR.VK_COLORSPACE_MAX_ENUM
-VK_COLORSPACE_RANGE_SIZE = VkColorSpaceKHR.VK_COLORSPACE_RANGE_SIZE
-VK_COLORSPACE_END_RANGE = VkColorSpaceKHR.VK_COLORSPACE_END_RANGE
-VK_COLORSPACE_BEGIN_RANGE = VkColorSpaceKHR.VK_COLORSPACE_BEGIN_RANGE
+VK_COLOR_SPACE_MAX_ENUM_KHR = VkColorSpaceKHR.VK_COLOR_SPACE_MAX_ENUM_KHR
+VK_COLOR_SPACE_RANGE_SIZE_KHR = VkColorSpaceKHR.VK_COLOR_SPACE_RANGE_SIZE_KHR
+VK_COLOR_SPACE_END_RANGE_KHR = VkColorSpaceKHR.VK_COLOR_SPACE_END_RANGE_KHR
+VK_COLOR_SPACE_BEGIN_RANGE_KHR = VkColorSpaceKHR.VK_COLOR_SPACE_BEGIN_RANGE_KHR
 VK_COLORSPACE_SRGB_NONLINEAR_KHR = VkColorSpaceKHR.VK_COLORSPACE_SRGB_NONLINEAR_KHR
 
 class VkPresentModeKHR:
-	VK_PRESENT_MODE_MAX_ENUM = 2147483647
-	VK_PRESENT_MODE_RANGE_SIZE = 4
-	VK_PRESENT_MODE_END_RANGE = 3
-	VK_PRESENT_MODE_BEGIN_RANGE = 0
+	VK_PRESENT_MODE_MAX_ENUM_KHR = 2147483647
+	VK_PRESENT_MODE_RANGE_SIZE_KHR = 4
+	VK_PRESENT_MODE_END_RANGE_KHR = 3
+	VK_PRESENT_MODE_BEGIN_RANGE_KHR = 0
 	VK_PRESENT_MODE_FIFO_RELAXED_KHR = 3
 	VK_PRESENT_MODE_FIFO_KHR = 2
 	VK_PRESENT_MODE_MAILBOX_KHR = 1
 	VK_PRESENT_MODE_IMMEDIATE_KHR = 0
 	
-VK_PRESENT_MODE_MAX_ENUM = VkPresentModeKHR.VK_PRESENT_MODE_MAX_ENUM
-VK_PRESENT_MODE_RANGE_SIZE = VkPresentModeKHR.VK_PRESENT_MODE_RANGE_SIZE
-VK_PRESENT_MODE_END_RANGE = VkPresentModeKHR.VK_PRESENT_MODE_END_RANGE
-VK_PRESENT_MODE_BEGIN_RANGE = VkPresentModeKHR.VK_PRESENT_MODE_BEGIN_RANGE
+VK_PRESENT_MODE_MAX_ENUM_KHR = VkPresentModeKHR.VK_PRESENT_MODE_MAX_ENUM_KHR
+VK_PRESENT_MODE_RANGE_SIZE_KHR = VkPresentModeKHR.VK_PRESENT_MODE_RANGE_SIZE_KHR
+VK_PRESENT_MODE_END_RANGE_KHR = VkPresentModeKHR.VK_PRESENT_MODE_END_RANGE_KHR
+VK_PRESENT_MODE_BEGIN_RANGE_KHR = VkPresentModeKHR.VK_PRESENT_MODE_BEGIN_RANGE_KHR
 VK_PRESENT_MODE_FIFO_RELAXED_KHR = VkPresentModeKHR.VK_PRESENT_MODE_FIFO_RELAXED_KHR
 VK_PRESENT_MODE_FIFO_KHR = VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR
 VK_PRESENT_MODE_MAILBOX_KHR = VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR
 VK_PRESENT_MODE_IMMEDIATE_KHR = VkPresentModeKHR.VK_PRESENT_MODE_IMMEDIATE_KHR
 
 class VkSurfaceTransformFlagBitsKHR:
+	VK_SURFACE_TRANSFORM_FLAG_BITS_MAX_ENUM_KHR = 2147483647
 	VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR = 256
 	VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR = 128
 	VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR = 64
@@ -1699,6 +1764,7 @@ class VkSurfaceTransformFlagBitsKHR:
 	VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR = 2
 	VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR = 1
 	
+VK_SURFACE_TRANSFORM_FLAG_BITS_MAX_ENUM_KHR = VkSurfaceTransformFlagBitsKHR.VK_SURFACE_TRANSFORM_FLAG_BITS_MAX_ENUM_KHR
 VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR = VkSurfaceTransformFlagBitsKHR.VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR
 VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR = VkSurfaceTransformFlagBitsKHR.VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR
 VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR = VkSurfaceTransformFlagBitsKHR.VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR
@@ -1710,28 +1776,36 @@ VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR = VkSurfaceTransformFlagBitsKHR.VK_SURFAC
 VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR = VkSurfaceTransformFlagBitsKHR.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
 
 class VkCompositeAlphaFlagBitsKHR:
+	VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR = 2147483647
 	VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR = 8
 	VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR = 4
 	VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR = 2
 	VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR = 1
 	
+VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR = VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR
 VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR = VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
 VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR = VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR
 VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR = VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR
 VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR = VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
 
 class VkDisplayPlaneAlphaFlagBitsKHR:
+	VK_DISPLAY_PLANE_ALPHA_FLAG_BITS_MAX_ENUM_KHR = 2147483647
 	VK_DISPLAY_PLANE_ALPHA_PER_PIXEL_PREMULTIPLIED_BIT_KHR = 8
 	VK_DISPLAY_PLANE_ALPHA_PER_PIXEL_BIT_KHR = 4
 	VK_DISPLAY_PLANE_ALPHA_GLOBAL_BIT_KHR = 2
 	VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR = 1
 	
+VK_DISPLAY_PLANE_ALPHA_FLAG_BITS_MAX_ENUM_KHR = VkDisplayPlaneAlphaFlagBitsKHR.VK_DISPLAY_PLANE_ALPHA_FLAG_BITS_MAX_ENUM_KHR
 VK_DISPLAY_PLANE_ALPHA_PER_PIXEL_PREMULTIPLIED_BIT_KHR = VkDisplayPlaneAlphaFlagBitsKHR.VK_DISPLAY_PLANE_ALPHA_PER_PIXEL_PREMULTIPLIED_BIT_KHR
 VK_DISPLAY_PLANE_ALPHA_PER_PIXEL_BIT_KHR = VkDisplayPlaneAlphaFlagBitsKHR.VK_DISPLAY_PLANE_ALPHA_PER_PIXEL_BIT_KHR
 VK_DISPLAY_PLANE_ALPHA_GLOBAL_BIT_KHR = VkDisplayPlaneAlphaFlagBitsKHR.VK_DISPLAY_PLANE_ALPHA_GLOBAL_BIT_KHR
 VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR = VkDisplayPlaneAlphaFlagBitsKHR.VK_DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR
 
 class VkDebugReportObjectTypeEXT:
+	VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT = 2147483647
+	VK_DEBUG_REPORT_OBJECT_TYPE_RANGE_SIZE_EXT = 29
+	VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT = 28
+	VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT = 0
 	VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT = 28
 	VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT = 27
 	VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT = 26
@@ -1762,6 +1836,10 @@ class VkDebugReportObjectTypeEXT:
 	VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT = 1
 	VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT = 0
 	
+VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_MAX_ENUM_EXT
+VK_DEBUG_REPORT_OBJECT_TYPE_RANGE_SIZE_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_RANGE_SIZE_EXT
+VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_END_RANGE_EXT
+VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT
 VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT
 VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT
 VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT
@@ -1793,19 +1871,29 @@ VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_R
 VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT = VkDebugReportObjectTypeEXT.VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT
 
 class VkDebugReportErrorEXT:
+	VK_DEBUG_REPORT_ERROR_MAX_ENUM_EXT = 2147483647
+	VK_DEBUG_REPORT_ERROR_RANGE_SIZE_EXT = 2
+	VK_DEBUG_REPORT_ERROR_END_RANGE_EXT = 1
+	VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT = 0
 	VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT = 1
 	VK_DEBUG_REPORT_ERROR_NONE_EXT = 0
 	
+VK_DEBUG_REPORT_ERROR_MAX_ENUM_EXT = VkDebugReportErrorEXT.VK_DEBUG_REPORT_ERROR_MAX_ENUM_EXT
+VK_DEBUG_REPORT_ERROR_RANGE_SIZE_EXT = VkDebugReportErrorEXT.VK_DEBUG_REPORT_ERROR_RANGE_SIZE_EXT
+VK_DEBUG_REPORT_ERROR_END_RANGE_EXT = VkDebugReportErrorEXT.VK_DEBUG_REPORT_ERROR_END_RANGE_EXT
+VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT = VkDebugReportErrorEXT.VK_DEBUG_REPORT_ERROR_BEGIN_RANGE_EXT
 VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT = VkDebugReportErrorEXT.VK_DEBUG_REPORT_ERROR_CALLBACK_REF_EXT
 VK_DEBUG_REPORT_ERROR_NONE_EXT = VkDebugReportErrorEXT.VK_DEBUG_REPORT_ERROR_NONE_EXT
 
 class VkDebugReportFlagBitsEXT:
+	VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT = 2147483647
 	VK_DEBUG_REPORT_DEBUG_BIT_EXT = 16
 	VK_DEBUG_REPORT_ERROR_BIT_EXT = 8
 	VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT = 4
 	VK_DEBUG_REPORT_WARNING_BIT_EXT = 2
 	VK_DEBUG_REPORT_INFORMATION_BIT_EXT = 1
 	
+VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT
 VK_DEBUG_REPORT_DEBUG_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_DEBUG_BIT_EXT
 VK_DEBUG_REPORT_ERROR_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_ERROR_BIT_EXT
 VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
@@ -1813,16 +1901,22 @@ VK_DEBUG_REPORT_WARNING_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_WARNI
 VK_DEBUG_REPORT_INFORMATION_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_INFORMATION_BIT_EXT
 
 
+_weakkey_dict = WeakKeyDictionary()
 def _castToPtr(x, _type):
 	if isinstance(x, ffi.CData):
 		if _type.item==ffi.typeof(x):
 			return ffi.addressof(x)
 		return x
 	if isinstance(x, Iterable):
-		return ffi.new(_type.item.cname+'[]', x)
+		if _type.item.kind=='pointer':
+			ptrs = [_castToPtr(i, _type.item) for i in x]
+			ret = ffi.new(_type.item.cname+'[]', ptrs)
+			_weakkey_dict[ret] = tuple(ptrs)
+			return ret
+		else:
+			return ffi.new(_type.item.cname+'[]', x)
 	return ffi.cast(_type, x)
 
-_weakkey_dict = WeakKeyDictionary()
 def _newStruct(ctype, **kwargs):
 	_type = ffi.typeof(ctype)
 
@@ -3131,227 +3225,6 @@ if hasattr(_lib, 'vkCmdExecuteCommands'):
 	def vkCmdExecuteCommands(commandBuffer, commandBufferCount, pCommandBuffers, ):
 		ret = _callApi(_lib.vkCmdExecuteCommands, commandBuffer, commandBufferCount, pCommandBuffers, )
 
-
-if hasattr(_lib, 'vkDestroySurfaceKHR'):
-	def vkDestroySurfaceKHR(instance, surface, pAllocator, ):
-		ret = _callApi(_lib.vkDestroySurfaceKHR, instance, surface, pAllocator, )
-
-
-if hasattr(_lib, 'vkGetPhysicalDeviceSurfaceSupportKHR'):
-	def vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface, ):
-		pSupported = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetPhysicalDeviceSurfaceSupportKHR, physicalDevice, queueFamilyIndex, surface, pSupported, )
-		_raiseException(ret)
-		return pSupported[0]
-
-if hasattr(_lib, 'vkGetPhysicalDeviceSurfaceCapabilitiesKHR'):
-	def vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, ):
-		pSurfaceCapabilities = ffi.new('VkSurfaceCapabilitiesKHR *')
-		ret = _callApi(_lib.vkGetPhysicalDeviceSurfaceCapabilitiesKHR, physicalDevice, surface, pSurfaceCapabilities, )
-		_raiseException(ret)
-		return pSurfaceCapabilities[0]
-
-if hasattr(_lib, 'vkGetPhysicalDeviceSurfaceFormatsKHR'):
-	def vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ):
-		pSurfaceFormatCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetPhysicalDeviceSurfaceFormatsKHR, physicalDevice, surface, pSurfaceFormatCount, ffi.NULL)
-		_raiseException(ret)
-		pSurfaceFormats = ffi.new('VkSurfaceFormatKHR[]', pSurfaceFormatCount[0])
-		ret = _callApi(_lib.vkGetPhysicalDeviceSurfaceFormatsKHR, physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats, )
-		_raiseException(ret)
-		return pSurfaceFormats
-
-if hasattr(_lib, 'vkGetPhysicalDeviceSurfacePresentModesKHR'):
-	def vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ):
-		pPresentModeCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetPhysicalDeviceSurfacePresentModesKHR, physicalDevice, surface, pPresentModeCount, ffi.NULL)
-		_raiseException(ret)
-		pPresentModes = ffi.new('VkPresentModeKHR[]', pPresentModeCount[0])
-		ret = _callApi(_lib.vkGetPhysicalDeviceSurfacePresentModesKHR, physicalDevice, surface, pPresentModeCount, pPresentModes, )
-		_raiseException(ret)
-		return pPresentModes
-
-if hasattr(_lib, 'vkCreateSwapchainKHR'):
-	def vkCreateSwapchainKHR(device, pCreateInfo, pAllocator, ):
-		pSwapchain = ffi.new('struct VkSwapchainKHR_T * *')
-		ret = _callApi(_lib.vkCreateSwapchainKHR, device, pCreateInfo, pAllocator, pSwapchain, )
-		_raiseException(ret)
-		return pSwapchain[0]
-
-if hasattr(_lib, 'vkDestroySwapchainKHR'):
-	def vkDestroySwapchainKHR(device, swapchain, pAllocator, ):
-		ret = _callApi(_lib.vkDestroySwapchainKHR, device, swapchain, pAllocator, )
-
-
-if hasattr(_lib, 'vkGetSwapchainImagesKHR'):
-	def vkGetSwapchainImagesKHR(device, swapchain, ):
-		pSwapchainImageCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetSwapchainImagesKHR, device, swapchain, pSwapchainImageCount, ffi.NULL)
-		_raiseException(ret)
-		pSwapchainImages = ffi.new('struct VkImage_T *[]', pSwapchainImageCount[0])
-		ret = _callApi(_lib.vkGetSwapchainImagesKHR, device, swapchain, pSwapchainImageCount, pSwapchainImages, )
-		_raiseException(ret)
-		return pSwapchainImages
-
-if hasattr(_lib, 'vkAcquireNextImageKHR'):
-	def vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, ):
-		pImageIndex = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkAcquireNextImageKHR, device, swapchain, timeout, semaphore, fence, pImageIndex, )
-		_raiseException(ret)
-		return pImageIndex[0]
-
-if hasattr(_lib, 'vkQueuePresentKHR'):
-	def vkQueuePresentKHR(queue, pPresentInfo, ):
-		ret = _callApi(_lib.vkQueuePresentKHR, queue, pPresentInfo, )
-		_raiseException(ret)
-
-
-if hasattr(_lib, 'vkGetPhysicalDeviceDisplayPropertiesKHR'):
-	def vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, ):
-		pPropertyCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetPhysicalDeviceDisplayPropertiesKHR, physicalDevice, pPropertyCount, ffi.NULL)
-		_raiseException(ret)
-		pProperties = ffi.new('VkDisplayPropertiesKHR[]', pPropertyCount[0])
-		ret = _callApi(_lib.vkGetPhysicalDeviceDisplayPropertiesKHR, physicalDevice, pPropertyCount, pProperties, )
-		_raiseException(ret)
-		return pProperties
-
-if hasattr(_lib, 'vkGetPhysicalDeviceDisplayPlanePropertiesKHR'):
-	def vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, ):
-		pPropertyCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetPhysicalDeviceDisplayPlanePropertiesKHR, physicalDevice, pPropertyCount, ffi.NULL)
-		_raiseException(ret)
-		pProperties = ffi.new('VkDisplayPlanePropertiesKHR[]', pPropertyCount[0])
-		ret = _callApi(_lib.vkGetPhysicalDeviceDisplayPlanePropertiesKHR, physicalDevice, pPropertyCount, pProperties, )
-		_raiseException(ret)
-		return pProperties
-
-if hasattr(_lib, 'vkGetDisplayPlaneSupportedDisplaysKHR'):
-	def vkGetDisplayPlaneSupportedDisplaysKHR(physicalDevice, planeIndex, ):
-		pDisplayCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetDisplayPlaneSupportedDisplaysKHR, physicalDevice, planeIndex, pDisplayCount, ffi.NULL)
-		_raiseException(ret)
-		pDisplays = ffi.new('struct VkDisplayKHR_T *[]', pDisplayCount[0])
-		ret = _callApi(_lib.vkGetDisplayPlaneSupportedDisplaysKHR, physicalDevice, planeIndex, pDisplayCount, pDisplays, )
-		_raiseException(ret)
-		return pDisplays
-
-if hasattr(_lib, 'vkGetDisplayModePropertiesKHR'):
-	def vkGetDisplayModePropertiesKHR(physicalDevice, display, ):
-		pPropertyCount = ffi.new('unsigned int *')
-		ret = _callApi(_lib.vkGetDisplayModePropertiesKHR, physicalDevice, display, pPropertyCount, ffi.NULL)
-		_raiseException(ret)
-		pProperties = ffi.new('VkDisplayModePropertiesKHR[]', pPropertyCount[0])
-		ret = _callApi(_lib.vkGetDisplayModePropertiesKHR, physicalDevice, display, pPropertyCount, pProperties, )
-		_raiseException(ret)
-		return pProperties
-
-if hasattr(_lib, 'vkCreateDisplayModeKHR'):
-	def vkCreateDisplayModeKHR(physicalDevice, display, pCreateInfo, pAllocator, ):
-		pMode = ffi.new('struct VkDisplayModeKHR_T * *')
-		ret = _callApi(_lib.vkCreateDisplayModeKHR, physicalDevice, display, pCreateInfo, pAllocator, pMode, )
-		_raiseException(ret)
-		return pMode[0]
-
-if hasattr(_lib, 'vkGetDisplayPlaneCapabilitiesKHR'):
-	def vkGetDisplayPlaneCapabilitiesKHR(physicalDevice, mode, planeIndex, ):
-		pCapabilities = ffi.new('VkDisplayPlaneCapabilitiesKHR *')
-		ret = _callApi(_lib.vkGetDisplayPlaneCapabilitiesKHR, physicalDevice, mode, planeIndex, pCapabilities, )
-		_raiseException(ret)
-		return pCapabilities[0]
-
-if hasattr(_lib, 'vkCreateDisplayPlaneSurfaceKHR'):
-	def vkCreateDisplayPlaneSurfaceKHR(instance, pCreateInfo, pAllocator, ):
-		pSurface = ffi.new('struct VkSurfaceKHR_T * *')
-		ret = _callApi(_lib.vkCreateDisplayPlaneSurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-		return pSurface[0]
-
-if hasattr(_lib, 'vkCreateSharedSwapchainsKHR'):
-	def vkCreateSharedSwapchainsKHR(device, swapchainCount, pCreateInfos, pAllocator, pSwapchains, ):
-		ret = _callApi(_lib.vkCreateSharedSwapchainsKHR, device, swapchainCount, pCreateInfos, pAllocator, pSwapchains, )
-		_raiseException(ret)
-
-
-if hasattr(_lib, 'vkCreateDebugReportCallbackEXT'):
-	def vkCreateDebugReportCallbackEXT(instance, pCreateInfo, pAllocator, ):
-		pCallback = ffi.new('struct VkDebugReportCallbackEXT_T * *')
-		ret = _callApi(_lib.vkCreateDebugReportCallbackEXT, instance, pCreateInfo, pAllocator, pCallback, )
-		_raiseException(ret)
-		return pCallback
-
-if hasattr(_lib, 'vkDestroyDebugReportCallbackEXT'):
-	def vkDestroyDebugReportCallbackEXT(instance, callback, pAllocator, ):
-		ret = _callApi(_lib.vkDestroyDebugReportCallbackEXT, instance, callback, pAllocator, )
-
-
-if hasattr(_lib, 'vkDebugReportMessageEXT'):
-	def vkDebugReportMessageEXT(instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, ):
-		ret = _callApi(_lib.vkDebugReportMessageEXT, instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, )
-
-
-if hasattr(_lib, 'vkCreateXlibSurfaceKHR'):
-	def vkCreateXlibSurfaceKHR(instance, pCreateInfo, pAllocator, ):
-		pSurface = ffi.new('struct VkSurfaceKHR_T * *')
-		ret = _callApi(_lib.vkCreateXlibSurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-		return pSurface[0]
-
-if hasattr(_lib, 'vkGetPhysicalDeviceXlibPresentationSupportKHR'):
-	def vkGetPhysicalDeviceXlibPresentationSupportKHR(physicalDevice, queueFamilyIndex, dpy, visualID, ):
-		ret = _callApi(_lib.vkGetPhysicalDeviceXlibPresentationSupportKHR, physicalDevice, queueFamilyIndex, dpy, visualID, )
-		return ret
-
-if hasattr(_lib, 'vkCreateXcbSurfaceKHR'):
-	def vkCreateXcbSurfaceKHR(instance, pCreateInfo, pAllocator, ):
-		pSurface = ffi.new('struct VkSurfaceKHR_T * *')
-		ret = _callApi(_lib.vkCreateXcbSurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-		return pSurface[0]
-
-if hasattr(_lib, 'vkGetPhysicalDeviceXcbPresentationSupportKHR'):
-	def vkGetPhysicalDeviceXcbPresentationSupportKHR(physicalDevice, queueFamilyIndex, connection, visual_id, ):
-		ret = _callApi(_lib.vkGetPhysicalDeviceXcbPresentationSupportKHR, physicalDevice, queueFamilyIndex, connection, visual_id, )
-		return ret
-
-if hasattr(_lib, 'vkCreateWaylandSurfaceKHR'):
-	def vkCreateWaylandSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
-		ret = _callApi(_lib.vkCreateWaylandSurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-
-
-if hasattr(_lib, 'vkGetPhysicalDeviceWaylandPresentationSupportKHR'):
-	def vkGetPhysicalDeviceWaylandPresentationSupportKHR(physicalDevice, queueFamilyIndex, display, ):
-		ret = _callApi(_lib.vkGetPhysicalDeviceWaylandPresentationSupportKHR, physicalDevice, queueFamilyIndex, display, )
-		return ret
-
-if hasattr(_lib, 'vkCreateMirSurfaceKHR'):
-	def vkCreateMirSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
-		ret = _callApi(_lib.vkCreateMirSurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-
-
-if hasattr(_lib, 'vkGetPhysicalDeviceMirPresentationSupportKHR'):
-	def vkGetPhysicalDeviceMirPresentationSupportKHR(physicalDevice, queueFamilyIndex, connection, ):
-		ret = _callApi(_lib.vkGetPhysicalDeviceMirPresentationSupportKHR, physicalDevice, queueFamilyIndex, connection, )
-		return ret
-
-if hasattr(_lib, 'vkCreateAndroidSurfaceKHR'):
-	def vkCreateAndroidSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
-		ret = _callApi(_lib.vkCreateAndroidSurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-
-
-if hasattr(_lib, 'vkCreateWin32SurfaceKHR'):
-	def vkCreateWin32SurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
-		ret = _callApi(_lib.vkCreateWin32SurfaceKHR, instance, pCreateInfo, pAllocator, pSurface, )
-		_raiseException(ret)
-
-
-if hasattr(_lib, 'vkGetPhysicalDeviceWin32PresentationSupportKHR'):
-	def vkGetPhysicalDeviceWin32PresentationSupportKHR(physicalDevice, queueFamilyIndex, ):
-		ret = _callApi(_lib.vkGetPhysicalDeviceWin32PresentationSupportKHR, physicalDevice, queueFamilyIndex, )
-		return ret
 
 
 
