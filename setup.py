@@ -6,7 +6,7 @@ print find_packages()
 
 setup(
     name='pyVulkan',
-    version='0.3',
+    version='0.4',
     description='vulkan API bindings for Python',
     author='latte10am',
     author_email='latte10am@gmail.com',
