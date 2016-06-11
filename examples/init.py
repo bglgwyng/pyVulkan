@@ -122,6 +122,8 @@ queue_props = vkGetPhysicalDeviceQueueFamilyProperties(gpu);
 
 features = vkGetPhysicalDeviceFeatures(gpu)
 
+##init sdl
+
 if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)!=0:
     print(sdl2.SDL_GetError())
 

@@ -8,14 +8,14 @@ typedef struct VkXlibSurfaceCreateInfoKHR {
     VkXlibSurfaceCreateFlagsKHR    flags;
     //Display* -> void*
     void*                       dpy;
-    //Window -> uint32_t
-    uint32_t                         window;
+    //Window -> unsigned long
+    unsigned long                         window;
 } VkXlibSurfaceCreateInfoKHR;
 
 typedef VkResult (VKAPI_PTR *PFN_vkCreateXlibSurfaceKHR)(VkInstance instance, const VkXlibSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
 //Display* -> void*
-//VisualID -> uint32_t
-typedef VkBool32 (VKAPI_PTR *PFN_vkGetPhysicalDeviceXlibPresentationSupportKHR)(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, void* dpy, uint32_t visualID);
+//VisualID -> unsigned long
+typedef VkBool32 (VKAPI_PTR *PFN_vkGetPhysicalDeviceXlibPresentationSupportKHR)(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, void* dpy, unsigned long visualID);
 
  VkResult  vkCreateXlibSurfaceKHR(
     VkInstance                                  instance,
@@ -28,8 +28,8 @@ typedef VkBool32 (VKAPI_PTR *PFN_vkGetPhysicalDeviceXlibPresentationSupportKHR)(
     uint32_t                                    queueFamilyIndex,
     //Display* -> void*
     void*                                    dpy,
-    //VisualID -> uint32_t
-    uint32_t                                    visualID);
+    //VisualID -> unsigned long
+    unsigned long                                    visualID);
 
 typedef VkFlags VkXcbSurfaceCreateFlagsKHR;
 
