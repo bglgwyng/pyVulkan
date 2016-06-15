@@ -78,7 +78,7 @@ extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionP
 
 @ffi.callback('VkBool32(VkFlags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *, const char *, void *)')
 def dbgFunc(*args):
-    print ffi.string(args[-2])
+    print (ffi.string(args[-2]))
     return True
 
 debug_info = VkDebugReportCallbackCreateInfoEXT(pfnCallback = dbgFunc,

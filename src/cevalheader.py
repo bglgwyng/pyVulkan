@@ -103,7 +103,7 @@ def cEvalExpression(header_file, cpp_args = []):
 
     Visitor().visit(ast)
 
-    return generator.visit(ast)
+    return ''.join(generator.visit(ast).splitlines())
 
 if __name__=='__main__':
     from sys import *

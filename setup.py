@@ -2,8 +2,6 @@ from setuptools import setup, find_packages
 
 install_requires = ['cffi>=1.5.2']
 
-print find_packages()
-
 setup(
     name='pyVulkan',
     version='0.4',

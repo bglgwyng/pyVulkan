@@ -6,7 +6,10 @@ import sys
 
 ffi = FFI()
 
-ffi.cdef(resource_string(__name__, "_vulkan.h"))
+if sys.version_info<(3, 0):
+	ffi.cdef(resource_string(__name__, "_vulkan.h"))
+else:
+	ffi.cdef(resource_string(__name__, "_vulkan.h").decode())
 
 if sys.platform=='win32':
 	_lib = ffi.dlopen('vulkan-1.dll')
