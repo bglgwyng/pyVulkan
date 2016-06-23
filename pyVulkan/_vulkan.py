@@ -6,10 +6,34 @@ import sys
 
 ffi = FFI()
 
+_weakkey_dict = WeakKeyDictionary()
+
+def _castToPtr2(x, _type):
+	if isinstance(x, ffi.CData):
+		if _type.item==ffi.typeof(x):
+			return ffi.addressof(x)
+		return x
+	if isinstance(x, Iterable):
+		if _type.item.kind=='pointer':
+			ptrs = [_castToPtr(i, _type.item) for i in x]
+			ret = ffi.new(_type.item.cname+'[]', ptrs)
+			_weakkey_dict[ret] = tuple(ptrs)
+			return ret
+		else:
+			return ffi.new(_type.item.cname+'[]', x)
+	return ffi.cast(_type, x)
+
+def _castToPtr3(x, _type):
+	if isinstance(x, str):
+		x = x.encode('ascii')
+	return _castToPtr2(x, _type)
+
 if sys.version_info<(3, 0):
 	ffi.cdef(resource_string(__name__, "_vulkan.h"))
+	_castToPtr = _castToPtr2
 else:
 	ffi.cdef(resource_string(__name__, "_vulkan.h").decode())
+	_castToPtr = _castToPtr3
 
 if sys.platform=='win32':
 	_lib = ffi.dlopen('vulkan-1.dll')
@@ -1904,21 +1928,6 @@ VK_DEBUG_REPORT_WARNING_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_WARNI
 VK_DEBUG_REPORT_INFORMATION_BIT_EXT = VkDebugReportFlagBitsEXT.VK_DEBUG_REPORT_INFORMATION_BIT_EXT
 
 
-_weakkey_dict = WeakKeyDictionary()
-def _castToPtr(x, _type):
-	if isinstance(x, ffi.CData):
-		if _type.item==ffi.typeof(x):
-			return ffi.addressof(x)
-		return x
-	if isinstance(x, Iterable):
-		if _type.item.kind=='pointer':
-			ptrs = [_castToPtr(i, _type.item) for i in x]
-			ret = ffi.new(_type.item.cname+'[]', ptrs)
-			_weakkey_dict[ret] = tuple(ptrs)
-			return ret
-		else:
-			return ffi.new(_type.item.cname+'[]', x)
-	return ffi.cast(_type, x)
 
 def _newStruct(ctype, **kwargs):
 	_type = ffi.typeof(ctype)

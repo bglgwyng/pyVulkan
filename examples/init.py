@@ -127,7 +127,7 @@ features = vkGetPhysicalDeviceFeatures(gpu)
 if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)!=0:
     print(sdl2.SDL_GetError())
 
-window = sdl2.SDL_CreateWindow(app_name, sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, width, height, 0)
+window = sdl2.SDL_CreateWindow(app_name.encode('ascii'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, width, height, 0)
 
 if not window:
     print(sdl2.SDL_GetError())
