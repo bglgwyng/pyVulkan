@@ -4,14 +4,14 @@ install_requires = ['cffi>=1.5.2']
 
 setup(
     name='pyVulkan',
-    version='0.5',
+    version='0.6',
     description='vulkan API bindings for Python',
     author='latte10am',
     author_email='latte10am@gmail.com',
     packages=find_packages(),
     package_data={'': ['*.h']},
     install_requires=install_requires,
-    url = 'http://pyopengl.sourceforge.net',
+    url = 'https://github.com/latte10am/pyVulkan',
     license = 'BSD',    
     keywords = 'Graphics,3D,Vulkan,cffi',
     classifiers = [

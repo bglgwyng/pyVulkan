@@ -76,9 +76,9 @@ def _getInstanceLayers():
 instance_layers = _getInstanceLayers()
 extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
 
-@ffi.callback('VkBool32(VkFlags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *, const char *, void *)')
+@PFN_vkDebugReportCallbackEXT
 def dbgFunc(*args):
-    print (ffi.string(args[-2]))
+    print (args)
     return True
 
 debug_info = VkDebugReportCallbackCreateInfoEXT(pfnCallback = dbgFunc,
@@ -91,10 +91,39 @@ instance_info = VkInstanceCreateInfo(pApplicationInfo = app_info,
                                     ppEnabledExtensionNames = extensions,
                                     pNext = ffi.addressof(debug_info))
 
+ptrs = set()
+@PFN_vkAllocationFunction
+def allocFunc(*args):
+    temp = ffi.new("char[]", args[1])
+    ptrs.add(temp)
+    return temp
 
-inst = vkCreateInstance(instance_info, None)
 
+@PFN_vkReallocationFunction
+def reallocFunc(*args):
+    raise NotImplementedError()
 
+@PFN_vkFreeFunction
+def freeFunc(*args):
+    ptrs.remove(args[1])
+
+@PFN_vkInternalAllocationNotification
+def internalAllocNotify(*args):
+    raise NotImplementedError()
+
+@PFN_vkInternalFreeNotification
+def internalFreeNotify(*args):
+    raise NotImplementedError()
+
+allocation_callbacks = VkAllocationCallbacks(pUserData = None,
+                                            pfnAllocation = allocFunc,
+                                            pfnReallocation = reallocFunc,
+                                            pfnFree = freeFunc,
+                                            pfnInternalAllocation = internalAllocNotify,
+                                            pfnInternalFree = internalFreeNotify)
+
+inst = vkCreateInstance(instance_info, allocation_callbacks)
+# inst = vkCreateInstance(instance_info, None)
 
 def getExtensionProc(name):
     return pyVulkan.extwrapper.__dict__[name+'Wrapper'](vkGetInstanceProcAddr(inst, name))
@@ -479,3 +508,4 @@ vkDestroyInstance(inst, None);
 
 sdl2.SDL_DestroyWindow(window)
 sdl2.SDL_Quit()
+

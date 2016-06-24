@@ -40,6 +40,13 @@ if sys.platform=='win32':
 else:
 	_lib = ffi.dlopen('libvulkan.so')
 
+PFN_vkDebugReportCallbackEXT = ffi.callback('VkBool32(VkFlags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *, const char *, void *)')
+PFN_vkAllocationFunction = ffi.callback('void*(void*, size_t, size_t, VkSystemAllocationScope)')
+PFN_vkReallocationFunction = ffi.callback('void*(void*, void*, size_t, size_t, VkSystemAllocationScope)')
+PFN_vkFreeFunction = ffi.callback('void(void*, void*)')
+PFN_vkInternalAllocationNotification = ffi.callback('void(void*, size_t, VkInternalAllocationType, VkSystemAllocationScope)')
+PFN_vkInternalFreeNotification = PFN_vkInternalAllocationNotification
+
 {% for i in enums %}
 class {{i}}:
 	{% for k, v in enums[i].relements.items() %}{{k}} = {{v}}
