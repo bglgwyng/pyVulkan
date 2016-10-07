@@ -194,6 +194,57 @@ def vkDebugReportMessageEXTWrapper(fn):
 		ret = _callApi(fn, instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, )
 	return vkDebugReportMessageEXT
 
+def vkDebugMarkerSetObjectTagEXTWrapper(fn):
+	fn = ffi.cast('PFN_vkDebugMarkerSetObjectTagEXT', fn)
+	def vkDebugMarkerSetObjectTagEXT(device, pTagInfo, ):
+		ret = _callApi(fn, device, pTagInfo, )
+		_raiseException(ret)
+	return vkDebugMarkerSetObjectTagEXT
+
+def vkDebugMarkerSetObjectNameEXTWrapper(fn):
+	fn = ffi.cast('PFN_vkDebugMarkerSetObjectNameEXT', fn)
+	def vkDebugMarkerSetObjectNameEXT(device, pNameInfo, ):
+		ret = _callApi(fn, device, pNameInfo, )
+		_raiseException(ret)
+	return vkDebugMarkerSetObjectNameEXT
+
+def vkCmdDebugMarkerBeginEXTWrapper(fn):
+	fn = ffi.cast('PFN_vkCmdDebugMarkerBeginEXT', fn)
+	def vkCmdDebugMarkerBeginEXT(commandBuffer, pMarkerInfo, ):
+		ret = _callApi(fn, commandBuffer, pMarkerInfo, )
+	return vkCmdDebugMarkerBeginEXT
+
+def vkCmdDebugMarkerEndEXTWrapper(fn):
+	fn = ffi.cast('PFN_vkCmdDebugMarkerEndEXT', fn)
+	def vkCmdDebugMarkerEndEXT(commandBuffer, ):
+		ret = _callApi(fn, commandBuffer, )
+	return vkCmdDebugMarkerEndEXT
+
+def vkCmdDebugMarkerInsertEXTWrapper(fn):
+	fn = ffi.cast('PFN_vkCmdDebugMarkerInsertEXT', fn)
+	def vkCmdDebugMarkerInsertEXT(commandBuffer, pMarkerInfo, ):
+		ret = _callApi(fn, commandBuffer, pMarkerInfo, )
+	return vkCmdDebugMarkerInsertEXT
+
+def vkCmdDrawIndirectCountAMDWrapper(fn):
+	fn = ffi.cast('PFN_vkCmdDrawIndirectCountAMD', fn)
+	def vkCmdDrawIndirectCountAMD(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride, ):
+		ret = _callApi(fn, commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride, )
+	return vkCmdDrawIndirectCountAMD
+
+def vkCmdDrawIndexedIndirectCountAMDWrapper(fn):
+	fn = ffi.cast('PFN_vkCmdDrawIndexedIndirectCountAMD', fn)
+	def vkCmdDrawIndexedIndirectCountAMD(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride, ):
+		ret = _callApi(fn, commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride, )
+	return vkCmdDrawIndexedIndirectCountAMD
+
+def vkGetPhysicalDeviceExternalImageFormatPropertiesNVWrapper(fn):
+	fn = ffi.cast('PFN_vkGetPhysicalDeviceExternalImageFormatPropertiesNV', fn)
+	def vkGetPhysicalDeviceExternalImageFormatPropertiesNV(physicalDevice, format, type, tiling, usage, flags, externalHandleType, pExternalImageFormatProperties, ):
+		ret = _callApi(fn, physicalDevice, format, type, tiling, usage, flags, externalHandleType, pExternalImageFormatProperties, )
+		_raiseException(ret)
+	return vkGetPhysicalDeviceExternalImageFormatPropertiesNV
+
 def vkCreateXlibSurfaceKHRWrapper(fn):
 	fn = ffi.cast('PFN_vkCreateXlibSurfaceKHR', fn)
 	def vkCreateXlibSurfaceKHR(instance, pCreateInfo, pAllocator, ):

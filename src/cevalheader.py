@@ -1,23 +1,24 @@
 from pycparser import parse_file, c_ast, c_generator
 from cffi import *
 
-def cEvalExpression(header_file, cpp_args = []):
+
+def cEvalExpression(header_file, cpp_args=[]):
 
     ignores = ['__attribute__(x)', '__extension__', '__inline', '__restrict']
-    
-    ast = parse_file(header_file, use_cpp = True, cpp_args = cpp_args+['-D'+i+'=' for i in ignores])
+
+    ast = parse_file(header_file, use_cpp=True, cpp_args=cpp_args + ['-D' + i + '=' for i in ignores])
     generator = c_generator.CGenerator()
 
     ffi = FFI()
     lib = ffi.dlopen(None)
 
-    unary_ops = {'+':lambda x:+x, '-':lambda x:-x}
-    bin_ops = {'+':lambda x, y:x+y, '-':lambda x, y:x-y, '*':lambda x, y:x*y, '/':lambda x, y:x/y, '%':lambda x, y:x%y}
+    unary_ops = {'+': lambda x: +x, '-': lambda x: -x}
+    bin_ops = {'+': lambda x, y: x + y, '-': lambda x, y: x - y, '*': lambda x, y: x * y, '/': lambda x, y: x / y, '%': lambda x, y: x % y}
 
     def evalConst(exp):
-        if exp.type=='int':
+        if exp.type == 'int':
             return int(exp.value, 0)
-        elif exp.type=='float':
+        elif exp.type == 'float':
             return float(exp.value)
         raise NotImplementedError()
 
@@ -28,7 +29,7 @@ def cEvalExpression(header_file, cpp_args = []):
             return c_ast.Constant('float', str(v))
         raise NotImplementedError()
 
-    def evalExpression(exp, enum_dict = {}):
+    def evalExpression(exp, enum_dict={}):
         def _(exp):
             if isinstance(exp, c_ast.ID):
                 if exp.name in enum_dict:
@@ -37,7 +38,7 @@ def cEvalExpression(header_file, cpp_args = []):
                     v = getattr(lib, exp.name)
                     assert v
             elif isinstance(exp, c_ast.UnaryOp):
-                if exp.op=='sizeof':
+                if exp.op == 'sizeof':
                     v = ffi.sizeof(generator.visit(exp.expr))
                 else:
                     if not exp.op in unary_ops:
@@ -51,17 +52,16 @@ def cEvalExpression(header_file, cpp_args = []):
             elif isinstance(exp, c_ast.Cast):
                 #FIXME
                 to_type = generator.visit(exp.to_type)
-                if to_type!='int':
+                if to_type != 'int':
                     raise NotImplementedError()
                 value = ffi.cast(to_type, evalConst(_(exp.expr)))
                 v = int(value)
             else:
                 return exp
-            
+
             return makeConst(v)
 
         return _(exp)
-
 
     generator = c_generator.CGenerator()
 
@@ -77,10 +77,9 @@ def cEvalExpression(header_file, cpp_args = []):
             for i, v in node.children():
                 self.visit(v)
 
-
             enums = node.values.enumerators
 
-            enum_dict = {i.name:i.value for i in enums}
+            enum_dict = {i.name: i.value for i in enums}
             for i in enums:
                 if i.value:
                     if not isinstance(i.value, c_ast.Constant) and not isinstance(i.value, c_ast.ID):
@@ -97,7 +96,7 @@ def cEvalExpression(header_file, cpp_args = []):
                 if not isinstance(i, c_ast.FuncDef):
                     if 'extern' in i.storage:
                         continue
-                    ffi.cdef(generator.visit(i)+';')
+                    ffi.cdef(generator.visit(i) + ';')
                     new_ext += [i]
             node.ext = new_ext
 
@@ -105,17 +104,17 @@ def cEvalExpression(header_file, cpp_args = []):
 
     return ''.join(generator.visit(ast).splitlines())
 
-if __name__=='__main__':
+if __name__ == '__main__':
     from sys import *
 
-    if len(argv)<2:
-        stderr.write("Usage: python %s header_file [cpp_args]..."%argv[0])
+    if len(argv) < 2:
+        stderr.write("Usage: python %s header_file [cpp_args]..." % argv[0])
         exit(1)
-    elif len(argv)==2:
+    elif len(argv) == 2:
         print (cEvalExpression(argv[1]))
         exit(0)
     else:
         print (cEvalExpression(argv[1], argv[2:]))
         exit(0)
-    
+
     #processHeader()

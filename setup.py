@@ -11,10 +11,10 @@ setup(
     packages=find_packages(),
     package_data={'': ['*.h']},
     install_requires=install_requires,
-    url = 'https://github.com/latte10am/pyVulkan',
-    license = 'BSD',    
-    keywords = 'Graphics,3D,Vulkan,cffi',
-    classifiers = [
+    url='https://github.com/latte10am/pyVulkan',
+    license='BSD',
+    keywords='Graphics,3D,Vulkan,cffi',
+    classifiers=[
         """License :: OSI Approved :: BSD License""",
         """Programming Language :: Python""",
         """Topic :: Multimedia :: Graphics :: 3D Rendering""",
