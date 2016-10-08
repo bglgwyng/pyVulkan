@@ -168,9 +168,11 @@ def vkCreateDisplayPlaneSurfaceKHRWrapper(fn):
 
 def vkCreateSharedSwapchainsKHRWrapper(fn):
 	fn = ffi.cast('PFN_vkCreateSharedSwapchainsKHR', fn)
-	def vkCreateSharedSwapchainsKHR(device, swapchainCount, pCreateInfos, pAllocator, pSwapchains, ):
+	def vkCreateSharedSwapchainsKHR(device, swapchainCount, pCreateInfos, pAllocator, ):
+		pSwapchains = ffi.new('struct VkSwapchainKHR_T * *')
 		ret = _callApi(fn, device, swapchainCount, pCreateInfos, pAllocator, pSwapchains, )
 		_raiseException(ret)
+		return pSwapchains		
 	return vkCreateSharedSwapchainsKHR
 
 def vkCreateDebugReportCallbackEXTWrapper(fn):
@@ -293,9 +295,11 @@ def vkGetPhysicalDeviceWaylandPresentationSupportKHRWrapper(fn):
 
 def vkCreateMirSurfaceKHRWrapper(fn):
 	fn = ffi.cast('PFN_vkCreateMirSurfaceKHR', fn)
-	def vkCreateMirSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
+	def vkCreateMirSurfaceKHR(instance, pCreateInfo, pAllocator, ):
+		pSurface = ffi.new('struct VkSurfaceKHR_T * *')
 		ret = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface, )
 		_raiseException(ret)
+		return pSurface[0]		
 	return vkCreateMirSurfaceKHR
 
 def vkGetPhysicalDeviceMirPresentationSupportKHRWrapper(fn):
@@ -307,16 +311,20 @@ def vkGetPhysicalDeviceMirPresentationSupportKHRWrapper(fn):
 
 def vkCreateAndroidSurfaceKHRWrapper(fn):
 	fn = ffi.cast('PFN_vkCreateAndroidSurfaceKHR', fn)
-	def vkCreateAndroidSurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
+	def vkCreateAndroidSurfaceKHR(instance, pCreateInfo, pAllocator, ):
+		pSurface = ffi.new('struct VkSurfaceKHR_T * *')
 		ret = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface, )
 		_raiseException(ret)
+		return pSurface[0]		
 	return vkCreateAndroidSurfaceKHR
 
 def vkCreateWin32SurfaceKHRWrapper(fn):
 	fn = ffi.cast('PFN_vkCreateWin32SurfaceKHR', fn)
-	def vkCreateWin32SurfaceKHR(instance, pCreateInfo, pAllocator, pSurface, ):
+	def vkCreateWin32SurfaceKHR(instance, pCreateInfo, pAllocator, ):
+		pSurface = ffi.new('struct VkSurfaceKHR_T * *')
 		ret = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface, )
 		_raiseException(ret)
+		return pSurface[0]		
 	return vkCreateWin32SurfaceKHR
 
 def vkGetPhysicalDeviceWin32PresentationSupportKHRWrapper(fn):

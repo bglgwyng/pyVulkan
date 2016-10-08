@@ -3060,10 +3060,11 @@ if hasattr(_lib, 'vkResetDescriptorPool'):
 
 
 if hasattr(_lib, 'vkAllocateDescriptorSets'):
-	def vkAllocateDescriptorSets(device, pAllocateInfo, pDescriptorSets, ):
+	def vkAllocateDescriptorSets(device, pAllocateInfo, ):
+		pDescriptorSets = ffi.new('struct VkDescriptorSet_T * *')
 		ret = _callApi(_lib.vkAllocateDescriptorSets, device, pAllocateInfo, pDescriptorSets, )
 		_raiseException(ret)
-
+		return pDescriptorSets
 
 if hasattr(_lib, 'vkFreeDescriptorSets'):
 	def vkFreeDescriptorSets(device, descriptorPool, descriptorSetCount, pDescriptorSets, ):

@@ -53,15 +53,15 @@ funcs_with_return = [
 
     'vkCreateXlibSurfaceKHR',
     'vkCreateXcbSurfaceKHR',
-    'vkCreateMirSurfaceKHR'
-    'vkCreateAndroidSurfaceKHR'
+    'vkCreateMirSurfaceKHR',
+    'vkCreateAndroidSurfaceKHR',
     'vkCreateWin32SurfaceKHR',
 
     'vkCreateDebugReportCallbackEXT']
 
 funcs_with_return_as_list = [
     'vkAllocateCommandBuffers',
-    'vkAllocateDescriptorSets'
+    'vkAllocateDescriptorSets',
 
     'vkCreateSharedSwapchainsKHR']
 
