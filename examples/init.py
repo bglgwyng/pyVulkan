@@ -1,5 +1,4 @@
 from pyVulkan import *
-import pyVulkan.extwrapper
 import sdl2
 import ctypes
 
@@ -81,7 +80,6 @@ extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionP
 
 @PFN_vkDebugReportCallbackEXT
 def dbgFunc(*args):
-    print (args)
     return True
 
 debug_info = VkDebugReportCallbackCreateInfoEXT(pfnCallback=dbgFunc,
@@ -134,22 +132,19 @@ inst = vkCreateInstance(instance_info, allocation_callbacks)
 
 # inst = vkCreateInstance(instance_info, None)
 
-def getExtensionProc(name):
-    return pyVulkan.extwrapper.__dict__[name + 'Wrapper'](vkGetInstanceProcAddr(inst, name))
-
-vkCreateXlibSurfaceKHR = getExtensionProc('vkCreateXlibSurfaceKHR')
-vkGetPhysicalDeviceSurfaceSupportKHR = getExtensionProc('vkGetPhysicalDeviceSurfaceSupportKHR')
-vkGetPhysicalDeviceSurfaceFormatsKHR = getExtensionProc('vkGetPhysicalDeviceSurfaceFormatsKHR')
-vkGetPhysicalDeviceSurfaceCapabilitiesKHR = getExtensionProc('vkGetPhysicalDeviceSurfaceCapabilitiesKHR')
-vkGetPhysicalDeviceSurfacePresentModesKHR = getExtensionProc('vkGetPhysicalDeviceSurfacePresentModesKHR')
-vkCreateSwapchainKHR = getExtensionProc('vkCreateSwapchainKHR')
-vkGetSwapchainImagesKHR = getExtensionProc('vkGetSwapchainImagesKHR')
-vkAcquireNextImageKHR = getExtensionProc('vkAcquireNextImageKHR')
-vkQueuePresentKHR = getExtensionProc('vkQueuePresentKHR')
-vkDestroySwapchainKHR = getExtensionProc('vkDestroySwapchainKHR')
-vkDestroySurfaceKHR = getExtensionProc('vkDestroySurfaceKHR')
-vkCreateDebugReportCallbackEXT = getExtensionProc('vkCreateDebugReportCallbackEXT')
-vkDestroyDebugReportCallbackEXT = getExtensionProc('vkDestroyDebugReportCallbackEXT')
+vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')
+vkGetPhysicalDeviceSurfaceSupportKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceSupportKHR')
+vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceFormatsKHR')
+vkGetPhysicalDeviceSurfaceCapabilitiesKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceCapabilitiesKHR')
+vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfacePresentModesKHR')
+vkCreateSwapchainKHR = vkGetInstanceProcAddr(inst, 'vkCreateSwapchainKHR')
+vkGetSwapchainImagesKHR = vkGetInstanceProcAddr(inst, 'vkGetSwapchainImagesKHR')
+vkAcquireNextImageKHR = vkGetInstanceProcAddr(inst, 'vkAcquireNextImageKHR')
+vkQueuePresentKHR = vkGetInstanceProcAddr(inst, 'vkQueuePresentKHR')
+vkDestroySwapchainKHR = vkGetInstanceProcAddr(inst, 'vkDestroySwapchainKHR')
+vkDestroySurfaceKHR = vkGetInstanceProcAddr(inst, 'vkDestroySurfaceKHR')
+vkCreateDebugReportCallbackEXT = vkGetInstanceProcAddr(inst, 'vkCreateDebugReportCallbackEXT')
+vkDestroyDebugReportCallbackEXT = vkGetInstanceProcAddr(inst, 'vkDestroyDebugReportCallbackEXT')
 
 debug_callback = vkCreateDebugReportCallbackEXT(inst, debug_info, None)
 

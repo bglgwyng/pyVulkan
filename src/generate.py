@@ -1,7 +1,30 @@
+import subprocess
+import re
 from pycparser import parse_file, c_ast, c_generator
 from cffi import *
 
-header_path = '_vulkan.h'
+macros = []
+
+out = subprocess.check_output('gcc -dM -E ./platform.h', shell = True)
+float_pattern = re.compile(r'(\d*\.?\d*)f')
+
+for i in out.split('\n'):
+    j = i.split()
+
+    if len(j)==3:
+        _, name, value = j
+
+        if name.startswith('VK'):
+            if value in ('(~0U)', '(~0ULL)'):
+                value = '-1'
+            else:
+                t = float_pattern.match(value)
+                if t is not None:
+                    value = t.group(1)
+
+            macros += [(name, value)]
+
+header_path = '../pyVulkan/_vulkan.h'
 
 ffi = FFI()
 ffi.cdef(open(header_path).read())
@@ -89,6 +112,7 @@ funcs_with_count_return = [
 
 def genExceptions():
     enums = [
+        'VK_SUCCESS',
         'VK_NOT_READY',
         'VK_TIMEOUT',
         'VK_EVENT_SET',
@@ -105,6 +129,7 @@ def genExceptions():
         'VK_ERROR_INCOMPATIBLE_DRIVER',
         'VK_ERROR_TOO_MANY_OBJECTS',
         'VK_ERROR_FORMAT_NOT_SUPPORTED',
+        'VK_ERROR_FRAGMENTED_POOL',
         'VK_ERROR_SURFACE_LOST_KHR',
         'VK_ERROR_NATIVE_WINDOW_IN_USE_KHR',
         'VK_SUBOPTIMAL_KHR',
@@ -135,7 +160,6 @@ funcs = {}
 exts = {}
 
 generator = c_generator.CGenerator()
-
 
 class Visitor(c_ast.NodeVisitor):
 
@@ -208,7 +232,6 @@ class Visitor(c_ast.NodeVisitor):
 
 Visitor().visit(ast)
 
-
 def gensType(x):
     tmp = ''
     postfix = ''
@@ -230,8 +253,4 @@ env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file
 
 genvulkan = env.get_template('vulkan.template.py')
 with open('../pyVulkan/_vulkan.py', 'w') as f:
-    f.write(genvulkan.render(structs=structs, field_defaults={'sType': gensType}, enums=enums, exceptions=genExceptions(), funcs=funcs))
-
-genextwrapper = env.get_template('extwrapper.template.py')
-with open('../pyVulkan/extwrapper.py', 'w') as f:
-    f.write(genextwrapper.render(exts=exts))
+    f.write(genvulkan.render(structs=structs, field_defaults={'sType': gensType}, macros=macros, enums=enums, exceptions=genExceptions(), funcs=funcs, exts=exts))
