@@ -47,7 +47,7 @@ else:
 	_castToPtr = _castToPtr3
 
 if sys.platform=='win32':
-	_cdef('vulkan_linux_win32.h')
+	_cdef('vulkan_win32_cffi.h')
 	_lib = ffi.dlopen('vulkan-1.dll')
 elif sys.platform.startswith('linux'):
 	_cdef('vulkan_linux_cffi.h')

@@ -375,7 +375,7 @@ for name, (type_, _, _, params) in funcs.items():
     func_wrappers[name] = (type_, [i for i, _ in params], [i for _, i in params])
 
 platform_vkapi_ptr = {'linux': '', 'win32': '__stdcall ', 'android': ''}
-platform_newline = {'linux': '\n', 'win32': '\r\n', 'android': '\n'}
+platform_newline = {'linux': '\n', 'win32': '\n', 'android': '\n'}
 
 from jinja2 import *
 import os
