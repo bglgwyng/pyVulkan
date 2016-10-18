@@ -200,7 +200,7 @@ for i in enums:
                         prefix + 'END_RANGE' + postfix:max(values),
                         prefix + 'RANGE_SIZE' + postfix:max(values)-min(values)+1}
 
-    enums_ranges[i][prefix + 'MAX_ENUM' + postfix] = '0x7FFFFFFF'
+    enums_ranges[i][prefix + 'MAX_ENUM' + postfix] = 0x7FFFFFFF
 
 
 for i in tree.findall('extensions/extension'):

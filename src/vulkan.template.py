@@ -57,14 +57,10 @@ else:
 
 def _new(ctype, **kwargs):
 	_type = ffi.typeof(ctype)
-
 	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
 	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
-
 	ret = ffi.new(_type.cname+'*', dict(kwargs, **ptrs))[0]
-
 	_weakkey_dict[ret] = tuple(ptrs.values())
-
 	return ret
 
 class VkException(Exception):
@@ -114,6 +110,7 @@ def vkGetInstanceProcAddr(instance, pName):
 		raise ProcedureNotFoundError()
 	if not pName in _instance_ext_funcs:
 		raise ExtensionNotSupportedError()
+	fn = ffi.cast('PFN_'+pName, fn)
 	return _instance_ext_funcs[pName](fn)
 
 def vkGetDeviceProcAddr(device, pName):
@@ -122,6 +119,7 @@ def vkGetDeviceProcAddr(device, pName):
 		raise ProcedureNotFoundError()
 	if not pName in _device_ext_funcs:
 		raise ExtensionNotSupportedError()
+	fn = ffi.cast('PFN_'+pName, fn)
 	return _device_ext_funcs[pName](fn)
 
 def VK_MAKE_VERSION(major, minor, patch):
