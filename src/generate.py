@@ -172,6 +172,37 @@ for i in tree.findall('enums'):
         for j in i.findall('enum'):
             macros[j.attrib['name']] = evalEnum(j)
 
+pattern = re.compile('(.*?)([A-Z]*)$')
+
+enums_ranges = {}
+
+for i in enums:
+    if not enums[i]:
+        continue
+
+    name = pattern.match(i).group(1)
+    ext = pattern.match(i).group(2)
+    postfix = '_' + ext if ext else ''
+
+    def _(name):
+        upper_pos = [j for j, k in enumerate(name) if k.isupper()]
+        return '_'.join(name[begin:end].upper() for begin, end in zip(upper_pos, upper_pos[1:] + [len(name)])) + '_'
+
+    is_bitmask = enum_types[i] == 'bitmask'
+    if is_bitmask:
+        assert name.endswith('FlagBits')
+        prefix = _(name[:-8])
+        enums_ranges[i] = {}
+    else:
+        prefix = _(name)
+        values = [int(j) for _, j in enums[i].items()]
+        enums_ranges[i] = {prefix + 'BEGIN_RANGE' + postfix:min(values),
+                        prefix + 'END_RANGE' + postfix:max(values),
+                        prefix + 'RANGE_SIZE' + postfix:max(values)-min(values)+1}
+
+    enums_ranges[i][prefix + 'MAX_ENUM' + postfix] = '0x7FFFFFFF'
+
+
 for i in tree.findall('extensions/extension'):
     #TODO:add extension macro
     if i.attrib['supported'] == 'disabled':
@@ -206,36 +237,10 @@ for i in tree.findall('extensions/extension'):
         else:
             macros[j.attrib['name']] = evalEnum(j)
 
+for i in enums_ranges:
+    enums[i].update(**enums_ranges[i])
+
 all_extensions = reduce(lambda x, y: x.union(y), platform_extensions.values()).union(general_extensions)
-
-pattern = re.compile('(.*?)([A-Z]*)$')
-
-
-for i in enums:
-    if not enums[i]:
-        continue
-
-    name = pattern.match(i).group(1)
-    ext = pattern.match(i).group(2)
-    postfix = '_' + ext if ext else ''
-
-
-    def _(name):
-        upper_pos = [j for j, k in enumerate(name) if k.isupper()]
-        return '_'.join(name[begin:end].upper() for begin, end in zip(upper_pos, upper_pos[1:] + [len(name)])) + '_'
-
-    is_bitmask = enum_types[i] == 'bitmask'
-    if is_bitmask:
-        assert name.endswith('FlagBits')
-        prefix = _(name[:-8])
-    else:
-        prefix = _(name)
-        values = [j for _, j in enums[i].items()]
-        enums[i][prefix + 'BEGIN_RANGE' + postfix] = min(values)
-        enums[i][prefix + 'END_RANGE' + postfix] = min(values)
-        enums[i][prefix + 'RANGE_SIZE' + postfix] = min(values)
-
-    enums[i][prefix + 'MAX_ENUM' + postfix] = '0x7FFFFFFF'
 
 def_orders = []
 
