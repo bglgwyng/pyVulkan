@@ -1,256 +1,398 @@
-import subprocess
+from xml.etree import ElementTree
+from collections import OrderedDict
+import io
 import re
-from pycparser import parse_file, c_ast, c_generator
-from cffi import *
 
-macros = []
+tree = ElementTree.parse('vk.xml').getroot()
 
-out = subprocess.check_output('gcc -dM -E ./platform.h', shell = True)
-float_pattern = re.compile(r'(\d*\.?\d*)f')
+linux_header = open('/dev/null', 'w')
+#
+# class MultiPlatformGenerator:
+#     def __init__(self, **kwargs):
+#         self.protects = {k:i for k, (i, _) in kwargs.items()}
+#         self.newline = {k:i for k, (_, i) in kwargs.items()}
+#         self.extensions = {k:set() for i in kwargs}
+#         self.files = {k:io.open('../pyVulkan/vulkan_%s_cffi.h'%k, 'w') for k in kwargs}
+#
+#
+#
+# generator = PlatformSpecificGenerator(linux = (('VK_USE_PLATFORM_XLIB_KHR', 'VK_USE_PLATFORM_XCB_KHR', 'VK_USE_PLATFORM_WAYLAND_KHR', 'VK_USE_PLATFORM_MIR_KHR'), '\n'),
+#                                     windows = (('VK_USE_PLATFORM_WIN32_KHR',), '\r\n'),
+#                                     android = (('VK_USE_PLATFORM_ANDROID_KHR',), '\n'))
 
-for i in out.split('\n'):
-    j = i.split()
+defined_defs = {'void', 'char', 'float', 'uint8_t', 'uint32_t', 'uint64_t', 'int32_t', 'size_t', 'DWORD', 'HINSTANCE', 'HWND', 'HANDLE'}
 
-    if len(j)==3:
-        _, name, value = j
+external_structs = {'Display', 'xcb_connection_t', 'wl_display', 'wl_surface', 'MirConnection', 'MirSurface', 'ANativeWindow', 'SECURITY_ATTRIBUTES'}
+handle_defs = {'Window': 'uint32_t',
+                'VisualID': 'uint32_t',
+                'xcb_window_t': 'uint32_t',
+                'xcb_visualid_t': 'uint32_t',
+                }
 
-        if name.startswith('VK'):
-            if value in ('(~0U)', '(~0ULL)'):
-                value = '-1'
-            else:
-                t = float_pattern.match(value)
-                if t is not None:
-                    value = t.group(1)
+platform_protects = {'linux': ('VK_USE_PLATFORM_XLIB_KHR', 'VK_USE_PLATFORM_XCB_KHR', 'VK_USE_PLATFORM_WAYLAND_KHR', 'VK_USE_PLATFORM_MIR_KHR'),
+            'win32': ('VK_USE_PLATFORM_WIN32_KHR', ),
+            'android': ('VK_USE_PLATFORM_ANDROID_KHR')}
 
-            macros += [(name, value)]
+platform_defs = {'linux': {'Display', 'Window', 'VisualID', 'xcb_connection_t', 'xcb_window_t', 'xcb_visualid_t', 'wl_display', 'wl_surface', 'MirConnection', 'MirSurface'},
+                'win32': {'SECURITY_ATTRIBUTES'},
+                'android': {'ANativeWindow'}}
+extension_types = {}
+platform_extensions = {k: set() for k in platform_protects}
+general_extensions = set()
 
-header_path = '../pyVulkan/_vulkan.h'
+ext_base = 1000000000
+ext_block_size = 1000
 
-ffi = FFI()
-ffi.cdef(open(header_path).read())
-
-lib = ffi.dlopen('libvulkan.so')
-
-ast = parse_file(header_path, use_cpp=True)
-
-funcs_with_return = [
-    'vkAcquireNextImageKHR',
-    'vkAllocateMemory',
-    'vkCreateBuffer',
-    'vkCreateBufferView',
-    'vkCreateCommandPool',
-    'vkCreateDescriptorPool',
-    'vkCreateDescriptorSetLayout',
-    'vkCreateDevice',
-    'vkCreateDisplayModeKHR',
-    'vkCreateDisplayPlaneSurfaceKHR',
-    'vkCreateEvent',
-    'vkCreateFence',
-    'vkCreateFramebuffer',
-    'vkCreateImage',
-    'vkCreateImageView',
-    'vkCreateInstance',
-    'vkCreatePipelineCache',
-    'vkCreatePipelineLayout',
-    'vkCreateQueryPool',
-    'vkCreateRenderPass',
-    'vkCreateSampler',
-    'vkCreateSemaphore',
-    'vkCreateShaderModule',
-    'vkCreateSwapchainKHR',
-    'vkGetBufferMemoryRequirements',
-    'vkGetDeviceMemoryCommitment',
-    'vkGetDeviceQueue',
-    'vkGetDisplayPlaneCapabilitiesKHR',
-    'vkGetImageMemoryRequirements',
-    'vkGetImageSubresourceLayout',
-    'vkGetPhysicalDeviceFeatures',
-    'vkGetPhysicalDeviceFormatProperties',
-    'vkGetPhysicalDeviceImageFormatProperties',
-    'vkGetPhysicalDeviceMemoryProperties',
-    'vkGetPhysicalDeviceProperties',
-    'vkGetRenderAreaGranularity',
-    'vkMapMemory',
-    'vkGetPhysicalDeviceSurfaceSupportKHR',
-    'vkGetPhysicalDeviceSurfaceCapabilitiesKHR',
-
-    'vkCreateXlibSurfaceKHR',
-    'vkCreateXcbSurfaceKHR',
-    'vkCreateMirSurfaceKHR',
-    'vkCreateAndroidSurfaceKHR',
-    'vkCreateWin32SurfaceKHR',
-
-    'vkCreateDebugReportCallbackEXT']
-
-funcs_with_return_as_list = [
-    'vkAllocateCommandBuffers',
-    'vkAllocateDescriptorSets',
-
-    'vkCreateSharedSwapchainsKHR']
-
-funcs_with_count_return = [
-    'vkGetDisplayModePropertiesKHR',
-    'vkGetDisplayPlaneSupportedDisplaysKHR',
-    'vkGetImageSparseMemoryRequirements',
-    'vkGetPhysicalDeviceDisplayPlanePropertiesKHR',
-    'vkGetPhysicalDeviceDisplayPropertiesKHR',
-    'vkGetPhysicalDeviceQueueFamilyProperties',
-    'vkGetPhysicalDeviceSparseImageFormatProperties',
-    'vkGetPhysicalDeviceSurfaceFormatsKHR',
-    'vkGetPhysicalDeviceSurfacePresentModesKHR',
-    'vkGetSwapchainImagesKHR',
-    'vkEnumerateInstanceExtensionProperties',
-    'vkEnumerateDeviceExtensionProperties',
-    'vkEnumerateInstanceLayerProperties',
-    'vkEnumerateDeviceLayerProperties',
-    'vkEnumerateDeviceExtensionProperties',
-    'vkEnumerateDeviceLayerProperties',
-    'vkEnumerateInstanceExtensionProperties',
-    'vkEnumerateInstanceLayerProperties',
-    'vkEnumeratePhysicalDevices']
-
-
-def genExceptions():
-    enums = [
-        'VK_SUCCESS',
-        'VK_NOT_READY',
-        'VK_TIMEOUT',
-        'VK_EVENT_SET',
-        'VK_EVENT_RESET',
-        'VK_INCOMPLETE',
-        'VK_ERROR_OUT_OF_HOST_MEMORY',
-        'VK_ERROR_OUT_OF_DEVICE_MEMORY',
-        'VK_ERROR_INITIALIZATION_FAILED',
-        'VK_ERROR_DEVICE_LOST',
-        'VK_ERROR_MEMORY_MAP_FAILED',
-        'VK_ERROR_LAYER_NOT_PRESENT',
-        'VK_ERROR_EXTENSION_NOT_PRESENT',
-        'VK_ERROR_FEATURE_NOT_PRESENT',
-        'VK_ERROR_INCOMPATIBLE_DRIVER',
-        'VK_ERROR_TOO_MANY_OBJECTS',
-        'VK_ERROR_FORMAT_NOT_SUPPORTED',
-        'VK_ERROR_FRAGMENTED_POOL',
-        'VK_ERROR_SURFACE_LOST_KHR',
-        'VK_ERROR_NATIVE_WINDOW_IN_USE_KHR',
-        'VK_SUBOPTIMAL_KHR',
-        'VK_ERROR_OUT_OF_DATE_KHR',
-        'VK_ERROR_INCOMPATIBLE_DISPLAY_KHR',
-        'VK_ERROR_VALIDATION_FAILED_EXT',
-        'VK_ERROR_INVALID_SHADER_NV']
-
-    def __(x):
-        def _(x):
-            if x in ('KHR', 'EXT', 'NV', 'AMD'):
-                return x
-            return x[0] + x[1:].lower()
-        return ''.join([_(i) for i in x.split('_')])
-
-    def _(x):
-        if x.startswith('VK_ERROR'):
-            return (x, 'Vk%sError' % __(x[9:]), 'VkError')
-        else:
-            return (x, 'Vk%sException' % __(x[3:]), 'VkException')
-
-    return [_(i) for i in enums]
-
-types = {}
-structs = {}
+typedefs = {}
+struct_unions = {}
+macros = {}
 enums = {}
+funcpointers = {}
 funcs = {}
-exts = {}
+ext_funcs = {}
 
-generator = c_generator.CGenerator()
+structs_default_values = {}
+structs_len_autos = {}
 
-class Visitor(c_ast.NodeVisitor):
 
-    def visit_FileAST(self, node):
+def innertext(tag):
+    return (tag.text or '') + ''.join(innertext(e) for e in tag) + (tag.tail or '')
 
-        named = set()
+for i in tree.findall('types/type'):
+    name = i.get('name')
+    requires = i.get('requires')
+    category = i.get('category')
+    if category in {'struct', 'union'}:
+        members = i.findall('member')
 
-        for i, v in node.children():
-            if isinstance(v.type, c_ast.TypeDecl):
 
-                if v.name.startswith('Vk'):
-                    _type = ffi.typeof(v.name)
-
-                    if _type.kind == 'primitive':
-                        pass
-                    elif  _type.kind == 'struct':
-                        if _type.fields:
-                            structs[v.name] = _type.fields
-                    elif  _type.kind == 'union':
-                        if _type.fields:
-                            structs[v.name] = _type.fields
-                    elif _type.kind == 'enum':
-                        enums[v.name] = _type
-
-            elif isinstance(v.type, c_ast.FuncDecl):
-                if not v.name.startswith('vk'):
-                    continue
-                _type = ffi.typeof('PFN_' + v.name)
-
-                _, funcdecl = v.children()[0]
-
-                inner_args = [i.name for _, i in funcdecl.args.children()]
-                args = zip(inner_args, _type.args)
-
-                if _type.result.cname == 'VkResult':
-                    exception_handler = True
+        def _(elem):
+            if elem is None:
+                return None
+            return elem.text
+        struct_unions[name] = (category, [((j.find('type').text + (j.find('type').tail or '')).strip(), j.find('name').text, _(j.find('enum'))) for j in members])
+        structs_default_values[name] = {j.find('name').text: j.get('values') for j in members if j.get('values')}
+        structs_len_autos[name] = {}
+        member_names = [j.find('name').text for j in members]
+        for j in members:
+            len_ = j.get('len')
+            name_ = j.find('name').text
+            if len_:
+                lens = [i for i in len_.split(',') if i != 'null-terminated']
+                if len(lens) == 1:
+                    if lens[0] in member_names:
+                        assert not (name_ in structs_default_values[name])
+                        structs_default_values[name][name_] = []
+                        if not lens[0] in structs_len_autos[name]:
+                            structs_len_autos[name][lens[0]] = []
+                        structs_len_autos[name][lens[0]].append("len(%s)" % name_)
                 else:
-                    exception_handler = False
-
-                new_vars = {}
-
-                result_length = None
-
-                if _type.result.cname not in ('void', 'VkResult'):
-                    result = ('ret', )
-                else:
-                    if v.name in funcs_with_return:
-                        result = args[-1]
-                        result_length = 1
-                        new_vars[result[0]] = "%s" % result[1].cname
-                        args = args[:-1]
-                    elif v.name in funcs_with_return_as_list:
-                        result = args[-1]
-                        new_vars[result[0]] = "%s" % result[1].cname
-                        args = args[:-1]
-                    elif v.name in funcs_with_count_return:
-                        result = args[-1]
-                        result_length = args[-2][0]
-                        new_vars[args[-2][0]] = "%s" % args[-2][1].cname
-                        args = args[:-2]
-                    else:
-                        result = None
-
-                tmp = (exception_handler, result, result_length, args, inner_args, new_vars)
-                if v.name[-1].isupper():
-                    exts[v.name] = tmp
-                else:
-                    funcs[v.name] = tmp
-                continue
-
-Visitor().visit(ast)
-
-def gensType(x):
-    tmp = ''
-    postfix = ''
-    for i in ('KHR', 'EXT', 'NV', 'AMD'):
-        if x.endswith(i):
-            postfix = '_' + i
-            x = x[:-len(i)]
-
-    for i in x[2:]:
-        if i.isupper():
-            tmp += '_' + i
+                    assert not lens
+    elif category == 'bitmask':
+        typedefs[i.find('name').text] = (i.find('type').text, i.find('name').text)
+    elif category == 'include':
+        pass
+    elif category == 'define':
+        name = i.find('name')
+        if name is None:
+            continue
+        # print>>linux_header, innertext(i).strip()
+    elif category == 'basetype':
+        typedefs[i.find('name').text] = (i.find('type').text, i.find('name').text)
+    elif category == 'handle':
+        type_ = i.find('type').text
+        name = i.find('name').text
+        if type_ == 'VK_DEFINE_HANDLE':
+            typedefs[name] = ('struct %s_T' % name, '*%s' % name)
+            print >> linux_header, "typedef struct %s_T *%s;" % (name, name)
+        elif type_ == 'VK_DEFINE_NON_DISPATCHABLE_HANDLE':
+            # FIXME
+            typedefs[name] = ('uint64_t', name)
+            print >> linux_header, "typedef uint64_t %s;" % name
         else:
-            tmp += i.upper()
-    return 'VK_STRUCTURE_TYPE' + tmp + postfix
+            assert False
+    elif category == 'enum':
+        name = i.get('name')
+        enums[name] = {}
+    elif category == 'funcpointer':
+        funcpointers[i.find('name').text] = ' '.join(innertext(i).split()).replace('( ', '(').strip()
+    elif category is None:
+        requires = i.get('requires')
+        if requires is None:
+            continue
+
+        platform = None
+        if requires in {'X11/Xlib.h', 'mir_toolkit/client_types.h', 'wayland-client.h', 'xcb/xcb.h'}:
+            platform = 'linux'
+        elif requires == 'windows.h':
+            platform = 'win32'
+        elif requires == 'android/native_window.h':
+            platform = 'android'
+        else:
+            assert requires == 'vk_platform'
+
+        if not platform is None:
+            platform_extensions[platform].add(name)
+
+        if name in external_structs:
+            typedefs[name] = ("struct %s" % name, name)
+        elif name in handle_defs:
+            typedefs[name] = (handle_defs[name], name)
+        else:
+            assert name in defined_defs
+    else:
+        assert False
+
+
+def evalEnum(enum, number=0):
+    if 'value' in enum.attrib:
+        value = enum.attrib['value']
+        special_cases = {'1000.0f': '1000.0', '(~0U)': -1, '(~0ULL)': -1}
+        if value in special_cases:
+            return special_cases[value]
+        return value
+    elif 'bitpos' in enum.attrib:
+        return 1 << int(enum.attrib['bitpos'])
+    elif 'extends' in enum.attrib:
+        sign = -1 if enum.get('dir') == '-' else 1
+        return sign * (ext_base + ext_block_size * (number - 1) + int(enum.attrib['offset']))
+    else:
+        assert False
+
+enum_types = {}
+
+for i in tree.findall('enums'):
+    type_ = i.get('type')
+    if type_ in ('enum', 'bitmask'):
+        name = i.attrib['name']
+        enum_types[name] = type_
+        for j in i.findall('enum'):
+            enums[name][j.attrib['name']] = evalEnum(j)
+    else:
+        for j in i.findall('enum'):
+            macros[j.attrib['name']] = evalEnum(j)
+
+for i in tree.findall('extensions/extension'):
+    #TODO:add extension macro
+    if i.attrib['supported'] == 'disabled':
+        continue
+
+    number = int(i.get('number'), 0)
+    require = i.find('require')
+    protect = i.get('protect')
+    type_ = i.attrib['type']
+
+    extension = None
+    if protect:
+        for j in platform_protects:
+            if protect in platform_protects[j]:
+                extension = platform_extensions[j]
+                break
+    else:
+        extension = general_extensions
+
+    assert not extension is None
+
+    extension.update(i.attrib['name'] for i in require.findall('enum'))
+    extension.update(i.attrib['name'] for i in require.findall('type'))
+    extension.update(i.attrib['name'] for i in require.findall('command'))
+    for i in require.findall('command'):
+        extension_types[i.attrib['name']] = type_
+
+    for j in require.findall('enum'):
+        if 'extends' in j.attrib:
+            assert j.attrib['extends'] in enums
+            enums[j.attrib['extends']][j.attrib['name']] = evalEnum(j, number)
+        else:
+            macros[j.attrib['name']] = evalEnum(j)
+
+all_extensions = reduce(lambda x, y: x.union(y), platform_extensions.values()).union(general_extensions)
+
+pattern = re.compile('(.*?)([A-Z]*)$')
+
+
+for i in enums:
+    if not enums[i]:
+        continue
+
+    name = pattern.match(i).group(1)
+    ext = pattern.match(i).group(2)
+    postfix = '_' + ext if ext else ''
+
+
+    def _(name):
+        upper_pos = [j for j, k in enumerate(name) if k.isupper()]
+        return '_'.join(name[begin:end].upper() for begin, end in zip(upper_pos, upper_pos[1:] + [len(name)])) + '_'
+
+    is_bitmask = enum_types[i] == 'bitmask'
+    if is_bitmask:
+        assert name.endswith('FlagBits')
+        prefix = _(name[:-8])
+    else:
+        prefix = _(name)
+        values = [j for _, j in enums[i].items()]
+        enums[i][prefix + 'BEGIN_RANGE' + postfix] = min(values)
+        enums[i][prefix + 'END_RANGE' + postfix] = min(values)
+        enums[i][prefix + 'RANGE_SIZE' + postfix] = min(values)
+
+    enums[i][prefix + 'MAX_ENUM' + postfix] = '0x7FFFFFFF'
+
+def_orders = []
+
+for i in struct_unions:
+    def _(name):
+        if name in def_orders:
+            return
+        __, members = struct_unions[name]
+        for j, __, ___ in members:
+            if j.endswith('*'):
+                j = j[:-1]
+            if j in struct_unions:
+                _(j)
+        def_orders.append(name)
+    _(i)
+
+assert len(struct_unions) == len(def_orders)
+struct_unions = OrderedDict((k, struct_unions[k]) for k in def_orders)
+
+funcs_return_list = set()
+funcs_return_list_len_specified = set()
+funcs_return_single = set()
+funcs_return_nothing = set()
+funcs_return_procaddr = set()
+all_successcodes = set()
+all_errorcodes = set()
+
+funcs_len_autos = {}
+
+for i in tree.findall('commands/command'):
+    type_ = i.find('proto/type').text
+    name = i.find('proto/name').text
+    successcodes = i.get('successcodes')
+    if successcodes:
+        all_successcodes.update(successcodes.split(','))
+    errorcodes = i.get('errorcodes')
+    if errorcodes:
+        all_errorcodes.update(errorcodes.split(','))
+    params = i.findall('param')
+    param_names = [j.find('name').text for j in params]
+
+    value = (type_, name, [innertext(j).strip() for j in params], [(((j.text or '') + j.find('type').text + j.find('type').tail).strip(), j.find('name').text) for j in params])
+    funcs[name] = value
+
+    len_ = params[-1].get('len')
+    if len_:
+        lens = len_.split(',')
+        assert len(lens) == 1
+        if lens[0] == 'null-terminated':
+            assert name in {'vkGetDeviceProcAddr', 'vkGetInstanceProcAddr'}
+            params = params[:-1]
+            funcs_return_procaddr.add(name)
+        elif params[-1].text and params[-1].text.strip() == 'const':
+            funcs_return_nothing.add(name)
+        elif lens[0] in param_names:
+
+            if params[-1].get('optional') != 'true':
+                params = params[:-1]
+                funcs_return_list_len_specified.add(name)
+            else:
+                assert lens[0] == param_names[-2]
+                assert params[-1].find('type').tail.strip() == '*'
+                params = params[:-2]
+                funcs_return_list.add(name)
+        else:
+            assert name in ['vkAllocateDescriptorSets', 'vkAllocateCommandBuffers']
+            params = params[:-1]
+            funcs_return_list_len_specified.add(name)
+    elif (params[-1].text is None or params[-1].text.strip() != 'const'):
+        tail = params[-1].find('type').tail.strip()
+        if tail == '*':
+            if any(name.startswith(i) for i in {'vkGet', 'vkCreate', 'vkAllocate', 'vkAcquire'}):
+                params = params[:-1]
+                funcs_return_single.add(name)
+            else:
+                assert name in {'vkDebugMarkerSetObjectNameEXT', 'vkDebugMarkerSetObjectTagEXT', 'vkCmdDebugMarkerBeginEXT', 'vkCmdDebugMarkerInsertEXT'}
+                funcs_return_nothing.add(name)
+        elif tail == '**':
+            assert name in {'vkMapMemory'}
+            params = params[:-1]
+            funcs_return_single.add(name)
+        else:
+            funcs_return_nothing.add(name)
+    else:
+        funcs_return_nothing.add(name)
+
+    param_names = [j.find('name').text for j in params]
+
+    funcs_len_autos[name] = {}
+    for j in params:
+        len_ = j.get('len')
+        name_ = j.find('name').text
+        if len_:
+            lens = [i for i in len_.split(',') if i != 'null-terminated']
+            if len(lens) == 1:
+                if lens[0] in param_names:
+                    if not lens[0] in funcs_len_autos[name]:
+                        funcs_len_autos[name][lens[0]] = []
+                    funcs_len_autos[name][lens[0]].append("len(%s)" % name_)
+            else:
+                assert not lens
+            # print lens[0]
+
+for i in funcs_len_autos:
+    if funcs_len_autos[i]:
+        pass
+        # print i
+        # assert funcs_return_single.intersection(funcs_return_list_len_specified)
+assert not all_errorcodes.intersection(all_successcodes)
+all_successcodes.remove('VK_SUCCESS')
+
+
+def _(name):
+    chunks = name.split('_')
+    if name in all_extensions:
+        return ''.join(i[0] + i[1:].lower() for i in chunks[:-1]) + chunks[-1]
+    else:
+        return ''.join(i[0] + i[1:].lower() for i in chunks)
+
+exceptions = {i: _(i) for i in all_successcodes}
+errors = {i: _(i) for i in all_errorcodes}
+exception_codes = '{%s}' % ', '.join('%s:%s' % (i, _(i)) for i in all_successcodes.union(all_errorcodes))
+
+constructors = {}
+for i in struct_unions:
+    _, fields = struct_unions[i]
+    wrapper_params = ', '.join([("%s=%s" % (k, structs_default_values[i][k] if k in structs_default_values[i] else None)) for _, k, _ in fields])
+    call_params = ', '.join("%s=%s" % (k, k) for _, k, _ in fields)
+    len_autos = structs_len_autos[i].items()
+
+    constructors[i] = (wrapper_params, call_params, len_autos)
+
+throwable_funcs = set(k for k, v in funcs.items() if v == 'VkResult')
+
+func_wrappers = {}
+for name, (type_, _, _, params) in funcs.items():
+    func_wrappers[name] = (type_, [i for i, _ in params], [i for _, i in params])
+
+platform_vkapi_ptr = {'linux': '', 'win32': '__stdcall ', 'android': ''}
+platform_newline = {'linux': '\n', 'win32': '\r\n', 'android': '\n'}
 
 from jinja2 import *
 import os
 env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file__))), trim_blocks=True)
 
+
+instance_ext_funcs = [i for i in all_extensions if i in funcs and extension_types[i]=='instance']
+device_ext_funcs = [i for i in all_extensions if i in funcs and extension_types[i]=='device']
+
 genvulkan = env.get_template('vulkan.template.py')
 with open('../pyVulkan/_vulkan.py', 'w') as f:
-    f.write(genvulkan.render(structs=structs, field_defaults={'sType': gensType}, macros=macros, enums=enums, exceptions=genExceptions(), funcs=funcs, exts=exts))
+    f.write(genvulkan.render(len=len, **globals()))
+
+genheader = env.get_template('header.template.h')
+for i in platform_extensions:
+    def _(x):
+        return {j: x[j] for j in x if not j in all_extensions or j in platform_extensions[i] or j in general_extensions}
+    with io.open('../pyVulkan/vulkan_%s_cffi.h' % i, 'w', newline=platform_newline[i]) as f:
+        f.write(genheader.render(extensions=all_extensions, macros=macros, typedefs=_(typedefs), enums=_(enums), struct_unions=_(struct_unions), funcs=_(funcs), ext_funcs=_(ext_funcs), funcpointers=_(funcpointers), vkapi_ptr=platform_vkapi_ptr[i]))
+#

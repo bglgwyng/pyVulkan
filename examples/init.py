@@ -71,6 +71,7 @@ def _getInstanceLayers():
                                     "VK_LAYER_LUNARG_device_limits", "VK_LAYER_LUNARG_object_tracker",
                                     "VK_LAYER_LUNARG_image", "VK_LAYER_LUNARG_core_validation",
                                     "VK_LAYER_LUNARG_swapchain", "VK_LAYER_GOOGLE_unique_objects"]]
+
     instance_layer_names = [ffi.string(i.layerName) for _, i in enumerate(vkEnumerateInstanceLayerProperties())]
     return next((i for i in instance_validation_layers_alts if set(i).issubset(instance_layer_names)), [])
 
@@ -78,7 +79,7 @@ instance_layers = _getInstanceLayers()
 extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
 
 
-@PFN_vkDebugReportCallbackEXT
+@vkDebugReportCallbackEXT
 def dbgFunc(*args):
     return True
 
@@ -95,29 +96,29 @@ instance_info = VkInstanceCreateInfo(pApplicationInfo=app_info,
 ptrs = set()
 
 
-@PFN_vkAllocationFunction
+@vkAllocationFunction
 def allocFunc(*args):
     temp = ffi.new("char[]", args[1])
     ptrs.add(temp)
     return temp
 
 
-@PFN_vkReallocationFunction
+@vkReallocationFunction
 def reallocFunc(*args):
     raise NotImplementedError()
 
 
-@PFN_vkFreeFunction
+@vkFreeFunction
 def freeFunc(*args):
     ptrs.remove(args[1])
 
 
-@PFN_vkInternalAllocationNotification
+@vkInternalAllocationNotification
 def internalAllocNotify(*args):
     raise NotImplementedError()
 
 
-@PFN_vkInternalFreeNotification
+@vkInternalFreeNotification
 def internalFreeNotify(*args):
     raise NotImplementedError()
 
@@ -129,7 +130,6 @@ allocation_callbacks = VkAllocationCallbacks(pUserData=None,
                                             pfnInternalFree=internalFreeNotify)
 
 inst = vkCreateInstance(instance_info, allocation_callbacks)
-
 # inst = vkCreateInstance(instance_info, None)
 
 vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')

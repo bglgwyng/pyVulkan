@@ -4,6 +4,15 @@ import collections as _collections
 import weakref as _weakref
 import sys
 
+class PlatformNotSupportedError(Exception):
+	pass
+
+class ProcedureNotFoundError(Exception):
+	pass
+
+class ExtensionNotSupportedError(Exception):
+	pass
+
 ffi = _cffi.FFI()
 
 _weakkey_dict = _weakref.WeakKeyDictionary()
@@ -29,39 +38,24 @@ def _castToPtr3(x, _type):
 	return _castToPtr2(x, _type)
 
 if sys.version_info<(3, 0):
-	ffi.cdef(_pkg_resources.resource_string(__name__, "_vulkan.h"))
+	def _cdef(header):
+		ffi.cdef(_pkg_resources.resource_string(__name__, header))
 	_castToPtr = _castToPtr2
 else:
-	ffi.cdef(_pkg_resources.resource_string(__name__, "_vulkan.h").decode())
+	def _cdef(header):
+		ffi.cdef(_pkg_resources.resource_string(__name__, header).decode())
 	_castToPtr = _castToPtr3
 
 if sys.platform=='win32':
+	_cdef('vulkan_linux_win32.h')
 	_lib = ffi.dlopen('vulkan-1.dll')
-
-	PFN_vkDebugReportCallbackEXT = ffi.callback('VkBool32 __stdcall(VkFlags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *, const char *, void *)')
-	PFN_vkAllocationFunction = ffi.callback('void* __stdcall(void*, size_t, size_t, VkSystemAllocationScope)')
-	PFN_vkReallocationFunction = ffi.callback('void* __stdcall(void*, void*, size_t, size_t, VkSystemAllocationScope)')
-	PFN_vkFreeFunction = ffi.callback('void __stdcall(void*, void*)')
-	PFN_vkInternalAllocationNotification = ffi.callback('void __stdcall(void*, size_t, VkInternalAllocationType, VkSystemAllocationScope)')
-	PFN_vkInternalFreeNotification = PFN_vkInternalAllocationNotification
-
-else:
+elif sys.platform.startswith('linux'):
+	_cdef('vulkan_linux_cffi.h')
 	_lib = ffi.dlopen('libvulkan.so')
+else:
+	raise PlatformNotSupportedError()
 
-	PFN_vkDebugReportCallbackEXT = ffi.callback('VkBool32(VkFlags, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, const char *, const char *, void *)')
-	PFN_vkAllocationFunction = ffi.callback('void*(void*, size_t, size_t, VkSystemAllocationScope)')
-	PFN_vkReallocationFunction = ffi.callback('void*(void*, void*, size_t, size_t, VkSystemAllocationScope)')
-	PFN_vkFreeFunction = ffi.callback('void(void*, void*)')
-	PFN_vkInternalAllocationNotification = ffi.callback('void(void*, size_t, VkInternalAllocationType, VkSystemAllocationScope)')
-	PFN_vkInternalFreeNotification = PFN_vkInternalAllocationNotification
-
-{% for i in enums %}
-{% for k, v in enums[i].relements.items() %}{{k}} = {{v}}
-{% endfor %}
-
-{% endfor %}
-
-def _newStruct(ctype, **kwargs):
+def _new(ctype, **kwargs):
 	_type = ffi.typeof(ctype)
 
 	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
@@ -73,33 +67,36 @@ def _newStruct(ctype, **kwargs):
 
 	return ret
 
-{% for i, fields in structs.items() %}
-
-def {{i}}({% for j, _ in fields %}{{j}} = {% if j in field_defaults %}{{field_defaults[j](i)}}{% else %}None{% endif %}, {% endfor %}):
-	return _newStruct('{{i}}', {% for j, _ in fields %}{{j}} = {{j}}, {% endfor %})
-{% endfor %}
-
 class VkException(Exception):
 	pass
 
 class VkError(Exception):
 	pass
 
-{% for _, i ,j in exceptions %}
-class {{i}}({{j}}):
+{% for i in exceptions %}
+class {{i}}(VkException):
 	pass
-
 {% endfor %}
 
-def _raiseException(ret):
-	exceptions = {
-	{% for i, j, _ in exceptions %}
-		{{i}}:{{j}},
-	{% endfor %}
-	}
+{% for i in errors %}
+class {{i}}(VkError):
+	pass
+{% endfor %}
 
-	if ret!=0:
-		raise exceptions[ret]
+def _raiseException(result):
+	exception_codes = {
+{% for i, j in exceptions.items() %}
+		{{i}}:{{j}},
+{% endfor %}
+{% for i, j in errors.items() %}
+{% if loop.last %}
+		{{i}}:{{j}}
+{% else %}
+		{{i}}:{{j}},
+{% endif %}
+{% endfor %}
+	}
+	raise exception_codes[result]
 
 def _callApi(fn, *args):
 	def _(x, _type):
@@ -111,78 +108,166 @@ def _callApi(fn, *args):
 
 	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
 
+def vkGetInstanceProcAddr(instance, pName):
+	fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
+	if fn==ffi.NULL:
+		raise ProcedureNotFoundError()
+	if not pName in _instance_ext_funcs:
+		raise ExtensionNotSupportedError()
+	return _instance_ext_funcs[pName](fn)
 
-{% for i, (exception_handler, result, result_length, args, inner_args, new_vars) in funcs.items() %}
-if hasattr(_lib, '{{i}}'):
-	def {{i}}({% for j, k in args %}{{j}}, {% endfor %}):
-{% for i in new_vars %}
-		{{i}} = ffi.new('{{new_vars[i]}}')
-{% endfor %}
-{% if result_length and result_length!=1 %}
-		ret = _callApi(_lib.{{i}}, {% for j in inner_args[:-1] %}{{j}}, {% endfor %}ffi.NULL)
-{% if exception_handler %}
-		_raiseException(ret)
-{% endif %}
-		{{result[0]}} = ffi.new('{{result[1].item.cname}}[]', {{result_length}}[0])
-{% endif %}
-		ret = _callApi(_lib.{{i}}, {% for j in inner_args %}{{j}}, {% endfor %})
-{% if exception_handler %}
-		_raiseException(ret)
-{% endif %}
-{% if result %}
-		return {{result[0]}}{% if result_length==1 %}[0]{% endif %}{% endif %}
-
-
-{% endfor %}
-
-{% for i, (exception_handler, result, result_length, args, inner_args, new_vars) in exts.items() %}
-def _{{i}}Wrapper(fn):
-	fn = ffi.cast('PFN_{{i}}', fn)
-	def {{i}}({% for j, k in args %}{{j}}, {% endfor %}):
-{% for i in new_vars %}
-		{{i}} = ffi.new('{{new_vars[i]}}')
-{% endfor %}
-{% if result_length and result_length!=1 %}
-		ret = _callApi(fn, {% for j in inner_args[:-1] %}{{j}}, {% endfor %}ffi.NULL)
-{% if exception_handler %}
-		_raiseException(ret)
-{% endif %}
-		{{result[0]}} = ffi.new('{{result[1].item.cname}}[]', {{result_length}}[0])
-{% endif %}
-		ret = _callApi(fn, {% for j in inner_args %}{{j}}, {% endfor %})
-{% if exception_handler %}
-		_raiseException(ret)
-{% endif %}
-{% if result %}
-		return {{result[0]}}{% if result_length==1 %}[0]{% endif %}
-
-{% endif %}
-	return {{i}}
-
-{% endfor %}
-
-def vkGetInstanceProcAddr(instance, pName, ):
-
-	ret = _callApi(_lib.vkGetInstanceProcAddr, instance, pName, )
-	return globals()["_%sWrapper"%pName](ret)
-
-def vkGetDeviceProcAddr(device, pName, ):
-
-	ret = _callApi(_lib.vkGetDeviceProcAddr, device, pName, )
-	return globals()["_%sWrapper"%pName](ret)
-
-{% for name, value in macros %}
-{{name}} = {{value}}
-{% endfor %}
+def vkGetDeviceProcAddr(device, pName):
+	fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
+	if fn==ffi.NULL:
+		raise ProcedureNotFoundError()
+	if not pName in _device_ext_funcs:
+		raise ExtensionNotSupportedError()
+	return _device_ext_funcs[pName](fn)
 
 def VK_MAKE_VERSION(major, minor, patch):
 	return (((major) << 22) | ((minor) << 12) | (patch))
 
-def VK_VERSION_PATCH(version):
-	return version&0xfff
+def VK_VERSION_MAJOR(version):
+	return version>>22
 
 def VK_VERSION_MINOR(version):
 	return (version>>12)&0x3ff
 
-def VK_VERSION_MAJOR(version):
-	return version>>22
+def VK_VERSION_PATCH(version):
+	return version&0xfff
+
+VK_API_VERSION = VK_MAKE_VERSION(1, 0, 0)
+VK_API_VERSION_1_0 = VK_MAKE_VERSION(1, 0, 0)
+
+VK_NULL_HANDLE = 0
+
+{% for _, i in enums.items() %}
+{% for name, value in i.items() %}
+{{name}} = {{value}}
+{% endfor %}
+{% endfor %}
+
+{% for i, _ in funcpointers.items() %}
+{{i[4:]}} = ffi.callback('{{i}}')
+{% endfor %}
+
+{% for i, (wrapper_params, call_params, len_autos) in constructors.items() %}
+
+def {{i}}({{wrapper_params}}):
+{% for j, k in len_autos %}
+	if {{j}} is None:
+{% if len(k)>1 %}
+		assert {{'=='.join(k)}}
+{% endif %}
+		{{j}} = {{k[0]}}
+{% endfor %}
+	return _new('{{i}}', {{call_params}})
+{% endfor %}
+
+{% macro def_func_return_single(i, fn) %}
+{% set passed_params = func_wrappers[i][2][:-1] %}
+{% set ptr_param = func_wrappers[i][2][-1] %}
+def {{i}}({{', '.join(passed_params)}}):
+	{{ptr_param}} = ffi.new('{{func_wrappers[i][1][-1]}}')
+{% if i in throwable_funcs %}
+	result = _callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
+	if result!=VK_SUCCESS:
+		raise _raiseException[result]
+{% else %}
+	_callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
+{% endif %}
+	return {{func_wrappers[i][2][-1]}}[0]
+{% endmacro %}
+
+{% macro def_func_return_list(i, fn) %}
+{% set passed_params = func_wrappers[i][2][:-2] %}
+{% set len_param = func_wrappers[i][2][-2] %}
+{% set ptr_param = func_wrappers[i][2][-1] %}
+def {{i}}({{', '.join(passed_params)}}):
+	{{len_param}} = ffi.new('{{func_wrappers[i][1][-2]}}')
+{% if i in throwable_funcs %}
+	result = _callApi({{fn}}, {{', '.join(func_wrappers[i][2][:-2]+[len_param, 'ffi.NULL'])}})
+	if result!=VK_SUCCESS:
+		raise _raiseException[result]
+{% else %}
+	_callApi({{fn}}, {{', '.join(func_wrappers[i][2][:-2]+[len_param, 'ffi.NULL'])}})
+{% endif %}
+	{{ptr_param}} = ffi.new('{{func_wrappers[i][1][-1][:-1] if func_wrappers[i][1][-1][-1]=='*'}}[]', {{len_param}}[0])
+{% if i in throwable_funcs %}
+	result = _callApi({{fn}}, {{', '.join(passed_params+[len_param, ptr_param])}})
+	if result!=VK_SUCCESS:
+		raise _raiseException[result]
+{% else %}
+	_callApi({{fn}}, {{', '.join(passed_params+[len_param, ptr_param])}})
+{% endif %}
+	return {{func_wrappers[i][2][-1]}}
+{% endmacro %}
+
+{% macro def_func_return_list_len_specified(i, fn) %}
+{% set passed_params = func_wrappers[i][2][:-1] %}
+{% set ptr_param = func_wrappers[i][2][-1] %}
+def {{i}}({{', '.join(passed_params)}}):
+	{{ptr_param}} = ffi.new('{{func_wrappers[i][1][-1]}}')
+{% if i in throwable_funcs %}
+	result = _callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
+	if result!=VK_SUCCESS:
+		raise _raiseException[result]
+{% else %}
+	_callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
+{% endif %}
+	return {{func_wrappers[i][2][-1]}}
+{% endmacro %}
+
+
+{% macro def_func_return_nothing(i, fn) %}
+{% set passed_params = func_wrappers[i][2] %}
+def {{i}}({{', '.join(passed_params)}}):
+{% if i in throwable_funcs %}
+	result = _callApi({{fn}}, {{', '.join(passed_params)}})
+	if result!=VK_SUCCESS:
+		raise _raiseException[result]
+{% else %}
+	_callApi(_lib.{{i}}, {{', '.join(passed_params)}})
+{% endif %}
+{% endmacro %}
+
+{% macro def_funcs(funcs, def_macro) %}
+{% for i in funcs %}
+{% if i in all_extensions %}
+def _wrap_{{i}}(fn):
+{{def_macro(i, 'fn')|indent(4, True)}}
+    return {{i}}
+{% else %}
+{{def_macro(i, '_lib.'+i)}}
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+{{ def_funcs(funcs_return_single, def_func_return_single)}}
+{{ def_funcs(funcs_return_list, def_func_return_list)}}
+{{ def_funcs(funcs_return_list_len_specified, def_func_return_list_len_specified)}}
+{{ def_funcs(funcs_return_nothing, def_func_return_nothing)}}
+
+_instance_ext_funcs = {
+{% for i in instance_ext_funcs %}
+{% if loop.last %}
+	'{{i}}':_wrap_{{i}}
+{% else %}
+	'{{i}}':_wrap_{{i}},
+{% endif %}
+{% endfor %}
+    }
+
+_device_ext_funcs = {
+{% for i in device_ext_funcs %}
+{% if loop.last %}
+	'{{i}}':_wrap_{{i}}
+{% else %}
+	'{{i}}':_wrap_{{i}},
+{% endif %}
+{% endfor %}
+    }
+
+{% for name, value in macros.items() %}
+{{name}} = {{value}}
+{% endfor %}
