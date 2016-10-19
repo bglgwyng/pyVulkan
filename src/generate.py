@@ -49,6 +49,8 @@ for i in tree.findall('types/type'):
     category = i.get('category')
     if category in {'struct', 'union'}:
         members = i.findall('member')
+
+
         def _(elem):
             tail = elem.find('name').tail
             if tail:
@@ -161,7 +163,7 @@ pattern = re.compile('(.*?)([A-Z]*)$')
 enums_ranges = {}
 
 for i in enums:
-    if i!='VkCompositeAlphaFlagBitsKHR':
+    if i != 'VkCompositeAlphaFlagBitsKHR':
         continue
     if not enums[i]:
         continue
@@ -169,6 +171,7 @@ for i in enums:
     name = pattern.match(i).group(1)
     ext = pattern.match(i).group(2)
     postfix = '_' + ext if ext else ''
+
 
     def _(name):
         upper_pos = [j for j, k in enumerate(name) if k.isupper()]
@@ -178,14 +181,14 @@ for i in enums:
     if is_bitmask:
         assert name.endswith('FlagBits')
         prefix = _(name[:-8])
-        enums_ranges[i] = {prefix+'FLAG_BITS_MAX_ENUM'+postfix:0x7FFFFFFF}
+        enums_ranges[i] = {prefix + 'FLAG_BITS_MAX_ENUM' + postfix: 0x7FFFFFFF}
     else:
         prefix = _(name)
         values = [int(j) for _, j in enums[i].items()]
-        enums_ranges[i] = {prefix + 'BEGIN_RANGE' + postfix:min(values),
-                        prefix + 'END_RANGE' + postfix:max(values),
-                        prefix + 'RANGE_SIZE' + postfix:max(values)-min(values)+1,
-                        prefix + 'MAX_ENUM' + postfix:0x7FFFFFFF}
+        enums_ranges[i] = {prefix + 'BEGIN_RANGE' + postfix: min(values),
+                        prefix + 'END_RANGE' + postfix: max(values),
+                        prefix + 'RANGE_SIZE' + postfix: max(values) - min(values) + 1,
+                        prefix + 'MAX_ENUM' + postfix: 0x7FFFFFFF}
 
 
 for i in tree.findall('extensions/extension'):
@@ -209,11 +212,13 @@ for i in tree.findall('extensions/extension'):
 
     assert not extension is None
 
-    extension.update(i.attrib['name'] for i in require.findall('enum'))
-    extension.update(i.attrib['name'] for i in require.findall('type'))
-    extension.update(i.attrib['name'] for i in require.findall('command'))
-    for i in require.findall('command'):
-        extension_types[i.attrib['name']] = type_
+    macros[i.attrib['name']] = 1
+
+    extension.update(j.attrib['name'] for j in require.findall('enum'))
+    extension.update(j.attrib['name'] for j in require.findall('type'))
+    extension.update(j.attrib['name'] for j in require.findall('command'))
+    for j in require.findall('command'):
+        extension_types[j.attrib['name']] = type_
 
     for j in require.findall('enum'):
         if 'extends' in j.attrib:
@@ -332,9 +337,9 @@ for i in tree.findall('commands/command'):
 for i in funcs_len_autos:
     if funcs_len_autos[i]:
         pass
-        # print i
-        # assert funcs_return_single.intersection(funcs_return_list_len_specified)
+
 assert not all_errorcodes.intersection(all_successcodes)
+all_errorcodes = set(i for i in enums['VkResult'] if i not in all_successcodes)
 all_successcodes.remove('VK_SUCCESS')
 
 
@@ -358,7 +363,7 @@ for i in struct_unions:
 
     constructors[i] = (wrapper_params, call_params, len_autos)
 
-throwable_funcs = set(k for k, v in funcs.items() if v == 'VkResult')
+throwable_funcs = set(k for k, (v, _, _, _) in funcs.items() if v == 'VkResult')
 
 func_wrappers = {}
 for name, (type_, _, _, params) in funcs.items():
@@ -371,9 +376,8 @@ from jinja2 import *
 import os
 env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file__))), trim_blocks=True)
 
-
-instance_ext_funcs = [i for i in all_extensions if i in funcs and extension_types[i]=='instance']
-device_ext_funcs = [i for i in all_extensions if i in funcs and extension_types[i]=='device']
+instance_ext_funcs = [i for i in all_extensions if i in funcs and extension_types[i] == 'instance']
+device_ext_funcs = [i for i in all_extensions if i in funcs and extension_types[i] == 'device']
 
 genvulkan = env.get_template('vulkan.template.py')
 with open('../pyVulkan/_vulkan.py', 'w') as f:

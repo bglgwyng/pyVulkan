@@ -26,7 +26,7 @@ def _castToPtr2(x, _type):
 		if _type.item.kind=='pointer':
 			ptrs = [_castToPtr(i, _type.item) for i in x]
 			ret = ffi.new(_type.item.cname+'[]', [i for i, _ in ptrs])
-			_weakkey_dict[ret] = tuple(i for _, i in ptrs)
+			_weakkey_dict[ret] = tuple(i for _, i in ptrs if i!=ffi.NULL)
 		else:
 			ret = ffi.new(_type.item.cname+'[]', x)
 		return ret, ret
@@ -55,74 +55,11 @@ elif sys.platform.startswith('linux'):
 else:
 	raise PlatformNotSupportedError()
 
-def _new(ctype, **kwargs):
-	_type = ffi.typeof(ctype)
-	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
-	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
-	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
-	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values())
-	print (ffi.sizeof(ctype))
-	return ret
-
-class VkException(Exception):
-	pass
-
-class VkError(Exception):
-	pass
-
-{% for i in exceptions %}
-class {{i}}(VkException):
-	pass
+{% for _, i in enums.items() %}
+{% for name, value in i.items() %}
+{{name}} = {{value}}
 {% endfor %}
-
-{% for i in errors %}
-class {{i}}(VkError):
-	pass
 {% endfor %}
-
-def _raiseException(result):
-	exception_codes = {
-{% for i, j in exceptions.items() %}
-		{{i}}:{{j}},
-{% endfor %}
-{% for i, j in errors.items() %}
-{% if loop.last %}
-		{{i}}:{{j}}
-{% else %}
-		{{i}}:{{j}},
-{% endif %}
-{% endfor %}
-	}
-	raise exception_codes[result]
-
-def _callApi(fn, *args):
-	def _(x, _type):
-		if x is None:
-			return ffi.NULL
-		if _type.kind=='pointer':
-			ptr, _ = _castToPtr(x, _type)
-			return ptr
-		return x
-
-	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
-
-def vkGetInstanceProcAddr(instance, pName):
-	fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
-	if fn==ffi.NULL:
-		raise ProcedureNotFoundError()
-	if not pName in _instance_ext_funcs:
-		raise ExtensionNotSupportedError()
-	fn = ffi.cast('PFN_'+pName, fn)
-	return _instance_ext_funcs[pName](fn)
-
-def vkGetDeviceProcAddr(device, pName):
-	fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
-	if fn==ffi.NULL:
-		raise ProcedureNotFoundError()
-	if not pName in _device_ext_funcs:
-		raise ExtensionNotSupportedError()
-	fn = ffi.cast('PFN_'+pName, fn)
-	return _device_ext_funcs[pName](fn)
 
 def VK_MAKE_VERSION(major, minor, patch):
 	return (((major) << 22) | ((minor) << 12) | (patch))
@@ -141,15 +78,50 @@ VK_API_VERSION_1_0 = VK_MAKE_VERSION(1, 0, 0)
 
 VK_NULL_HANDLE = 0
 
-{% for _, i in enums.items() %}
-{% for name, value in i.items() %}
+{% for name, value in macros.items() %}
 {{name}} = {{value}}
 {% endfor %}
+
+class VkException(Exception):
+	pass
+
+class VkError(Exception):
+	pass
+
+{% for i in exceptions.values() %}
+class {{i}}(VkException):
+	pass
 {% endfor %}
+
+{% for i in errors.values() %}
+class {{i}}(VkError):
+	pass
+{% endfor %}
+
+_exception_codes = {
+{% for i, j in exceptions.items() %}
+	{{i}}:{{j}},
+{% endfor %}
+{% for i, j in errors.items() %}
+{% if loop.last %}
+	{{i}}:{{j}}
+{% else %}
+	{{i}}:{{j}},
+{% endif %}
+{% endfor %}
+}
 
 {% for i, _ in funcpointers.items() %}
 {{i[4:]}} = ffi.callback('{{i}}')
 {% endfor %}
+
+def _new(ctype, **kwargs):
+	_type = ffi.typeof(ctype)
+	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
+	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
+	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
+	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values() if v!=ffi.NULL)
+	return ret
 
 {% for i, (wrapper_params, call_params, len_autos) in constructors.items() %}
 
@@ -164,6 +136,17 @@ def {{i}}({{wrapper_params}}):
 	return _new('{{i}}', {{call_params}})
 {% endfor %}
 
+def _callApi(fn, *args):
+	def _(x, _type):
+		if x is None:
+			return ffi.NULL
+		if _type.kind=='pointer':
+			ptr, _ = _castToPtr(x, _type)
+			return ptr
+		return x
+
+	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
+
 {% macro def_func_return_single(i, fn) %}
 {% set passed_params = func_wrappers[i][2][:-1] %}
 {% set ptr_param = func_wrappers[i][2][-1] %}
@@ -172,7 +155,7 @@ def {{i}}({{', '.join(passed_params)}}):
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
 	if result!=VK_SUCCESS:
-		raise _raiseException[result]
+		raise _exception_codes[result]
 {% else %}
 	_callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
 {% endif %}
@@ -188,7 +171,7 @@ def {{i}}({{', '.join(passed_params)}}):
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(func_wrappers[i][2][:-2]+[len_param, 'ffi.NULL'])}})
 	if result!=VK_SUCCESS:
-		raise _raiseException[result]
+		raise _exception_codes[result]
 {% else %}
 	_callApi({{fn}}, {{', '.join(func_wrappers[i][2][:-2]+[len_param, 'ffi.NULL'])}})
 {% endif %}
@@ -196,7 +179,7 @@ def {{i}}({{', '.join(passed_params)}}):
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params+[len_param, ptr_param])}})
 	if result!=VK_SUCCESS:
-		raise _raiseException[result]
+		raise _exception_codes[result]
 {% else %}
 	_callApi({{fn}}, {{', '.join(passed_params+[len_param, ptr_param])}})
 {% endif %}
@@ -211,13 +194,12 @@ def {{i}}({{', '.join(passed_params)}}):
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
 	if result!=VK_SUCCESS:
-		raise _raiseException[result]
+		raise _exception_codes[result]
 {% else %}
 	_callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
 {% endif %}
 	return {{func_wrappers[i][2][-1]}}
 {% endmacro %}
-
 
 {% macro def_func_return_nothing(i, fn) %}
 {% set passed_params = func_wrappers[i][2] %}
@@ -225,7 +207,7 @@ def {{i}}({{', '.join(passed_params)}}):
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params)}})
 	if result!=VK_SUCCESS:
-		raise _raiseException[result]
+		raise _exception_codes[result]
 {% else %}
 	_callApi({{fn}}, {{', '.join(passed_params)}})
 {% endif %}
@@ -268,6 +250,20 @@ _device_ext_funcs = {
 {% endfor %}
     }
 
-{% for name, value in macros.items() %}
-{{name}} = {{value}}
-{% endfor %}
+def vkGetInstanceProcAddr(instance, pName):
+	fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
+	if fn==ffi.NULL:
+		raise ProcedureNotFoundError()
+	if not pName in _instance_ext_funcs:
+		raise ExtensionNotSupportedError()
+	fn = ffi.cast('PFN_'+pName, fn)
+	return _instance_ext_funcs[pName](fn)
+
+def vkGetDeviceProcAddr(device, pName):
+	fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
+	if fn==ffi.NULL:
+		raise ProcedureNotFoundError()
+	if not pName in _device_ext_funcs:
+		raise ExtensionNotSupportedError()
+	fn = ffi.cast('PFN_'+pName, fn)
+	return _device_ext_funcs[pName](fn)

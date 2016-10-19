@@ -1,6 +1,8 @@
 from pyVulkan import *
 import sdl2
 import ctypes
+import sys
+from pyVulkan._vulkan import _lib
 
 app_name = 'Initialization demo'
 
@@ -18,7 +20,6 @@ def memory_type_from_properties(typeBits, requirements_mask):
             if (v.propertyFlags & requirements_mask) == requirements_mask:
                 return i
         typeBits >>= 1
-
     assert False
 
 
@@ -56,13 +57,20 @@ def set_image_layout(image, aspect_mask, old_image_layout, new_image_layout, src
     dest_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
 
     vkCmdPipelineBarrier(setup_cmd, src_stages, dest_stages, 0, 0, None, 0, None, 1, [image_memory_barrier])
-#initialize
 
+#initialize
 app_info = VkApplicationInfo(pApplicationName=app_name,
                             applicationVersion=0,
                             pEngineName=app_name,
                             engineVersion=0,
                             apiVersion=VK_MAKE_VERSION(1, 0, 0))
+
+
+def string(char_ptr):
+    if sys.version_info < (3, 0):
+        return ffi.string(char_ptr)
+    else:
+        return ffi.string(char_ptr).decode('ascii')
 
 
 def _getInstanceLayers():
@@ -72,15 +80,19 @@ def _getInstanceLayers():
                                     "VK_LAYER_LUNARG_image", "VK_LAYER_LUNARG_core_validation",
                                     "VK_LAYER_LUNARG_swapchain", "VK_LAYER_GOOGLE_unique_objects"]]
 
-    instance_layer_names = [ffi.string(i.layerName) for _, i in enumerate(vkEnumerateInstanceLayerProperties())]
+    instance_layer_names = [string(i.layerName) for _, i in enumerate(vkEnumerateInstanceLayerProperties())]
     return next((i for i in instance_validation_layers_alts if set(i).issubset(instance_layer_names)), [])
 
+# instance_layers = []
 instance_layers = _getInstanceLayers()
-extensions = [ffi.string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
+
+extensions = [string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
 
 
 @vkDebugReportCallbackEXT
 def dbgFunc(*args):
+    # print (string(args[5]))
+    # print (string(args[6]))
     return True
 
 debug_info = VkDebugReportCallbackCreateInfoEXT(pfnCallback=dbgFunc,
@@ -91,7 +103,7 @@ instance_info = VkInstanceCreateInfo(pApplicationInfo=app_info,
                                     ppEnabledLayerNames=instance_layers,
                                     enabledExtensionCount=len(extensions),
                                     ppEnabledExtensionNames=extensions,
-                                    pNext=ffi.addressof(debug_info))
+                                    pNext=debug_info)
 
 ptrs = set()
 
@@ -110,7 +122,8 @@ def reallocFunc(*args):
 
 @vkFreeFunction
 def freeFunc(*args):
-    ptrs.remove(args[1])
+    if args[1] != ffi.NULL:
+        ptrs.remove(args[1])
 
 
 @vkInternalAllocationNotification
@@ -130,19 +143,14 @@ allocation_callbacks = VkAllocationCallbacks(pUserData=None,
                                             pfnInternalFree=internalFreeNotify)
 
 inst = vkCreateInstance(instance_info, allocation_callbacks)
-# inst = vkCreateInstance(instance_info, None)
 
 vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')
+vkDestroySurfaceKHR = vkGetInstanceProcAddr(inst, 'vkDestroySurfaceKHR')
 vkGetPhysicalDeviceSurfaceSupportKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceSupportKHR')
 vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceFormatsKHR')
 vkGetPhysicalDeviceSurfaceCapabilitiesKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceCapabilitiesKHR')
 vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfacePresentModesKHR')
-vkCreateSwapchainKHR = vkGetInstanceProcAddr(inst, 'vkCreateSwapchainKHR')
-vkGetSwapchainImagesKHR = vkGetInstanceProcAddr(inst, 'vkGetSwapchainImagesKHR')
-vkAcquireNextImageKHR = vkGetInstanceProcAddr(inst, 'vkAcquireNextImageKHR')
-vkQueuePresentKHR = vkGetInstanceProcAddr(inst, 'vkQueuePresentKHR')
-vkDestroySwapchainKHR = vkGetInstanceProcAddr(inst, 'vkDestroySwapchainKHR')
-vkDestroySurfaceKHR = vkGetInstanceProcAddr(inst, 'vkDestroySurfaceKHR')
+
 vkCreateDebugReportCallbackEXT = vkGetInstanceProcAddr(inst, 'vkCreateDebugReportCallbackEXT')
 vkDestroyDebugReportCallbackEXT = vkGetInstanceProcAddr(inst, 'vkDestroyDebugReportCallbackEXT')
 
@@ -156,7 +164,6 @@ queue_props = vkGetPhysicalDeviceQueueFamilyProperties(gpu)
 features = vkGetPhysicalDeviceFeatures(gpu)
 
 ##init sdl
-
 if sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO) != 0:
     print(sdl2.SDL_GetError())
 
@@ -169,9 +176,10 @@ wm_info = sdl2.SDL_SysWMinfo()
 
 sdl2.SDL_VERSION(wm_info.version)
 sdl2.SDL_GetWindowWMInfo(window, ctypes.byref(wm_info))
-assert wm_info.subsystem == sdl2.SDL_SYSWM_X11
-
-surface = vkCreateXlibSurfaceKHR(inst, VkXlibSurfaceCreateInfoKHR(dpy=wm_info.info.x11.display, window=wm_info.info.x11.window), None)
+if wm_info.subsystem == sdl2.SDL_SYSWM_X11:
+    surface = vkCreateXlibSurfaceKHR(inst, VkXlibSurfaceCreateInfoKHR(dpy=wm_info.info.x11.display, window=wm_info.info.x11.window), None)
+else:
+    assert False
 
 support_presents = [vkGetPhysicalDeviceSurfaceSupportKHR(gpu, i, surface) for i, _ in enumerate(queue_props)]
 
@@ -195,22 +203,25 @@ if not present_queue_node_index:
 
 assert (graphics_queue_node_index is not None) and (present_queue_node_index is not None)
 assert graphics_queue_node_index == present_queue_node_index
-
 queue_info = VkDeviceQueueCreateInfo(queueFamilyIndex=graphics_queue_node_index,
                                     queueCount=1,
                                     pQueuePriorities=[0.0])
 
-device_layers = [i for i in [ffi.string(i.layerName) for i in vkEnumerateDeviceLayerProperties(gpu)] if i in instance_layers]
-extensions = [ffi.string(i.extensionName) for i in vkEnumerateDeviceExtensionProperties(gpu, None)]
+extensions = [string(i.extensionName) for i in vkEnumerateDeviceExtensionProperties(gpu, None)]
+
 device_info = VkDeviceCreateInfo(queueCreateInfoCount=1,
                                 pQueueCreateInfos=queue_info,
-                                pEnabledFeatures=VkPhysicalDeviceFeatures(shaderClipDistance=VK_TRUE),
-                                enabledLayerCount=len(device_layers),
-                                ppEnabledLayerNames=device_layers,
-                                enabledExtensionCount=len(extensions),
+                                pEnabledFeatures=VkPhysicalDeviceFeatures(),
+                                ppEnabledLayerNames=[],
                                 ppEnabledExtensionNames=extensions)
 
 device = vkCreateDevice(gpu, device_info, None)
+
+vkCreateSwapchainKHR = vkGetDeviceProcAddr(device, 'vkCreateSwapchainKHR')
+vkGetSwapchainImagesKHR = vkGetDeviceProcAddr(device, 'vkGetSwapchainImagesKHR')
+vkAcquireNextImageKHR = vkGetDeviceProcAddr(device, 'vkAcquireNextImageKHR')
+vkQueuePresentKHR = vkGetDeviceProcAddr(device, 'vkQueuePresentKHR')
+vkDestroySwapchainKHR = vkGetDeviceProcAddr(device, 'vkDestroySwapchainKHR')
 
 queue = vkGetDeviceQueue(device, graphics_queue_node_index, 0)
 
@@ -245,7 +256,7 @@ else:
     width = surface_capabilities.currentExtent.width
     height = surface_capabilities.currentExtent.height
 
-swapchain_present_mode = VK_PRESENT_MODE_FIFO_KHR
+swapchain_present_mode = VK_PRESENT_MODE_MAILBOX_KHR
 
 desiredNumberOfSwapchainImages = surface_capabilities.minImageCount + 1
 if (surface_capabilities.maxImageCount > 0) and (desiredNumberOfSwapchainImages > surface_capabilities.maxImageCount):
@@ -403,7 +414,7 @@ def draw():
 
     current_buffer = vkAcquireNextImageKHR(device, swapchain, ffi.cast('uint64_t', -1),
                                       present_complete_semaphore,
-                                      None)
+                                      0)
 
     set_image_layout(swapchain_images[current_buffer], VK_IMAGE_ASPECT_COLOR_BIT,
                           VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
@@ -503,7 +514,7 @@ vkDestroyDevice(device, None)
 vkDestroyDebugReportCallbackEXT(inst, debug_callback, None)
 
 vkDestroySurfaceKHR(inst, surface, None)
-vkDestroyInstance(inst, None)
+vkDestroyInstance(inst, allocation_callbacks)
 
 sdl2.SDL_DestroyWindow(window)
 sdl2.SDL_Quit()

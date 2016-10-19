@@ -26,7 +26,7 @@ def _castToPtr2(x, _type):
 		if _type.item.kind=='pointer':
 			ptrs = [_castToPtr(i, _type.item) for i in x]
 			ret = ffi.new(_type.item.cname+'[]', [i for i, _ in ptrs])
-			_weakkey_dict[ret] = tuple(i for _, i in ptrs)
+			_weakkey_dict[ret] = tuple(i for _, i in ptrs if i!=ffi.NULL)
 		else:
 			ret = ffi.new(_type.item.cname+'[]', x)
 		return ret, ret
@@ -54,143 +54,6 @@ elif sys.platform.startswith('linux'):
 	_lib = ffi.dlopen('libvulkan.so')
 else:
 	raise PlatformNotSupportedError()
-
-def _new(ctype, **kwargs):
-	_type = ffi.typeof(ctype)
-	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
-	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
-	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
-	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values())
-	print (ffi.sizeof(ctype))
-	return ret
-
-class VkException(Exception):
-	pass
-
-class VkError(Exception):
-	pass
-
-class VK_INCOMPLETE(VkException):
-	pass
-class VK_NOT_READY(VkException):
-	pass
-class VK_TIMEOUT(VkException):
-	pass
-class VK_EVENT_SET(VkException):
-	pass
-class VK_EVENT_RESET(VkException):
-	pass
-class VK_SUBOPTIMAL_KHR(VkException):
-	pass
-
-class VK_ERROR_OUT_OF_HOST_MEMORY(VkError):
-	pass
-class VK_ERROR_OUT_OF_DEVICE_MEMORY(VkError):
-	pass
-class VK_ERROR_INITIALIZATION_FAILED(VkError):
-	pass
-class VK_ERROR_LAYER_NOT_PRESENT(VkError):
-	pass
-class VK_ERROR_EXTENSION_NOT_PRESENT(VkError):
-	pass
-class VK_ERROR_INCOMPATIBLE_DRIVER(VkError):
-	pass
-class VK_ERROR_FORMAT_NOT_SUPPORTED(VkError):
-	pass
-class VK_ERROR_FEATURE_NOT_PRESENT(VkError):
-	pass
-class VK_ERROR_TOO_MANY_OBJECTS(VkError):
-	pass
-class VK_ERROR_DEVICE_LOST(VkError):
-	pass
-class VK_ERROR_MEMORY_MAP_FAILED(VkError):
-	pass
-class VK_ERROR_INVALID_SHADER_NV(VkError):
-	pass
-class VK_ERROR_FRAGMENTED_POOL(VkError):
-	pass
-class VK_ERROR_NATIVE_WINDOW_IN_USE_KHR(VkError):
-	pass
-class VK_ERROR_INCOMPATIBLE_DISPLAY_KHR(VkError):
-	pass
-class VK_ERROR_SURFACE_LOST_KHR(VkError):
-	pass
-class VK_ERROR_OUT_OF_DATE_KHR(VkError):
-	pass
-
-def _raiseException(result):
-	exception_codes = {
-		VK_INCOMPLETE:VkIncomplete,
-		VK_NOT_READY:VkNotReady,
-		VK_TIMEOUT:VkTimeout,
-		VK_EVENT_SET:VkEventSet,
-		VK_EVENT_RESET:VkEventReset,
-		VK_SUBOPTIMAL_KHR:VkSuboptimalKHR,
-		VK_ERROR_OUT_OF_HOST_MEMORY:VkErrorOutOfHostMemory,
-		VK_ERROR_OUT_OF_DEVICE_MEMORY:VkErrorOutOfDeviceMemory,
-		VK_ERROR_INITIALIZATION_FAILED:VkErrorInitializationFailed,
-		VK_ERROR_LAYER_NOT_PRESENT:VkErrorLayerNotPresent,
-		VK_ERROR_EXTENSION_NOT_PRESENT:VkErrorExtensionNotPresent,
-		VK_ERROR_INCOMPATIBLE_DRIVER:VkErrorIncompatibleDriver,
-		VK_ERROR_FORMAT_NOT_SUPPORTED:VkErrorFormatNotSupported,
-		VK_ERROR_FEATURE_NOT_PRESENT:VkErrorFeatureNotPresent,
-		VK_ERROR_TOO_MANY_OBJECTS:VkErrorTooManyObjects,
-		VK_ERROR_DEVICE_LOST:VkErrorDeviceLost,
-		VK_ERROR_MEMORY_MAP_FAILED:VkErrorMemoryMapFailed,
-		VK_ERROR_INVALID_SHADER_NV:VkErrorInvalidShaderNV,
-		VK_ERROR_FRAGMENTED_POOL:VkErrorFragmentedPool,
-		VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:VkErrorNativeWindowInUseKHR,
-		VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:VkErrorIncompatibleDisplayKHR,
-		VK_ERROR_SURFACE_LOST_KHR:VkErrorSurfaceLostKHR,
-		VK_ERROR_OUT_OF_DATE_KHR:VkErrorOutOfDateKHR
-	}
-	raise exception_codes[result]
-
-def _callApi(fn, *args):
-	def _(x, _type):
-		if x is None:
-			return ffi.NULL
-		if _type.kind=='pointer':
-			ptr, _ = _castToPtr(x, _type)
-			return ptr
-		return x
-
-	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
-
-def vkGetInstanceProcAddr(instance, pName):
-	fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
-	if fn==ffi.NULL:
-		raise ProcedureNotFoundError()
-	if not pName in _instance_ext_funcs:
-		raise ExtensionNotSupportedError()
-	fn = ffi.cast('PFN_'+pName, fn)
-	return _instance_ext_funcs[pName](fn)
-
-def vkGetDeviceProcAddr(device, pName):
-	fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
-	if fn==ffi.NULL:
-		raise ProcedureNotFoundError()
-	if not pName in _device_ext_funcs:
-		raise ExtensionNotSupportedError()
-	fn = ffi.cast('PFN_'+pName, fn)
-	return _device_ext_funcs[pName](fn)
-
-def VK_MAKE_VERSION(major, minor, patch):
-	return (((major) << 22) | ((minor) << 12) | (patch))
-
-def VK_VERSION_MAJOR(version):
-	return version>>22
-
-def VK_VERSION_MINOR(version):
-	return (version>>12)&0x3ff
-
-def VK_VERSION_PATCH(version):
-	return version&0xfff
-
-VK_API_VERSION = VK_MAKE_VERSION(1, 0, 0)
-VK_API_VERSION_1_0 = VK_MAKE_VERSION(1, 0, 0)
-
-VK_NULL_HANDLE = 0
 
 VK_ATTACHMENT_LOAD_OP_LOAD = 0
 VK_ATTACHMENT_LOAD_OP_CLEAR = 1
@@ -870,6 +733,214 @@ VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT_NV = 2
 VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT_NV = 4
 VK_VALIDATION_CHECK_ALL_EXT = 0
 
+def VK_MAKE_VERSION(major, minor, patch):
+	return (((major) << 22) | ((minor) << 12) | (patch))
+
+def VK_VERSION_MAJOR(version):
+	return version>>22
+
+def VK_VERSION_MINOR(version):
+	return (version>>12)&0x3ff
+
+def VK_VERSION_PATCH(version):
+	return version&0xfff
+
+VK_API_VERSION = VK_MAKE_VERSION(1, 0, 0)
+VK_API_VERSION_1_0 = VK_MAKE_VERSION(1, 0, 0)
+
+VK_NULL_HANDLE = 0
+
+VK_MAX_PHYSICAL_DEVICE_NAME_SIZE = 256
+VK_UUID_SIZE = 16
+VK_MAX_EXTENSION_NAME_SIZE = 256
+VK_MAX_DESCRIPTION_SIZE = 256
+VK_MAX_MEMORY_TYPES = 32
+VK_MAX_MEMORY_HEAPS = 16
+VK_LOD_CLAMP_NONE = 1000.0
+VK_REMAINING_MIP_LEVELS = -1
+VK_REMAINING_ARRAY_LAYERS = -1
+VK_WHOLE_SIZE = -1
+VK_ATTACHMENT_UNUSED = -1
+VK_TRUE = 1
+VK_FALSE = 0
+VK_QUEUE_FAMILY_IGNORED = -1
+VK_SUBPASS_EXTERNAL = -1
+VK_KHR_surface = 1
+VK_KHR_SURFACE_SPEC_VERSION = 25
+VK_KHR_SURFACE_EXTENSION_NAME = "VK_KHR_surface"
+VK_COLORSPACE_SRGB_NONLINEAR_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+VK_KHR_swapchain = 1
+VK_KHR_SWAPCHAIN_SPEC_VERSION = 68
+VK_KHR_SWAPCHAIN_EXTENSION_NAME = "VK_KHR_swapchain"
+VK_KHR_display = 1
+VK_KHR_DISPLAY_SPEC_VERSION = 21
+VK_KHR_DISPLAY_EXTENSION_NAME = "VK_KHR_display"
+VK_KHR_display_swapchain = 1
+VK_KHR_DISPLAY_SWAPCHAIN_SPEC_VERSION = 9
+VK_KHR_DISPLAY_SWAPCHAIN_EXTENSION_NAME = "VK_KHR_display_swapchain"
+VK_KHR_xlib_surface = 1
+VK_KHR_XLIB_SURFACE_SPEC_VERSION = 6
+VK_KHR_XLIB_SURFACE_EXTENSION_NAME = "VK_KHR_xlib_surface"
+VK_KHR_xcb_surface = 1
+VK_KHR_XCB_SURFACE_SPEC_VERSION = 6
+VK_KHR_XCB_SURFACE_EXTENSION_NAME = "VK_KHR_xcb_surface"
+VK_KHR_wayland_surface = 1
+VK_KHR_WAYLAND_SURFACE_SPEC_VERSION = 5
+VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME = "VK_KHR_wayland_surface"
+VK_KHR_mir_surface = 1
+VK_KHR_MIR_SURFACE_SPEC_VERSION = 4
+VK_KHR_MIR_SURFACE_EXTENSION_NAME = "VK_KHR_mir_surface"
+VK_KHR_android_surface = 1
+VK_KHR_ANDROID_SURFACE_SPEC_VERSION = 6
+VK_KHR_ANDROID_SURFACE_EXTENSION_NAME = "VK_KHR_android_surface"
+VK_KHR_win32_surface = 1
+VK_KHR_WIN32_SURFACE_SPEC_VERSION = 5
+VK_KHR_WIN32_SURFACE_EXTENSION_NAME = "VK_KHR_win32_surface"
+VK_EXT_debug_report = 1
+VK_EXT_DEBUG_REPORT_SPEC_VERSION = 3
+VK_EXT_DEBUG_REPORT_EXTENSION_NAME = "VK_EXT_debug_report"
+VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
+VK_NV_glsl_shader = 1
+VK_NV_GLSL_SHADER_SPEC_VERSION = 1
+VK_NV_GLSL_SHADER_EXTENSION_NAME = "VK_NV_glsl_shader"
+VK_KHR_sampler_mirror_clamp_to_edge = 1
+VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_SPEC_VERSION = 1
+VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME = "VK_KHR_sampler_mirror_clamp_to_edge"
+VK_IMG_filter_cubic = 1
+VK_IMG_FILTER_CUBIC_SPEC_VERSION = 1
+VK_IMG_FILTER_CUBIC_EXTENSION_NAME = "VK_IMG_filter_cubic"
+VK_AMD_rasterization_order = 1
+VK_AMD_RASTERIZATION_ORDER_SPEC_VERSION = 1
+VK_AMD_RASTERIZATION_ORDER_EXTENSION_NAME = "VK_AMD_rasterization_order"
+VK_AMD_shader_trinary_minmax = 1
+VK_AMD_SHADER_TRINARY_MINMAX_SPEC_VERSION = 1
+VK_AMD_SHADER_TRINARY_MINMAX_EXTENSION_NAME = "VK_AMD_shader_trinary_minmax"
+VK_AMD_shader_explicit_vertex_parameter = 1
+VK_AMD_SHADER_EXPLICIT_VERTEX_PARAMETER_SPEC_VERSION = 1
+VK_AMD_SHADER_EXPLICIT_VERTEX_PARAMETER_EXTENSION_NAME = "VK_AMD_shader_explicit_vertex_parameter"
+VK_EXT_debug_marker = 1
+VK_EXT_DEBUG_MARKER_SPEC_VERSION = 3
+VK_EXT_DEBUG_MARKER_EXTENSION_NAME = "VK_EXT_debug_marker"
+VK_AMD_gcn_shader = 1
+VK_AMD_GCN_SHADER_SPEC_VERSION = 1
+VK_AMD_GCN_SHADER_EXTENSION_NAME = "VK_AMD_gcn_shader"
+VK_NV_dedicated_allocation = 1
+VK_NV_DEDICATED_ALLOCATION_SPEC_VERSION = 1
+VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME = "VK_NV_dedicated_allocation"
+VK_AMD_draw_indirect_count = 1
+VK_AMD_DRAW_INDIRECT_COUNT_SPEC_VERSION = 1
+VK_AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME = "VK_AMD_draw_indirect_count"
+VK_AMD_negative_viewport_height = 1
+VK_AMD_NEGATIVE_VIEWPORT_HEIGHT_SPEC_VERSION = 0
+VK_AMD_NEGATIVE_VIEWPORT_HEIGHT_EXTENSION_NAME = "VK_AMD_negative_viewport_height"
+VK_AMD_gpu_shader_half_float = 1
+VK_AMD_GPU_SHADER_HALF_FLOAT_SPEC_VERSION = 1
+VK_AMD_GPU_SHADER_HALF_FLOAT_EXTENSION_NAME = "VK_AMD_gpu_shader_half_float"
+VK_AMD_shader_ballot = 1
+VK_AMD_SHADER_BALLOT_SPEC_VERSION = 0
+VK_AMD_SHADER_BALLOT_EXTENSION_NAME = "VK_AMD_shader_ballot"
+VK_IMG_format_pvrtc = 1
+VK_IMG_FORMAT_PVRTC_SPEC_VERSION = 1
+VK_IMG_FORMAT_PVRTC_EXTENSION_NAME = "VK_IMG_format_pvrtc"
+VK_NV_external_memory_capabilities = 1
+VK_NV_EXTERNAL_MEMORY_CAPABILITIES_SPEC_VERSION = 1
+VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME = "VK_NV_external_memory_capabilities"
+VK_NV_external_memory = 1
+VK_NV_EXTERNAL_MEMORY_SPEC_VERSION = 1
+VK_NV_EXTERNAL_MEMORY_EXTENSION_NAME = "VK_NV_external_memory"
+VK_NV_external_memory_win32 = 1
+VK_NV_EXTERNAL_MEMORY_WIN32_SPEC_VERSION = 1
+VK_NV_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME = "VK_NV_external_memory_win32"
+VK_NV_win32_keyed_mutex = 1
+VK_NV_WIN32_KEYED_MUTEX_SPEC_VERSION = 1
+VK_NV_WIN32_KEYED_MUTEX_EXTENSION_NAME = "VK_NV_win32_keyed_mutex"
+VK_EXT_validation_flags = 1
+VK_EXT_VALIDATION_FLAGS_SPEC_VERSION = 1
+VK_EXT_VALIDATION_FLAGS_EXTENSION_NAME = "VK_EXT_validation_flags"
+
+class VkException(Exception):
+	pass
+
+class VkError(Exception):
+	pass
+
+class VkIncomplete(VkException):
+	pass
+class VkNotReady(VkException):
+	pass
+class VkTimeout(VkException):
+	pass
+class VkEventSet(VkException):
+	pass
+class VkEventReset(VkException):
+	pass
+class VkSuboptimalKHR(VkException):
+	pass
+
+class VkErrorOutOfHostMemory(VkError):
+	pass
+class VkErrorOutOfDeviceMemory(VkError):
+	pass
+class VkErrorInitializationFailed(VkError):
+	pass
+class VkErrorDeviceLost(VkError):
+	pass
+class VkErrorMemoryMapFailed(VkError):
+	pass
+class VkErrorLayerNotPresent(VkError):
+	pass
+class VkErrorExtensionNotPresent(VkError):
+	pass
+class VkErrorFeatureNotPresent(VkError):
+	pass
+class VkErrorIncompatibleDriver(VkError):
+	pass
+class VkErrorTooManyObjects(VkError):
+	pass
+class VkErrorFormatNotSupported(VkError):
+	pass
+class VkErrorFragmentedPool(VkError):
+	pass
+class VkErrorSurfaceLostKHR(VkError):
+	pass
+class VkErrorNativeWindowInUseKHR(VkError):
+	pass
+class VkErrorOutOfDateKHR(VkError):
+	pass
+class VkErrorIncompatibleDisplayKHR(VkError):
+	pass
+class VkErrorValidationFailedEXT(VkError):
+	pass
+class VkErrorInvalidShaderNV(VkError):
+	pass
+
+_exception_codes = {
+	VK_INCOMPLETE:VkIncomplete,
+	VK_NOT_READY:VkNotReady,
+	VK_TIMEOUT:VkTimeout,
+	VK_EVENT_SET:VkEventSet,
+	VK_EVENT_RESET:VkEventReset,
+	VK_SUBOPTIMAL_KHR:VkSuboptimalKHR,
+	VK_ERROR_OUT_OF_HOST_MEMORY:VkErrorOutOfHostMemory,
+	VK_ERROR_OUT_OF_DEVICE_MEMORY:VkErrorOutOfDeviceMemory,
+	VK_ERROR_INITIALIZATION_FAILED:VkErrorInitializationFailed,
+	VK_ERROR_DEVICE_LOST:VkErrorDeviceLost,
+	VK_ERROR_MEMORY_MAP_FAILED:VkErrorMemoryMapFailed,
+	VK_ERROR_LAYER_NOT_PRESENT:VkErrorLayerNotPresent,
+	VK_ERROR_EXTENSION_NOT_PRESENT:VkErrorExtensionNotPresent,
+	VK_ERROR_FEATURE_NOT_PRESENT:VkErrorFeatureNotPresent,
+	VK_ERROR_INCOMPATIBLE_DRIVER:VkErrorIncompatibleDriver,
+	VK_ERROR_TOO_MANY_OBJECTS:VkErrorTooManyObjects,
+	VK_ERROR_FORMAT_NOT_SUPPORTED:VkErrorFormatNotSupported,
+	VK_ERROR_FRAGMENTED_POOL:VkErrorFragmentedPool,
+	VK_ERROR_SURFACE_LOST_KHR:VkErrorSurfaceLostKHR,
+	VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:VkErrorNativeWindowInUseKHR,
+	VK_ERROR_OUT_OF_DATE_KHR:VkErrorOutOfDateKHR,
+	VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:VkErrorIncompatibleDisplayKHR,
+	VK_ERROR_VALIDATION_FAILED_EXT:VkErrorValidationFailedEXT,
+	VK_ERROR_INVALID_SHADER_NV:VkErrorInvalidShaderNV
+}
+
 vkInternalAllocationNotification = ffi.callback('PFN_vkInternalAllocationNotification')
 vkInternalFreeNotification = ffi.callback('PFN_vkInternalFreeNotification')
 vkReallocationFunction = ffi.callback('PFN_vkReallocationFunction')
@@ -877,6 +948,14 @@ vkAllocationFunction = ffi.callback('PFN_vkAllocationFunction')
 vkFreeFunction = ffi.callback('PFN_vkFreeFunction')
 vkVoidFunction = ffi.callback('PFN_vkVoidFunction')
 vkDebugReportCallbackEXT = ffi.callback('PFN_vkDebugReportCallbackEXT')
+
+def _new(ctype, **kwargs):
+	_type = ffi.typeof(ctype)
+	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
+	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
+	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
+	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values() if v!=ffi.NULL)
+	return ret
 
 
 def VkOffset2D(x=None, y=None):
@@ -1410,6 +1489,16 @@ def VkWin32KeyedMutexAcquireReleaseInfoNV(sType=VK_STRUCTURE_TYPE_WIN32_KEYED_MU
 		releaseCount = len(pReleaseSyncs)
 	return _new('VkWin32KeyedMutexAcquireReleaseInfoNV', sType=sType, pNext=pNext, acquireCount=acquireCount, pAcquireSyncs=pAcquireSyncs, pAcquireKeys=pAcquireKeys, pAcquireTimeoutMilliseconds=pAcquireTimeoutMilliseconds, releaseCount=releaseCount, pReleaseSyncs=pReleaseSyncs, pReleaseKeys=pReleaseKeys)
 
+def _callApi(fn, *args):
+	def _(x, _type):
+		if x is None:
+			return ffi.NULL
+		if _type.kind=='pointer':
+			ptr, _ = _castToPtr(x, _type)
+			return ptr
+		return x
+
+	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
 
 
 
@@ -1418,7 +1507,9 @@ def VkWin32KeyedMutexAcquireReleaseInfoNV(sType=VK_STRUCTURE_TYPE_WIN32_KEYED_MU
 
 def vkCreateInstance(pCreateInfo, pAllocator):
 	pInstance = ffi.new('VkInstance*')
-	_callApi(_lib.vkCreateInstance, pCreateInfo, pAllocator, pInstance)
+	result = _callApi(_lib.vkCreateInstance, pCreateInfo, pAllocator, pInstance)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pInstance[0]
 
 def vkGetPhysicalDeviceProperties(physicalDevice):
@@ -1443,12 +1534,16 @@ def vkGetPhysicalDeviceFormatProperties(physicalDevice, format):
 
 def vkGetPhysicalDeviceImageFormatProperties(physicalDevice, format, type, tiling, usage, flags):
 	pImageFormatProperties = ffi.new('VkImageFormatProperties*')
-	_callApi(_lib.vkGetPhysicalDeviceImageFormatProperties, physicalDevice, format, type, tiling, usage, flags, pImageFormatProperties)
+	result = _callApi(_lib.vkGetPhysicalDeviceImageFormatProperties, physicalDevice, format, type, tiling, usage, flags, pImageFormatProperties)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pImageFormatProperties[0]
 
 def vkCreateDevice(physicalDevice, pCreateInfo, pAllocator):
 	pDevice = ffi.new('VkDevice*')
-	_callApi(_lib.vkCreateDevice, physicalDevice, pCreateInfo, pAllocator, pDevice)
+	result = _callApi(_lib.vkCreateDevice, physicalDevice, pCreateInfo, pAllocator, pDevice)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pDevice[0]
 
 def vkGetDeviceQueue(device, queueFamilyIndex, queueIndex):
@@ -1458,12 +1553,16 @@ def vkGetDeviceQueue(device, queueFamilyIndex, queueIndex):
 
 def vkAllocateMemory(device, pAllocateInfo, pAllocator):
 	pMemory = ffi.new('VkDeviceMemory*')
-	_callApi(_lib.vkAllocateMemory, device, pAllocateInfo, pAllocator, pMemory)
+	result = _callApi(_lib.vkAllocateMemory, device, pAllocateInfo, pAllocator, pMemory)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pMemory[0]
 
 def vkMapMemory(device, memory, offset, size, flags):
 	ppData = ffi.new('void**')
-	_callApi(_lib.vkMapMemory, device, memory, offset, size, flags, ppData)
+	result = _callApi(_lib.vkMapMemory, device, memory, offset, size, flags, ppData)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return ppData[0]
 
 def vkGetDeviceMemoryCommitment(device, memory):
@@ -1483,37 +1582,51 @@ def vkGetImageMemoryRequirements(device, image):
 
 def vkCreateFence(device, pCreateInfo, pAllocator):
 	pFence = ffi.new('VkFence*')
-	_callApi(_lib.vkCreateFence, device, pCreateInfo, pAllocator, pFence)
+	result = _callApi(_lib.vkCreateFence, device, pCreateInfo, pAllocator, pFence)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pFence[0]
 
 def vkCreateSemaphore(device, pCreateInfo, pAllocator):
 	pSemaphore = ffi.new('VkSemaphore*')
-	_callApi(_lib.vkCreateSemaphore, device, pCreateInfo, pAllocator, pSemaphore)
+	result = _callApi(_lib.vkCreateSemaphore, device, pCreateInfo, pAllocator, pSemaphore)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pSemaphore[0]
 
 def vkCreateEvent(device, pCreateInfo, pAllocator):
 	pEvent = ffi.new('VkEvent*')
-	_callApi(_lib.vkCreateEvent, device, pCreateInfo, pAllocator, pEvent)
+	result = _callApi(_lib.vkCreateEvent, device, pCreateInfo, pAllocator, pEvent)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pEvent[0]
 
 def vkCreateQueryPool(device, pCreateInfo, pAllocator):
 	pQueryPool = ffi.new('VkQueryPool*')
-	_callApi(_lib.vkCreateQueryPool, device, pCreateInfo, pAllocator, pQueryPool)
+	result = _callApi(_lib.vkCreateQueryPool, device, pCreateInfo, pAllocator, pQueryPool)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pQueryPool[0]
 
 def vkCreateBuffer(device, pCreateInfo, pAllocator):
 	pBuffer = ffi.new('VkBuffer*')
-	_callApi(_lib.vkCreateBuffer, device, pCreateInfo, pAllocator, pBuffer)
+	result = _callApi(_lib.vkCreateBuffer, device, pCreateInfo, pAllocator, pBuffer)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pBuffer[0]
 
 def vkCreateBufferView(device, pCreateInfo, pAllocator):
 	pView = ffi.new('VkBufferView*')
-	_callApi(_lib.vkCreateBufferView, device, pCreateInfo, pAllocator, pView)
+	result = _callApi(_lib.vkCreateBufferView, device, pCreateInfo, pAllocator, pView)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pView[0]
 
 def vkCreateImage(device, pCreateInfo, pAllocator):
 	pImage = ffi.new('VkImage*')
-	_callApi(_lib.vkCreateImage, device, pCreateInfo, pAllocator, pImage)
+	result = _callApi(_lib.vkCreateImage, device, pCreateInfo, pAllocator, pImage)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pImage[0]
 
 def vkGetImageSubresourceLayout(device, image, pSubresource):
@@ -1523,47 +1636,65 @@ def vkGetImageSubresourceLayout(device, image, pSubresource):
 
 def vkCreateImageView(device, pCreateInfo, pAllocator):
 	pView = ffi.new('VkImageView*')
-	_callApi(_lib.vkCreateImageView, device, pCreateInfo, pAllocator, pView)
+	result = _callApi(_lib.vkCreateImageView, device, pCreateInfo, pAllocator, pView)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pView[0]
 
 def vkCreateShaderModule(device, pCreateInfo, pAllocator):
 	pShaderModule = ffi.new('VkShaderModule*')
-	_callApi(_lib.vkCreateShaderModule, device, pCreateInfo, pAllocator, pShaderModule)
+	result = _callApi(_lib.vkCreateShaderModule, device, pCreateInfo, pAllocator, pShaderModule)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pShaderModule[0]
 
 def vkCreatePipelineCache(device, pCreateInfo, pAllocator):
 	pPipelineCache = ffi.new('VkPipelineCache*')
-	_callApi(_lib.vkCreatePipelineCache, device, pCreateInfo, pAllocator, pPipelineCache)
+	result = _callApi(_lib.vkCreatePipelineCache, device, pCreateInfo, pAllocator, pPipelineCache)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pPipelineCache[0]
 
 def vkCreatePipelineLayout(device, pCreateInfo, pAllocator):
 	pPipelineLayout = ffi.new('VkPipelineLayout*')
-	_callApi(_lib.vkCreatePipelineLayout, device, pCreateInfo, pAllocator, pPipelineLayout)
+	result = _callApi(_lib.vkCreatePipelineLayout, device, pCreateInfo, pAllocator, pPipelineLayout)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pPipelineLayout[0]
 
 def vkCreateSampler(device, pCreateInfo, pAllocator):
 	pSampler = ffi.new('VkSampler*')
-	_callApi(_lib.vkCreateSampler, device, pCreateInfo, pAllocator, pSampler)
+	result = _callApi(_lib.vkCreateSampler, device, pCreateInfo, pAllocator, pSampler)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pSampler[0]
 
 def vkCreateDescriptorSetLayout(device, pCreateInfo, pAllocator):
 	pSetLayout = ffi.new('VkDescriptorSetLayout*')
-	_callApi(_lib.vkCreateDescriptorSetLayout, device, pCreateInfo, pAllocator, pSetLayout)
+	result = _callApi(_lib.vkCreateDescriptorSetLayout, device, pCreateInfo, pAllocator, pSetLayout)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pSetLayout[0]
 
 def vkCreateDescriptorPool(device, pCreateInfo, pAllocator):
 	pDescriptorPool = ffi.new('VkDescriptorPool*')
-	_callApi(_lib.vkCreateDescriptorPool, device, pCreateInfo, pAllocator, pDescriptorPool)
+	result = _callApi(_lib.vkCreateDescriptorPool, device, pCreateInfo, pAllocator, pDescriptorPool)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pDescriptorPool[0]
 
 def vkCreateFramebuffer(device, pCreateInfo, pAllocator):
 	pFramebuffer = ffi.new('VkFramebuffer*')
-	_callApi(_lib.vkCreateFramebuffer, device, pCreateInfo, pAllocator, pFramebuffer)
+	result = _callApi(_lib.vkCreateFramebuffer, device, pCreateInfo, pAllocator, pFramebuffer)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pFramebuffer[0]
 
 def vkCreateRenderPass(device, pCreateInfo, pAllocator):
 	pRenderPass = ffi.new('VkRenderPass*')
-	_callApi(_lib.vkCreateRenderPass, device, pCreateInfo, pAllocator, pRenderPass)
+	result = _callApi(_lib.vkCreateRenderPass, device, pCreateInfo, pAllocator, pRenderPass)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pRenderPass[0]
 
 def vkGetRenderAreaGranularity(device, renderPass):
@@ -1573,37 +1704,49 @@ def vkGetRenderAreaGranularity(device, renderPass):
 
 def vkCreateCommandPool(device, pCreateInfo, pAllocator):
 	pCommandPool = ffi.new('VkCommandPool*')
-	_callApi(_lib.vkCreateCommandPool, device, pCreateInfo, pAllocator, pCommandPool)
+	result = _callApi(_lib.vkCreateCommandPool, device, pCreateInfo, pAllocator, pCommandPool)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pCommandPool[0]
 
 def _wrap_vkCreateAndroidSurfaceKHR(fn):
     def vkCreateAndroidSurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateAndroidSurfaceKHR
 def _wrap_vkCreateDisplayModeKHR(fn):
     def vkCreateDisplayModeKHR(physicalDevice, display, pCreateInfo, pAllocator):
     	pMode = ffi.new('VkDisplayModeKHR*')
-    	_callApi(fn, physicalDevice, display, pCreateInfo, pAllocator, pMode)
+    	result = _callApi(fn, physicalDevice, display, pCreateInfo, pAllocator, pMode)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pMode[0]
     return vkCreateDisplayModeKHR
 def _wrap_vkGetDisplayPlaneCapabilitiesKHR(fn):
     def vkGetDisplayPlaneCapabilitiesKHR(physicalDevice, mode, planeIndex):
     	pCapabilities = ffi.new('VkDisplayPlaneCapabilitiesKHR*')
-    	_callApi(fn, physicalDevice, mode, planeIndex, pCapabilities)
+    	result = _callApi(fn, physicalDevice, mode, planeIndex, pCapabilities)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pCapabilities[0]
     return vkGetDisplayPlaneCapabilitiesKHR
 def _wrap_vkCreateDisplayPlaneSurfaceKHR(fn):
     def vkCreateDisplayPlaneSurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateDisplayPlaneSurfaceKHR
 def _wrap_vkCreateMirSurfaceKHR(fn):
     def vkCreateMirSurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateMirSurfaceKHR
 def _wrap_vkGetPhysicalDeviceMirPresentationSupportKHR(fn):
@@ -1615,31 +1758,41 @@ def _wrap_vkGetPhysicalDeviceMirPresentationSupportKHR(fn):
 def _wrap_vkGetPhysicalDeviceSurfaceSupportKHR(fn):
     def vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface):
     	pSupported = ffi.new('VkBool32*')
-    	_callApi(fn, physicalDevice, queueFamilyIndex, surface, pSupported)
+    	result = _callApi(fn, physicalDevice, queueFamilyIndex, surface, pSupported)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSupported[0]
     return vkGetPhysicalDeviceSurfaceSupportKHR
 def _wrap_vkGetPhysicalDeviceSurfaceCapabilitiesKHR(fn):
     def vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface):
     	pSurfaceCapabilities = ffi.new('VkSurfaceCapabilitiesKHR*')
-    	_callApi(fn, physicalDevice, surface, pSurfaceCapabilities)
+    	result = _callApi(fn, physicalDevice, surface, pSurfaceCapabilities)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurfaceCapabilities[0]
     return vkGetPhysicalDeviceSurfaceCapabilitiesKHR
 def _wrap_vkCreateSwapchainKHR(fn):
     def vkCreateSwapchainKHR(device, pCreateInfo, pAllocator):
     	pSwapchain = ffi.new('VkSwapchainKHR*')
-    	_callApi(fn, device, pCreateInfo, pAllocator, pSwapchain)
+    	result = _callApi(fn, device, pCreateInfo, pAllocator, pSwapchain)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSwapchain[0]
     return vkCreateSwapchainKHR
 def _wrap_vkAcquireNextImageKHR(fn):
     def vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence):
     	pImageIndex = ffi.new('uint32_t*')
-    	_callApi(fn, device, swapchain, timeout, semaphore, fence, pImageIndex)
+    	result = _callApi(fn, device, swapchain, timeout, semaphore, fence, pImageIndex)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pImageIndex[0]
     return vkAcquireNextImageKHR
 def _wrap_vkCreateWaylandSurfaceKHR(fn):
     def vkCreateWaylandSurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateWaylandSurfaceKHR
 def _wrap_vkGetPhysicalDeviceWaylandPresentationSupportKHR(fn):
@@ -1651,45 +1804,61 @@ def _wrap_vkGetPhysicalDeviceWaylandPresentationSupportKHR(fn):
 def _wrap_vkCreateWin32SurfaceKHR(fn):
     def vkCreateWin32SurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateWin32SurfaceKHR
 def _wrap_vkCreateXlibSurfaceKHR(fn):
     def vkCreateXlibSurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateXlibSurfaceKHR
 def _wrap_vkCreateXcbSurfaceKHR(fn):
     def vkCreateXcbSurfaceKHR(instance, pCreateInfo, pAllocator):
     	pSurface = ffi.new('VkSurfaceKHR*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurface[0]
     return vkCreateXcbSurfaceKHR
 def _wrap_vkCreateDebugReportCallbackEXT(fn):
     def vkCreateDebugReportCallbackEXT(instance, pCreateInfo, pAllocator):
     	pCallback = ffi.new('VkDebugReportCallbackEXT*')
-    	_callApi(fn, instance, pCreateInfo, pAllocator, pCallback)
+    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pCallback)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pCallback[0]
     return vkCreateDebugReportCallbackEXT
 def _wrap_vkGetPhysicalDeviceExternalImageFormatPropertiesNV(fn):
     def vkGetPhysicalDeviceExternalImageFormatPropertiesNV(physicalDevice, format, type, tiling, usage, flags, externalHandleType):
     	pExternalImageFormatProperties = ffi.new('VkExternalImageFormatPropertiesNV*')
-    	_callApi(fn, physicalDevice, format, type, tiling, usage, flags, externalHandleType, pExternalImageFormatProperties)
+    	result = _callApi(fn, physicalDevice, format, type, tiling, usage, flags, externalHandleType, pExternalImageFormatProperties)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pExternalImageFormatProperties[0]
     return vkGetPhysicalDeviceExternalImageFormatPropertiesNV
 def _wrap_vkGetMemoryWin32HandleNV(fn):
     def vkGetMemoryWin32HandleNV(device, memory, handleType):
     	pHandle = ffi.new('HANDLE*')
-    	_callApi(fn, device, memory, handleType, pHandle)
+    	result = _callApi(fn, device, memory, handleType, pHandle)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pHandle[0]
     return vkGetMemoryWin32HandleNV
 
 def vkEnumeratePhysicalDevices(instance):
 	pPhysicalDeviceCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, ffi.NULL)
+	result = _callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, ffi.NULL)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	pPhysicalDevices = ffi.new('VkPhysicalDevice[]', pPhysicalDeviceCount[0])
-	_callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, pPhysicalDevices)
+	result = _callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, pPhysicalDevices)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pPhysicalDevices
 
 def vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice):
@@ -1701,30 +1870,46 @@ def vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice):
 
 def vkEnumerateInstanceLayerProperties():
 	pPropertyCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, ffi.NULL)
+	result = _callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, ffi.NULL)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	pProperties = ffi.new('VkLayerProperties[]', pPropertyCount[0])
-	_callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, pProperties)
+	result = _callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, pProperties)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pProperties
 
 def vkEnumerateInstanceExtensionProperties(pLayerName):
 	pPropertyCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, ffi.NULL)
+	result = _callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, ffi.NULL)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	pProperties = ffi.new('VkExtensionProperties[]', pPropertyCount[0])
-	_callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, pProperties)
+	result = _callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, pProperties)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pProperties
 
 def vkEnumerateDeviceLayerProperties(physicalDevice):
 	pPropertyCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, ffi.NULL)
+	result = _callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, ffi.NULL)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	pProperties = ffi.new('VkLayerProperties[]', pPropertyCount[0])
-	_callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, pProperties)
+	result = _callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, pProperties)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pProperties
 
 def vkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName):
 	pPropertyCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, ffi.NULL)
+	result = _callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, ffi.NULL)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	pProperties = ffi.new('VkExtensionProperties[]', pPropertyCount[0])
-	_callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, pProperties)
+	result = _callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, pProperties)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pProperties
 
 def vkGetImageSparseMemoryRequirements(device, image):
@@ -1743,92 +1928,134 @@ def vkGetPhysicalDeviceSparseImageFormatProperties(physicalDevice, format, type,
 
 def vkGetPipelineCacheData(device, pipelineCache):
 	pDataSize = ffi.new('size_t*')
-	_callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, ffi.NULL)
+	result = _callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, ffi.NULL)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	pData = ffi.new('void[]', pDataSize[0])
-	_callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, pData)
+	result = _callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, pData)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pData
 
 def _wrap_vkGetPhysicalDeviceDisplayPropertiesKHR(fn):
     def vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice):
     	pPropertyCount = ffi.new('uint32_t*')
-    	_callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
+    	result = _callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pProperties = ffi.new('VkDisplayPropertiesKHR[]', pPropertyCount[0])
-    	_callApi(fn, physicalDevice, pPropertyCount, pProperties)
+    	result = _callApi(fn, physicalDevice, pPropertyCount, pProperties)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pProperties
     return vkGetPhysicalDeviceDisplayPropertiesKHR
 def _wrap_vkGetPhysicalDeviceDisplayPlanePropertiesKHR(fn):
     def vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice):
     	pPropertyCount = ffi.new('uint32_t*')
-    	_callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
+    	result = _callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pProperties = ffi.new('VkDisplayPlanePropertiesKHR[]', pPropertyCount[0])
-    	_callApi(fn, physicalDevice, pPropertyCount, pProperties)
+    	result = _callApi(fn, physicalDevice, pPropertyCount, pProperties)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pProperties
     return vkGetPhysicalDeviceDisplayPlanePropertiesKHR
 def _wrap_vkGetDisplayPlaneSupportedDisplaysKHR(fn):
     def vkGetDisplayPlaneSupportedDisplaysKHR(physicalDevice, planeIndex):
     	pDisplayCount = ffi.new('uint32_t*')
-    	_callApi(fn, physicalDevice, planeIndex, pDisplayCount, ffi.NULL)
+    	result = _callApi(fn, physicalDevice, planeIndex, pDisplayCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pDisplays = ffi.new('VkDisplayKHR[]', pDisplayCount[0])
-    	_callApi(fn, physicalDevice, planeIndex, pDisplayCount, pDisplays)
+    	result = _callApi(fn, physicalDevice, planeIndex, pDisplayCount, pDisplays)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pDisplays
     return vkGetDisplayPlaneSupportedDisplaysKHR
 def _wrap_vkGetDisplayModePropertiesKHR(fn):
     def vkGetDisplayModePropertiesKHR(physicalDevice, display):
     	pPropertyCount = ffi.new('uint32_t*')
-    	_callApi(fn, physicalDevice, display, pPropertyCount, ffi.NULL)
+    	result = _callApi(fn, physicalDevice, display, pPropertyCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pProperties = ffi.new('VkDisplayModePropertiesKHR[]', pPropertyCount[0])
-    	_callApi(fn, physicalDevice, display, pPropertyCount, pProperties)
+    	result = _callApi(fn, physicalDevice, display, pPropertyCount, pProperties)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pProperties
     return vkGetDisplayModePropertiesKHR
 def _wrap_vkGetPhysicalDeviceSurfaceFormatsKHR(fn):
     def vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface):
     	pSurfaceFormatCount = ffi.new('uint32_t*')
-    	_callApi(fn, physicalDevice, surface, pSurfaceFormatCount, ffi.NULL)
+    	result = _callApi(fn, physicalDevice, surface, pSurfaceFormatCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pSurfaceFormats = ffi.new('VkSurfaceFormatKHR[]', pSurfaceFormatCount[0])
-    	_callApi(fn, physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats)
+    	result = _callApi(fn, physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSurfaceFormats
     return vkGetPhysicalDeviceSurfaceFormatsKHR
 def _wrap_vkGetPhysicalDeviceSurfacePresentModesKHR(fn):
     def vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface):
     	pPresentModeCount = ffi.new('uint32_t*')
-    	_callApi(fn, physicalDevice, surface, pPresentModeCount, ffi.NULL)
+    	result = _callApi(fn, physicalDevice, surface, pPresentModeCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pPresentModes = ffi.new('VkPresentModeKHR[]', pPresentModeCount[0])
-    	_callApi(fn, physicalDevice, surface, pPresentModeCount, pPresentModes)
+    	result = _callApi(fn, physicalDevice, surface, pPresentModeCount, pPresentModes)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pPresentModes
     return vkGetPhysicalDeviceSurfacePresentModesKHR
 def _wrap_vkGetSwapchainImagesKHR(fn):
     def vkGetSwapchainImagesKHR(device, swapchain):
     	pSwapchainImageCount = ffi.new('uint32_t*')
-    	_callApi(fn, device, swapchain, pSwapchainImageCount, ffi.NULL)
+    	result = _callApi(fn, device, swapchain, pSwapchainImageCount, ffi.NULL)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	pSwapchainImages = ffi.new('VkImage[]', pSwapchainImageCount[0])
-    	_callApi(fn, device, swapchain, pSwapchainImageCount, pSwapchainImages)
+    	result = _callApi(fn, device, swapchain, pSwapchainImageCount, pSwapchainImages)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSwapchainImages
     return vkGetSwapchainImagesKHR
 
 def vkCreateGraphicsPipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator):
 	pPipelines = ffi.new('VkPipeline*')
-	_callApi(_lib.vkCreateGraphicsPipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
+	result = _callApi(_lib.vkCreateGraphicsPipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pPipelines
 
 def vkCreateComputePipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator):
 	pPipelines = ffi.new('VkPipeline*')
-	_callApi(_lib.vkCreateComputePipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
+	result = _callApi(_lib.vkCreateComputePipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pPipelines
 
 def vkAllocateDescriptorSets(device, pAllocateInfo):
 	pDescriptorSets = ffi.new('VkDescriptorSet*')
-	_callApi(_lib.vkAllocateDescriptorSets, device, pAllocateInfo, pDescriptorSets)
+	result = _callApi(_lib.vkAllocateDescriptorSets, device, pAllocateInfo, pDescriptorSets)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pDescriptorSets
 
 def vkAllocateCommandBuffers(device, pAllocateInfo):
 	pCommandBuffers = ffi.new('VkCommandBuffer*')
-	_callApi(_lib.vkAllocateCommandBuffers, device, pAllocateInfo, pCommandBuffers)
+	result = _callApi(_lib.vkAllocateCommandBuffers, device, pAllocateInfo, pCommandBuffers)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 	return pCommandBuffers
 
 def _wrap_vkCreateSharedSwapchainsKHR(fn):
     def vkCreateSharedSwapchainsKHR(device, swapchainCount, pCreateInfos, pAllocator):
     	pSwapchains = ffi.new('VkSwapchainKHR*')
-    	_callApi(fn, device, swapchainCount, pCreateInfos, pAllocator, pSwapchains)
+    	result = _callApi(fn, device, swapchainCount, pCreateInfos, pAllocator, pSwapchains)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     	return pSwapchains
     return vkCreateSharedSwapchainsKHR
 
@@ -1839,13 +2066,19 @@ def vkDestroyDevice(device, pAllocator):
 	_callApi(_lib.vkDestroyDevice, device, pAllocator)
 
 def vkQueueSubmit(queue, submitCount, pSubmits, fence):
-	_callApi(_lib.vkQueueSubmit, queue, submitCount, pSubmits, fence)
+	result = _callApi(_lib.vkQueueSubmit, queue, submitCount, pSubmits, fence)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkQueueWaitIdle(queue):
-	_callApi(_lib.vkQueueWaitIdle, queue)
+	result = _callApi(_lib.vkQueueWaitIdle, queue)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkDeviceWaitIdle(device):
-	_callApi(_lib.vkDeviceWaitIdle, device)
+	result = _callApi(_lib.vkDeviceWaitIdle, device)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkFreeMemory(device, memory, pAllocator):
 	_callApi(_lib.vkFreeMemory, device, memory, pAllocator)
@@ -1854,31 +2087,47 @@ def vkUnmapMemory(device, memory):
 	_callApi(_lib.vkUnmapMemory, device, memory)
 
 def vkFlushMappedMemoryRanges(device, memoryRangeCount, pMemoryRanges):
-	_callApi(_lib.vkFlushMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
+	result = _callApi(_lib.vkFlushMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkInvalidateMappedMemoryRanges(device, memoryRangeCount, pMemoryRanges):
-	_callApi(_lib.vkInvalidateMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
+	result = _callApi(_lib.vkInvalidateMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkBindBufferMemory(device, buffer, memory, memoryOffset):
-	_callApi(_lib.vkBindBufferMemory, device, buffer, memory, memoryOffset)
+	result = _callApi(_lib.vkBindBufferMemory, device, buffer, memory, memoryOffset)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkBindImageMemory(device, image, memory, memoryOffset):
-	_callApi(_lib.vkBindImageMemory, device, image, memory, memoryOffset)
+	result = _callApi(_lib.vkBindImageMemory, device, image, memory, memoryOffset)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkQueueBindSparse(queue, bindInfoCount, pBindInfo, fence):
-	_callApi(_lib.vkQueueBindSparse, queue, bindInfoCount, pBindInfo, fence)
+	result = _callApi(_lib.vkQueueBindSparse, queue, bindInfoCount, pBindInfo, fence)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkDestroyFence(device, fence, pAllocator):
 	_callApi(_lib.vkDestroyFence, device, fence, pAllocator)
 
 def vkResetFences(device, fenceCount, pFences):
-	_callApi(_lib.vkResetFences, device, fenceCount, pFences)
+	result = _callApi(_lib.vkResetFences, device, fenceCount, pFences)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkGetFenceStatus(device, fence):
-	_callApi(_lib.vkGetFenceStatus, device, fence)
+	result = _callApi(_lib.vkGetFenceStatus, device, fence)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkWaitForFences(device, fenceCount, pFences, waitAll, timeout):
-	_callApi(_lib.vkWaitForFences, device, fenceCount, pFences, waitAll, timeout)
+	result = _callApi(_lib.vkWaitForFences, device, fenceCount, pFences, waitAll, timeout)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkDestroySemaphore(device, semaphore, pAllocator):
 	_callApi(_lib.vkDestroySemaphore, device, semaphore, pAllocator)
@@ -1887,19 +2136,27 @@ def vkDestroyEvent(device, event, pAllocator):
 	_callApi(_lib.vkDestroyEvent, device, event, pAllocator)
 
 def vkGetEventStatus(device, event):
-	_callApi(_lib.vkGetEventStatus, device, event)
+	result = _callApi(_lib.vkGetEventStatus, device, event)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkSetEvent(device, event):
-	_callApi(_lib.vkSetEvent, device, event)
+	result = _callApi(_lib.vkSetEvent, device, event)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkResetEvent(device, event):
-	_callApi(_lib.vkResetEvent, device, event)
+	result = _callApi(_lib.vkResetEvent, device, event)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkDestroyQueryPool(device, queryPool, pAllocator):
 	_callApi(_lib.vkDestroyQueryPool, device, queryPool, pAllocator)
 
 def vkGetQueryPoolResults(device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags):
-	_callApi(_lib.vkGetQueryPoolResults, device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags)
+	result = _callApi(_lib.vkGetQueryPoolResults, device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkDestroyBuffer(device, buffer, pAllocator):
 	_callApi(_lib.vkDestroyBuffer, device, buffer, pAllocator)
@@ -1920,7 +2177,9 @@ def vkDestroyPipelineCache(device, pipelineCache, pAllocator):
 	_callApi(_lib.vkDestroyPipelineCache, device, pipelineCache, pAllocator)
 
 def vkMergePipelineCaches(device, dstCache, srcCacheCount, pSrcCaches):
-	_callApi(_lib.vkMergePipelineCaches, device, dstCache, srcCacheCount, pSrcCaches)
+	result = _callApi(_lib.vkMergePipelineCaches, device, dstCache, srcCacheCount, pSrcCaches)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkDestroyPipeline(device, pipeline, pAllocator):
 	_callApi(_lib.vkDestroyPipeline, device, pipeline, pAllocator)
@@ -1938,10 +2197,14 @@ def vkDestroyDescriptorPool(device, descriptorPool, pAllocator):
 	_callApi(_lib.vkDestroyDescriptorPool, device, descriptorPool, pAllocator)
 
 def vkResetDescriptorPool(device, descriptorPool, flags):
-	_callApi(_lib.vkResetDescriptorPool, device, descriptorPool, flags)
+	result = _callApi(_lib.vkResetDescriptorPool, device, descriptorPool, flags)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkFreeDescriptorSets(device, descriptorPool, descriptorSetCount, pDescriptorSets):
-	_callApi(_lib.vkFreeDescriptorSets, device, descriptorPool, descriptorSetCount, pDescriptorSets)
+	result = _callApi(_lib.vkFreeDescriptorSets, device, descriptorPool, descriptorSetCount, pDescriptorSets)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkUpdateDescriptorSets(device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies):
 	_callApi(_lib.vkUpdateDescriptorSets, device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies)
@@ -1956,19 +2219,27 @@ def vkDestroyCommandPool(device, commandPool, pAllocator):
 	_callApi(_lib.vkDestroyCommandPool, device, commandPool, pAllocator)
 
 def vkResetCommandPool(device, commandPool, flags):
-	_callApi(_lib.vkResetCommandPool, device, commandPool, flags)
+	result = _callApi(_lib.vkResetCommandPool, device, commandPool, flags)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkFreeCommandBuffers(device, commandPool, commandBufferCount, pCommandBuffers):
 	_callApi(_lib.vkFreeCommandBuffers, device, commandPool, commandBufferCount, pCommandBuffers)
 
 def vkBeginCommandBuffer(commandBuffer, pBeginInfo):
-	_callApi(_lib.vkBeginCommandBuffer, commandBuffer, pBeginInfo)
+	result = _callApi(_lib.vkBeginCommandBuffer, commandBuffer, pBeginInfo)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkEndCommandBuffer(commandBuffer):
-	_callApi(_lib.vkEndCommandBuffer, commandBuffer)
+	result = _callApi(_lib.vkEndCommandBuffer, commandBuffer)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkResetCommandBuffer(commandBuffer, flags):
-	_callApi(_lib.vkResetCommandBuffer, commandBuffer, flags)
+	result = _callApi(_lib.vkResetCommandBuffer, commandBuffer, flags)
+	if result!=VK_SUCCESS:
+		raise _exception_codes[result]
 
 def vkCmdBindPipeline(commandBuffer, pipelineBindPoint, pipeline):
 	_callApi(_lib.vkCmdBindPipeline, commandBuffer, pipelineBindPoint, pipeline)
@@ -2112,7 +2383,9 @@ def _wrap_vkDestroySwapchainKHR(fn):
     return vkDestroySwapchainKHR
 def _wrap_vkQueuePresentKHR(fn):
     def vkQueuePresentKHR(queue, pPresentInfo):
-    	_callApi(fn, queue, pPresentInfo)
+    	result = _callApi(fn, queue, pPresentInfo)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     return vkQueuePresentKHR
 def _wrap_vkGetPhysicalDeviceWin32PresentationSupportKHR(fn):
     def vkGetPhysicalDeviceWin32PresentationSupportKHR(physicalDevice, queueFamilyIndex):
@@ -2136,11 +2409,15 @@ def _wrap_vkDebugReportMessageEXT(fn):
     return vkDebugReportMessageEXT
 def _wrap_vkDebugMarkerSetObjectNameEXT(fn):
     def vkDebugMarkerSetObjectNameEXT(device, pNameInfo):
-    	_callApi(fn, device, pNameInfo)
+    	result = _callApi(fn, device, pNameInfo)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     return vkDebugMarkerSetObjectNameEXT
 def _wrap_vkDebugMarkerSetObjectTagEXT(fn):
     def vkDebugMarkerSetObjectTagEXT(device, pTagInfo):
-    	_callApi(fn, device, pTagInfo)
+    	result = _callApi(fn, device, pTagInfo)
+    	if result!=VK_SUCCESS:
+    		raise _exception_codes[result]
     return vkDebugMarkerSetObjectTagEXT
 def _wrap_vkCmdDebugMarkerBeginEXT(fn):
     def vkCmdDebugMarkerBeginEXT(commandBuffer, pMarkerInfo):
@@ -2211,80 +2488,20 @@ _device_ext_funcs = {
 	'vkCmdDrawIndexedIndirectCountAMD':_wrap_vkCmdDrawIndexedIndirectCountAMD
     }
 
-VK_MAX_PHYSICAL_DEVICE_NAME_SIZE = 256
-VK_UUID_SIZE = 16
-VK_MAX_EXTENSION_NAME_SIZE = 256
-VK_MAX_DESCRIPTION_SIZE = 256
-VK_MAX_MEMORY_TYPES = 32
-VK_MAX_MEMORY_HEAPS = 16
-VK_LOD_CLAMP_NONE = 1000.0
-VK_REMAINING_MIP_LEVELS = -1
-VK_REMAINING_ARRAY_LAYERS = -1
-VK_WHOLE_SIZE = -1
-VK_ATTACHMENT_UNUSED = -1
-VK_TRUE = 1
-VK_FALSE = 0
-VK_QUEUE_FAMILY_IGNORED = -1
-VK_SUBPASS_EXTERNAL = -1
-VK_KHR_SURFACE_SPEC_VERSION = 25
-VK_KHR_SURFACE_EXTENSION_NAME = "VK_KHR_surface"
-VK_COLORSPACE_SRGB_NONLINEAR_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
-VK_KHR_SWAPCHAIN_SPEC_VERSION = 68
-VK_KHR_SWAPCHAIN_EXTENSION_NAME = "VK_KHR_swapchain"
-VK_KHR_DISPLAY_SPEC_VERSION = 21
-VK_KHR_DISPLAY_EXTENSION_NAME = "VK_KHR_display"
-VK_KHR_DISPLAY_SWAPCHAIN_SPEC_VERSION = 9
-VK_KHR_DISPLAY_SWAPCHAIN_EXTENSION_NAME = "VK_KHR_display_swapchain"
-VK_KHR_XLIB_SURFACE_SPEC_VERSION = 6
-VK_KHR_XLIB_SURFACE_EXTENSION_NAME = "VK_KHR_xlib_surface"
-VK_KHR_XCB_SURFACE_SPEC_VERSION = 6
-VK_KHR_XCB_SURFACE_EXTENSION_NAME = "VK_KHR_xcb_surface"
-VK_KHR_WAYLAND_SURFACE_SPEC_VERSION = 5
-VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME = "VK_KHR_wayland_surface"
-VK_KHR_MIR_SURFACE_SPEC_VERSION = 4
-VK_KHR_MIR_SURFACE_EXTENSION_NAME = "VK_KHR_mir_surface"
-VK_KHR_ANDROID_SURFACE_SPEC_VERSION = 6
-VK_KHR_ANDROID_SURFACE_EXTENSION_NAME = "VK_KHR_android_surface"
-VK_KHR_WIN32_SURFACE_SPEC_VERSION = 5
-VK_KHR_WIN32_SURFACE_EXTENSION_NAME = "VK_KHR_win32_surface"
-VK_EXT_DEBUG_REPORT_SPEC_VERSION = 3
-VK_EXT_DEBUG_REPORT_EXTENSION_NAME = "VK_EXT_debug_report"
-VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
-VK_NV_GLSL_SHADER_SPEC_VERSION = 1
-VK_NV_GLSL_SHADER_EXTENSION_NAME = "VK_NV_glsl_shader"
-VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_SPEC_VERSION = 1
-VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME = "VK_KHR_sampler_mirror_clamp_to_edge"
-VK_IMG_FILTER_CUBIC_SPEC_VERSION = 1
-VK_IMG_FILTER_CUBIC_EXTENSION_NAME = "VK_IMG_filter_cubic"
-VK_AMD_RASTERIZATION_ORDER_SPEC_VERSION = 1
-VK_AMD_RASTERIZATION_ORDER_EXTENSION_NAME = "VK_AMD_rasterization_order"
-VK_AMD_SHADER_TRINARY_MINMAX_SPEC_VERSION = 1
-VK_AMD_SHADER_TRINARY_MINMAX_EXTENSION_NAME = "VK_AMD_shader_trinary_minmax"
-VK_AMD_SHADER_EXPLICIT_VERTEX_PARAMETER_SPEC_VERSION = 1
-VK_AMD_SHADER_EXPLICIT_VERTEX_PARAMETER_EXTENSION_NAME = "VK_AMD_shader_explicit_vertex_parameter"
-VK_EXT_DEBUG_MARKER_SPEC_VERSION = 3
-VK_EXT_DEBUG_MARKER_EXTENSION_NAME = "VK_EXT_debug_marker"
-VK_AMD_GCN_SHADER_SPEC_VERSION = 1
-VK_AMD_GCN_SHADER_EXTENSION_NAME = "VK_AMD_gcn_shader"
-VK_NV_DEDICATED_ALLOCATION_SPEC_VERSION = 1
-VK_NV_DEDICATED_ALLOCATION_EXTENSION_NAME = "VK_NV_dedicated_allocation"
-VK_AMD_DRAW_INDIRECT_COUNT_SPEC_VERSION = 1
-VK_AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME = "VK_AMD_draw_indirect_count"
-VK_AMD_NEGATIVE_VIEWPORT_HEIGHT_SPEC_VERSION = 0
-VK_AMD_NEGATIVE_VIEWPORT_HEIGHT_EXTENSION_NAME = "VK_AMD_negative_viewport_height"
-VK_AMD_GPU_SHADER_HALF_FLOAT_SPEC_VERSION = 1
-VK_AMD_GPU_SHADER_HALF_FLOAT_EXTENSION_NAME = "VK_AMD_gpu_shader_half_float"
-VK_AMD_SHADER_BALLOT_SPEC_VERSION = 0
-VK_AMD_SHADER_BALLOT_EXTENSION_NAME = "VK_AMD_shader_ballot"
-VK_IMG_FORMAT_PVRTC_SPEC_VERSION = 1
-VK_IMG_FORMAT_PVRTC_EXTENSION_NAME = "VK_IMG_format_pvrtc"
-VK_NV_EXTERNAL_MEMORY_CAPABILITIES_SPEC_VERSION = 1
-VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME = "VK_NV_external_memory_capabilities"
-VK_NV_EXTERNAL_MEMORY_SPEC_VERSION = 1
-VK_NV_EXTERNAL_MEMORY_EXTENSION_NAME = "VK_NV_external_memory"
-VK_NV_EXTERNAL_MEMORY_WIN32_SPEC_VERSION = 1
-VK_NV_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME = "VK_NV_external_memory_win32"
-VK_NV_WIN32_KEYED_MUTEX_SPEC_VERSION = 1
-VK_NV_WIN32_KEYED_MUTEX_EXTENSION_NAME = "VK_NV_win32_keyed_mutex"
-VK_EXT_VALIDATION_FLAGS_SPEC_VERSION = 1
-VK_EXT_VALIDATION_FLAGS_EXTENSION_NAME = "VK_EXT_validation_flags"
+def vkGetInstanceProcAddr(instance, pName):
+	fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
+	if fn==ffi.NULL:
+		raise ProcedureNotFoundError()
+	if not pName in _instance_ext_funcs:
+		raise ExtensionNotSupportedError()
+	fn = ffi.cast('PFN_'+pName, fn)
+	return _instance_ext_funcs[pName](fn)
+
+def vkGetDeviceProcAddr(device, pName):
+	fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
+	if fn==ffi.NULL:
+		raise ProcedureNotFoundError()
+	if not pName in _device_ext_funcs:
+		raise ExtensionNotSupportedError()
+	fn = ffi.cast('PFN_'+pName, fn)
+	return _device_ext_funcs[pName](fn)
