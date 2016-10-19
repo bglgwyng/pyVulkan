@@ -138,7 +138,6 @@ allocation_callbacks = VkAllocationCallbacks(pUserData=None,
 # inst = vkCreateInstance(instance_info, allocation_callbacks)
 inst = vkCreateInstance(instance_info, None)
 
-vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')
 vkDestroySurfaceKHR = vkGetInstanceProcAddr(inst, 'vkDestroySurfaceKHR')
 vkGetPhysicalDeviceSurfaceSupportKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceSupportKHR')
 vkGetPhysicalDeviceSurfaceFormatsKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceFormatsKHR')
@@ -171,7 +170,14 @@ wm_info = sdl2.SDL_SysWMinfo()
 sdl2.SDL_VERSION(wm_info.version)
 sdl2.SDL_GetWindowWMInfo(window, ctypes.byref(wm_info))
 if wm_info.subsystem == sdl2.SDL_SYSWM_X11:
+    vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')
     surface = vkCreateXlibSurfaceKHR(inst, VkXlibSurfaceCreateInfoKHR(dpy=wm_info.info.x11.display, window=wm_info.info.x11.window), None)
+elif wm_info.subsystem == sdl2.SDL_SYSWM_WINDOWS:
+    vkCreateWin32SurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateWin32SurfaceKHR')
+    import win32misc
+    hinstance = win32misc.getInstance(wm_info.info.win.window)
+    print hinstance
+    surface = vkCreateWin32SurfaceKHR(inst, VkWin32SurfaceCreateInfoKHR(hinstance=hinstance, hwnd=wm_info.info.win.window), None)
 else:
     assert False
 
