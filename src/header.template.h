@@ -21,7 +21,11 @@ typedef enum {{name}}{
 typedef {{type_}} {{name}}{
 {% for type_, name, enum in fields %}
 {% if enum %}
+{% if isinstance(enum, int) %}
+	{{type_}} {{name}}[{{enum}}];
+{% else %}
 	{{type_}} {{name}}[{{macros[enum]}}];
+{% endif %}
 {% else %}
 	{{type_}} {{name}};
 {% endif %}

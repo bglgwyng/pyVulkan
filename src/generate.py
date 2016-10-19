@@ -49,13 +49,14 @@ for i in tree.findall('types/type'):
     category = i.get('category')
     if category in {'struct', 'union'}:
         members = i.findall('member')
-
-
         def _(elem):
-            if elem is None:
-                return None
-            return elem.text
-        struct_unions[name] = (category, [((j.find('type').text + (j.find('type').tail or '')).strip(), j.find('name').text, _(j.find('enum'))) for j in members])
+            tail = elem.find('name').tail
+            if tail:
+                enum = elem.find('enum')
+                if enum is None:
+                    return int(tail[1:-1])
+                return enum.text
+        struct_unions[name] = (category, [((j.find('type').text + (j.find('type').tail or '')).strip(), j.find('name').text, _(j)) for j in members])
         structs_default_values[name] = {j.find('name').text: j.get('values') for j in members if j.get('values')}
         structs_len_autos[name] = {}
         member_names = [j.find('name').text for j in members]
@@ -383,8 +384,6 @@ for i in platform_extensions:
     def _(x):
         return {j: x[j] for j in x if not j in all_extensions or j in platform_extensions[i] or j in general_extensions}
     with io.open('../pyVulkan/vulkan_%s_cffi.h' % i, 'w', newline=platform_newline[i]) as f:
-        f.write(genheader.render(extensions=all_extensions, macros=macros, typedefs=_(typedefs), enums=_(enums), struct_unions=_(struct_unions), funcs=_(funcs), ext_funcs=_(ext_funcs), funcpointers=_(funcpointers), vkapi_ptr=platform_vkapi_ptr[i]))
-
-gentestenum = env.get_template('testenum.template.c')
-with io.open('/home/sobrans/sandbox/testenum.c', 'w', newline=platform_newline[i]) as f:
-    f.write(gentestenum.render(enums=enums, macros=macros, extensions=all_extensions))
+        f.write(genheader.render(extensions=all_extensions, macros=macros, typedefs=_(typedefs), enums=_(enums),
+        struct_unions=_(struct_unions), funcs=_(funcs), ext_funcs=_(ext_funcs), funcpointers=_(funcpointers),
+        vkapi_ptr=platform_vkapi_ptr[i], isinstance=isinstance, int=int))

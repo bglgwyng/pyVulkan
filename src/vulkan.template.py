@@ -61,6 +61,7 @@ def _new(ctype, **kwargs):
 	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
 	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
 	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values())
+	print (ffi.sizeof(ctype))
 	return ret
 
 class VkException(Exception):
@@ -226,7 +227,7 @@ def {{i}}({{', '.join(passed_params)}}):
 	if result!=VK_SUCCESS:
 		raise _raiseException[result]
 {% else %}
-	_callApi(_lib.{{i}}, {{', '.join(passed_params)}})
+	_callApi({{fn}}, {{', '.join(passed_params)}})
 {% endif %}
 {% endmacro %}
 
