@@ -5,21 +5,6 @@ import re
 
 tree = ElementTree.parse('vk.xml').getroot()
 
-linux_header = open('/dev/null', 'w')
-#
-# class MultiPlatformGenerator:
-#     def __init__(self, **kwargs):
-#         self.protects = {k:i for k, (i, _) in kwargs.items()}
-#         self.newline = {k:i for k, (_, i) in kwargs.items()}
-#         self.extensions = {k:set() for i in kwargs}
-#         self.files = {k:io.open('../pyVulkan/vulkan_%s_cffi.h'%k, 'w') for k in kwargs}
-#
-#
-#
-# generator = PlatformSpecificGenerator(linux = (('VK_USE_PLATFORM_XLIB_KHR', 'VK_USE_PLATFORM_XCB_KHR', 'VK_USE_PLATFORM_WAYLAND_KHR', 'VK_USE_PLATFORM_MIR_KHR'), '\n'),
-#                                     windows = (('VK_USE_PLATFORM_WIN32_KHR',), '\r\n'),
-#                                     android = (('VK_USE_PLATFORM_ANDROID_KHR',), '\n'))
-
 defined_defs = {'void', 'char', 'float', 'uint8_t', 'uint32_t', 'uint64_t', 'int32_t', 'size_t', 'DWORD', 'HINSTANCE', 'HWND', 'HANDLE'}
 
 external_structs = {'Display', 'xcb_connection_t', 'wl_display', 'wl_surface', 'MirConnection', 'MirSurface', 'ANativeWindow', 'SECURITY_ATTRIBUTES'}
@@ -104,11 +89,9 @@ for i in tree.findall('types/type'):
         name = i.find('name').text
         if type_ == 'VK_DEFINE_HANDLE':
             typedefs[name] = ('struct %s_T' % name, '*%s' % name)
-            print >> linux_header, "typedef struct %s_T *%s;" % (name, name)
         elif type_ == 'VK_DEFINE_NON_DISPATCHABLE_HANDLE':
             # FIXME
             typedefs[name] = ('uint64_t', name)
-            print >> linux_header, "typedef uint64_t %s;" % name
         else:
             assert False
     elif category == 'enum':
@@ -177,6 +160,8 @@ pattern = re.compile('(.*?)([A-Z]*)$')
 enums_ranges = {}
 
 for i in enums:
+    if i!='VkCompositeAlphaFlagBitsKHR':
+        continue
     if not enums[i]:
         continue
 
@@ -192,15 +177,14 @@ for i in enums:
     if is_bitmask:
         assert name.endswith('FlagBits')
         prefix = _(name[:-8])
-        enums_ranges[i] = {}
+        enums_ranges[i] = {prefix+'FLAG_BITS_MAX_ENUM'+postfix:0x7FFFFFFF}
     else:
         prefix = _(name)
         values = [int(j) for _, j in enums[i].items()]
         enums_ranges[i] = {prefix + 'BEGIN_RANGE' + postfix:min(values),
                         prefix + 'END_RANGE' + postfix:max(values),
-                        prefix + 'RANGE_SIZE' + postfix:max(values)-min(values)+1}
-
-    enums_ranges[i][prefix + 'MAX_ENUM' + postfix] = 0x7FFFFFFF
+                        prefix + 'RANGE_SIZE' + postfix:max(values)-min(values)+1,
+                        prefix + 'MAX_ENUM' + postfix:0x7FFFFFFF}
 
 
 for i in tree.findall('extensions/extension'):
@@ -400,4 +384,7 @@ for i in platform_extensions:
         return {j: x[j] for j in x if not j in all_extensions or j in platform_extensions[i] or j in general_extensions}
     with io.open('../pyVulkan/vulkan_%s_cffi.h' % i, 'w', newline=platform_newline[i]) as f:
         f.write(genheader.render(extensions=all_extensions, macros=macros, typedefs=_(typedefs), enums=_(enums), struct_unions=_(struct_unions), funcs=_(funcs), ext_funcs=_(ext_funcs), funcpointers=_(funcpointers), vkapi_ptr=platform_vkapi_ptr[i]))
-#
+
+gentestenum = env.get_template('testenum.template.c')
+with io.open('/home/sobrans/sandbox/testenum.c', 'w', newline=platform_newline[i]) as f:
+    f.write(gentestenum.render(enums=enums, macros=macros, extensions=all_extensions))
