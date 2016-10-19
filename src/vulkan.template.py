@@ -19,18 +19,18 @@ _weakkey_dict = _weakref.WeakKeyDictionary()
 
 def _castToPtr2(x, _type):
 	if isinstance(x, ffi.CData):
-		if _type.item==ffi.typeof(x):
-			return ffi.addressof(x)
-		return x
+		if _type.item==ffi.typeof(x) or (_type.item.cname=='void' and ffi.typeof(x).kind in ['struct', 'union']):
+			return ffi.addressof(x), x
+		return x, x
 	if isinstance(x, _collections.Iterable):
 		if _type.item.kind=='pointer':
 			ptrs = [_castToPtr(i, _type.item) for i in x]
-			ret = ffi.new(_type.item.cname+'[]', ptrs)
-			_weakkey_dict[ret] = tuple(ptrs)
-			return ret
+			ret = ffi.new(_type.item.cname+'[]', [i for i, _ in ptrs])
+			_weakkey_dict[ret] = tuple(i for _, i in ptrs)
 		else:
-			return ffi.new(_type.item.cname+'[]', x)
-	return ffi.cast(_type, x)
+			ret = ffi.new(_type.item.cname+'[]', x)
+		return ret, ret
+	return ffi.cast(_type, x), x
 
 def _castToPtr3(x, _type):
 	if isinstance(x, str):
@@ -59,8 +59,8 @@ def _new(ctype, **kwargs):
 	_type = ffi.typeof(ctype)
 	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
 	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
-	ret = ffi.new(_type.cname+'*', dict(kwargs, **ptrs))[0]
-	_weakkey_dict[ret] = tuple(ptrs.values())
+	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
+	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values())
 	return ret
 
 class VkException(Exception):
@@ -99,7 +99,8 @@ def _callApi(fn, *args):
 		if x is None:
 			return ffi.NULL
 		if _type.kind=='pointer':
-			return _castToPtr(x, _type)
+			ptr, _ = _castToPtr(x, _type)
+			return ptr
 		return x
 
 	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
