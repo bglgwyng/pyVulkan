@@ -13,7 +13,6 @@ setup_cmd = VK_NULL_HANDLE
 old_swapchain = VK_NULL_HANDLE
 depth_stencil = 1.0
 
-
 def memory_type_from_properties(typeBits, requirements_mask):
     for i, v in enumerate(memory_properties.memoryTypes):
         if (typeBits & 1) == 1:
@@ -21,7 +20,6 @@ def memory_type_from_properties(typeBits, requirements_mask):
                 return i
         typeBits >>= 1
     assert False
-
 
 def set_image_layout(image, aspect_mask, old_image_layout, new_image_layout, src_access_mask):
 
@@ -91,8 +89,7 @@ extensions = [string(i.extensionName) for i in vkEnumerateInstanceExtensionPrope
 
 @vkDebugReportCallbackEXT
 def dbgFunc(*args):
-    # print (string(args[5]))
-    # print (string(args[6]))
+    print (string(args[6]))
     return True
 
 debug_info = VkDebugReportCallbackCreateInfoEXT(pfnCallback=dbgFunc,
@@ -114,22 +111,18 @@ def allocFunc(*args):
     ptrs.add(temp)
     return temp
 
-
-@vkReallocationFunction
-def reallocFunc(*args):
-    raise NotImplementedError()
-
-
 @vkFreeFunction
 def freeFunc(*args):
     if args[1] != ffi.NULL:
         ptrs.remove(args[1])
 
+@vkReallocationFunction
+def reallocFunc(*args):
+    raise NotImplementedError()
 
 @vkInternalAllocationNotification
 def internalAllocNotify(*args):
     raise NotImplementedError()
-
 
 @vkInternalFreeNotification
 def internalFreeNotify(*args):
@@ -142,7 +135,8 @@ allocation_callbacks = VkAllocationCallbacks(pUserData=None,
                                             pfnInternalAllocation=internalAllocNotify,
                                             pfnInternalFree=internalFreeNotify)
 
-inst = vkCreateInstance(instance_info, allocation_callbacks)
+# inst = vkCreateInstance(instance_info, allocation_callbacks)
+inst = vkCreateInstance(instance_info, None)
 
 vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')
 vkDestroySurfaceKHR = vkGetInstanceProcAddr(inst, 'vkDestroySurfaceKHR')
@@ -514,7 +508,7 @@ vkDestroyDevice(device, None)
 vkDestroyDebugReportCallbackEXT(inst, debug_callback, None)
 
 vkDestroySurfaceKHR(inst, surface, None)
-vkDestroyInstance(inst, allocation_callbacks)
+vkDestroyInstance(inst, None)
 
 sdl2.SDL_DestroyWindow(window)
 sdl2.SDL_Quit()
