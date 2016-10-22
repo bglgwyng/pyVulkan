@@ -1070,9 +1070,6 @@ def VkDescriptorImageInfo(sampler=None, imageView=None, imageLayout=None):
 	return _new('VkDescriptorImageInfo', sampler=sampler, imageView=imageView, imageLayout=imageLayout)
 
 def VkWriteDescriptorSet(sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, pNext=None, dstSet=None, dstBinding=None, dstArrayElement=None, descriptorCount=None, descriptorType=None, pImageInfo=[], pBufferInfo=[], pTexelBufferView=[]):
-	if descriptorCount is None:
-		assert len(pImageInfo)==len(pBufferInfo)==len(pTexelBufferView)
-		descriptorCount = len(pImageInfo)
 	return _new('VkWriteDescriptorSet', sType=sType, pNext=pNext, dstSet=dstSet, dstBinding=dstBinding, dstArrayElement=dstArrayElement, descriptorCount=descriptorCount, descriptorType=descriptorType, pImageInfo=pImageInfo, pBufferInfo=pBufferInfo, pTexelBufferView=pTexelBufferView)
 
 def VkCopyDescriptorSet(sType=VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, pNext=None, srcSet=None, srcBinding=None, srcArrayElement=None, dstSet=None, dstBinding=None, dstArrayElement=None, descriptorCount=None):

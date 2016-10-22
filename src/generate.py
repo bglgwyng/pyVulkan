@@ -355,11 +355,12 @@ errors = {i: _(i) for i in all_errorcodes}
 exception_codes = '{%s}' % ', '.join('%s:%s' % (i, _(i)) for i in all_successcodes.union(all_errorcodes))
 
 constructors = {}
+len_auto_special_cases = ['VkWriteDescriptorSet']
 for i in struct_unions:
     _, fields = struct_unions[i]
     wrapper_params = ', '.join([("%s=%s" % (k, structs_default_values[i][k] if k in structs_default_values[i] else None)) for _, k, _ in fields])
     call_params = ', '.join("%s=%s" % (k, k) for _, k, _ in fields)
-    len_autos = structs_len_autos[i].items()
+    len_autos = structs_len_autos[i].items() if not i in len_auto_special_cases else []
 
     constructors[i] = (wrapper_params, call_params, len_autos)
 
