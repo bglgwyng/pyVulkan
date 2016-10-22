@@ -4,14 +4,12 @@ import ctypes
 import sys
 
 
-
-
-
 def string(char_ptr):
     if sys.version_info < (3, 0):
         return ffi.string(char_ptr)
     else:
         return ffi.string(char_ptr).decode('ascii')
+
 
 class Demo:
     def __init__(self):
@@ -31,9 +29,6 @@ class Demo:
                                     engineVersion=0,
                                     apiVersion=VK_MAKE_VERSION(1, 0, 0))
 
-
-
-
         def _getInstanceLayers():
             instance_validation_layers_alts = [["VK_LAYER_LUNARG_standard_validation"],
                                             ["VK_LAYER_GOOGLE_threading", "VK_LAYER_LUNARG_parameter_validation",
@@ -48,7 +43,6 @@ class Demo:
         instance_layers = _getInstanceLayers()
 
         extensions = [string(i.extensionName) for i in vkEnumerateInstanceExtensionProperties(None)]
-
 
         @vkDebugReportCallbackEXT
         def dbgFunc(*args):
@@ -243,7 +237,6 @@ class Demo:
 
         self.swapchain_images = vkGetSwapchainImagesKHR(self.device, self.swapchain)
 
-
         def _getView(image):
             self.set_image_layout(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 0, VK_ACCESS_MEMORY_READ_BIT)
             return vkCreateImageView(self.device, VkImageViewCreateInfo(format=format_,
@@ -343,7 +336,6 @@ class Demo:
                                                                             height=self.height,
                                                                             layers=1), None) for i, v in enumerate(self.views)]
 
-
     def flush_init_cmd(self):
         if self.setup_cmd:
             vkEndCommandBuffer(self.setup_cmd)
@@ -362,7 +354,6 @@ class Demo:
 
         vkBeginCommandBuffer(self.draw_cmd, cmd_buf_info)
         vkEndCommandBuffer(self.draw_cmd)
-
 
     def draw(self):
         vkDeviceWaitIdle(self.device)

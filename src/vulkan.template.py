@@ -147,10 +147,23 @@ def _callApi(fn, *args):
 
 	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
 
+{%- macro params(params, optional) -%}
+{%- for i in params -%}
+{%- if i in optional -%}
+{{i}}=None
+{%- else -%}
+{{i}}
+{%- endif -%}
+{%- if not loop.last -%}
+,
+{%- endif -%}
+{%- endfor -%}
+{%- endmacro -%}
+
 {% macro def_func_return_single(i, fn) %}
 {% set passed_params = func_wrappers[i][2][:-1] %}
 {% set ptr_param = func_wrappers[i][2][-1] %}
-def {{i}}({{', '.join(passed_params)}}):
+def {{i}}({{params(passed_params, func_wrappers[i][3])}}):
 	{{ptr_param}} = ffi.new('{{func_wrappers[i][1][-1]}}')
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
@@ -166,7 +179,7 @@ def {{i}}({{', '.join(passed_params)}}):
 {% set passed_params = func_wrappers[i][2][:-2] %}
 {% set len_param = func_wrappers[i][2][-2] %}
 {% set ptr_param = func_wrappers[i][2][-1] %}
-def {{i}}({{', '.join(passed_params)}}):
+def {{i}}({{params(passed_params, func_wrappers[i][3])}}):
 	{{len_param}} = ffi.new('{{func_wrappers[i][1][-2]}}')
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(func_wrappers[i][2][:-2]+[len_param, 'ffi.NULL'])}})
@@ -189,7 +202,7 @@ def {{i}}({{', '.join(passed_params)}}):
 {% macro def_func_return_list_len_specified(i, fn) %}
 {% set passed_params = func_wrappers[i][2][:-1] %}
 {% set ptr_param = func_wrappers[i][2][-1] %}
-def {{i}}({{', '.join(passed_params)}}):
+def {{i}}({{params(passed_params, func_wrappers[i][3])}}):
 	{{ptr_param}} = ffi.new('{{func_wrappers[i][1][-1]}}')
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params+[ptr_param])}})
@@ -203,7 +216,7 @@ def {{i}}({{', '.join(passed_params)}}):
 
 {% macro def_func_return_nothing(i, fn) %}
 {% set passed_params = func_wrappers[i][2] %}
-def {{i}}({{', '.join(passed_params)}}):
+def {{i}}({{params(passed_params, func_wrappers[i][3])}}):
 {% if i in throwable_funcs %}
 	result = _callApi({{fn}}, {{', '.join(passed_params)}})
 	if result!=VK_SUCCESS:

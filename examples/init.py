@@ -13,6 +13,7 @@ setup_cmd = VK_NULL_HANDLE
 old_swapchain = VK_NULL_HANDLE
 depth_stencil = 1.0
 
+
 def memory_type_from_properties(typeBits, requirements_mask):
     for i, v in enumerate(memory_properties.memoryTypes):
         if (typeBits & 1) == 1:
@@ -20,6 +21,7 @@ def memory_type_from_properties(typeBits, requirements_mask):
                 return i
         typeBits >>= 1
     assert False
+
 
 def set_image_layout(image, aspect_mask, old_image_layout, new_image_layout, src_access_mask):
 
@@ -111,18 +113,22 @@ def allocFunc(*args):
     ptrs.add(temp)
     return temp
 
+
 @vkFreeFunction
 def freeFunc(*args):
     if args[1] != ffi.NULL:
         ptrs.remove(args[1])
 
+
 @vkReallocationFunction
 def reallocFunc(*args):
     raise NotImplementedError()
 
+
 @vkInternalAllocationNotification
 def internalAllocNotify(*args):
     raise NotImplementedError()
+
 
 @vkInternalFreeNotification
 def internalFreeNotify(*args):
@@ -136,7 +142,7 @@ allocation_callbacks = VkAllocationCallbacks(pUserData=None,
                                             pfnInternalFree=internalFreeNotify)
 
 # inst = vkCreateInstance(instance_info, allocation_callbacks)
-inst = vkCreateInstance(instance_info, None)
+inst = vkCreateInstance(instance_info)
 
 vkDestroySurfaceKHR = vkGetInstanceProcAddr(inst, 'vkDestroySurfaceKHR')
 vkGetPhysicalDeviceSurfaceSupportKHR = vkGetInstanceProcAddr(inst, 'vkGetPhysicalDeviceSurfaceSupportKHR')
@@ -147,7 +153,7 @@ vkGetPhysicalDeviceSurfacePresentModesKHR = vkGetInstanceProcAddr(inst, 'vkGetPh
 vkCreateDebugReportCallbackEXT = vkGetInstanceProcAddr(inst, 'vkCreateDebugReportCallbackEXT')
 vkDestroyDebugReportCallbackEXT = vkGetInstanceProcAddr(inst, 'vkDestroyDebugReportCallbackEXT')
 
-debug_callback = vkCreateDebugReportCallbackEXT(inst, debug_info, None)
+debug_callback = vkCreateDebugReportCallbackEXT(inst, debug_info)
 
 gpu = vkEnumeratePhysicalDevices(inst)[0]
 
@@ -171,12 +177,12 @@ sdl2.SDL_VERSION(wm_info.version)
 sdl2.SDL_GetWindowWMInfo(window, ctypes.byref(wm_info))
 if wm_info.subsystem == sdl2.SDL_SYSWM_X11:
     vkCreateXlibSurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateXlibSurfaceKHR')
-    surface = vkCreateXlibSurfaceKHR(inst, VkXlibSurfaceCreateInfoKHR(dpy=wm_info.info.x11.display, window=wm_info.info.x11.window), None)
+    surface = vkCreateXlibSurfaceKHR(inst, VkXlibSurfaceCreateInfoKHR(dpy=wm_info.info.x11.display, window=wm_info.info.x11.window))
 elif wm_info.subsystem == sdl2.SDL_SYSWM_WINDOWS:
     vkCreateWin32SurfaceKHR = vkGetInstanceProcAddr(inst, 'vkCreateWin32SurfaceKHR')
     import win32misc
     hinstance = win32misc.getInstance(wm_info.info.win.window)
-    surface = vkCreateWin32SurfaceKHR(inst, VkWin32SurfaceCreateInfoKHR(hinstance=hinstance, hwnd=wm_info.info.win.window), None)
+    surface = vkCreateWin32SurfaceKHR(inst, VkWin32SurfaceCreateInfoKHR(hinstance=hinstance, hwnd=wm_info.info.win.window))
 else:
     assert False
 
@@ -206,7 +212,7 @@ queue_info = VkDeviceQueueCreateInfo(queueFamilyIndex=graphics_queue_node_index,
                                     queueCount=1,
                                     pQueuePriorities=[0.0])
 
-extensions = [string(i.extensionName) for i in vkEnumerateDeviceExtensionProperties(gpu, None)]
+extensions = [string(i.extensionName) for i in vkEnumerateDeviceExtensionProperties(gpu)]
 
 device_info = VkDeviceCreateInfo(queueCreateInfoCount=1,
                                 pQueueCreateInfos=queue_info,
@@ -214,7 +220,7 @@ device_info = VkDeviceCreateInfo(queueCreateInfoCount=1,
                                 ppEnabledLayerNames=[],
                                 ppEnabledExtensionNames=extensions)
 
-device = vkCreateDevice(gpu, device_info, None)
+device = vkCreateDevice(gpu, device_info)
 
 vkCreateSwapchainKHR = vkGetDeviceProcAddr(device, 'vkCreateSwapchainKHR')
 vkGetSwapchainImagesKHR = vkGetDeviceProcAddr(device, 'vkGetSwapchainImagesKHR')
@@ -236,7 +242,7 @@ memory_properties = vkGetPhysicalDeviceMemoryProperties(gpu)
 
 cmd_pool_info = VkCommandPoolCreateInfo(queueFamilyIndex=graphics_queue_node_index, flags=VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
 
-cmd_pool = vkCreateCommandPool(device, cmd_pool_info, None)
+cmd_pool = vkCreateCommandPool(device, cmd_pool_info)
 
 cmd_buffer_info = VkCommandBufferAllocateInfo(commandPool=cmd_pool,
                                             level=VK_COMMAND_BUFFER_LEVEL_PRIMARY,
@@ -280,7 +286,7 @@ swapchain_info = VkSwapchainCreateInfoKHR(surface=surface,
                                         oldSwapchain=old_swapchain,
                                         clipped=True)
 
-swapchain = vkCreateSwapchainKHR(device, swapchain_info, None)
+swapchain = vkCreateSwapchainKHR(device, swapchain_info)
 
 swapchain_images = vkGetSwapchainImagesKHR(device, swapchain)
 
@@ -299,7 +305,7 @@ def _getView(image):
                                                                             'layerCount': 1},
                                                         viewType=VK_IMAGE_VIEW_TYPE_2D,
                                                         flags=0,
-                                                        image=image), None)
+                                                        image=image))
 
 views = [_getView(i) for i in swapchain_images]
 
@@ -325,14 +331,14 @@ view = VkImageViewCreateInfo(format=depth_format,
                                                                     layerCount=1),
                             viewType=VK_IMAGE_VIEW_TYPE_2D)
 
-depth_image = vkCreateImage(device, image, None)
+depth_image = vkCreateImage(device, image)
 
 mem_reqs = vkGetImageMemoryRequirements(device, depth_image)
 
 mem_alloc.allocationSize = mem_reqs.size
 mem_alloc.memoryTypeIndex = memory_type_from_properties(mem_reqs.memoryTypeBits, 0)
 
-depth_mem = vkAllocateMemory(device, mem_alloc, None)
+depth_mem = vkAllocateMemory(device, mem_alloc)
 
 vkBindImageMemory(device, depth_image, depth_mem, 0)
 
@@ -343,7 +349,7 @@ set_image_layout(depth_image, VK_IMAGE_ASPECT_DEPTH_BIT,
 
 view.image = depth_image
 
-depth_view = vkCreateImageView(device, view, None)
+depth_view = vkCreateImageView(device, view)
 
 attachments = [VkAttachmentDescription(format=format_,
                                     samples=VK_SAMPLE_COUNT_1_BIT,
@@ -375,14 +381,14 @@ rp_info = VkRenderPassCreateInfo(attachmentCount=len(attachments),
                                 subpassCount=1,
                                 pSubpasses=[subpass])
 
-render_pass = vkCreateRenderPass(device, rp_info, None)
+render_pass = vkCreateRenderPass(device, rp_info)
 
 framebuffers = [vkCreateFramebuffer(device, VkFramebufferCreateInfo(renderPass=render_pass,
                                                                     attachmentCount=2,
                                                                     pAttachments=[v, depth_view],
                                                                     width=width,
                                                                     height=height,
-                                                                    layers=1), None) for i, v in enumerate(views)]
+                                                                    layers=1)) for i, v in enumerate(views)]
 
 
 def flush_init_cmd():
@@ -409,7 +415,7 @@ vkEndCommandBuffer(draw_cmd)
 def draw():
     vkDeviceWaitIdle(device)
 
-    present_complete_semaphore = vkCreateSemaphore(device, VkSemaphoreCreateInfo(), None)
+    present_complete_semaphore = vkCreateSemaphore(device, VkSemaphoreCreateInfo())
 
     current_buffer = vkAcquireNextImageKHR(device, swapchain, ffi.cast('uint64_t', -1),
                                       present_complete_semaphore,
@@ -468,7 +474,7 @@ def draw():
 
     vkQueuePresentKHR(queue, present)
 
-    vkDestroySemaphore(device, present_complete_semaphore, None)
+    vkDestroySemaphore(device, present_complete_semaphore)
 #main loop
 
 running = True
@@ -487,33 +493,33 @@ while running:
         last_ticks = new_ticks
 #cleanup
 
-vkFreeMemory(device, depth_mem, None)
+vkFreeMemory(device, depth_mem)
 
 for i in framebuffers:
-    vkDestroyFramebuffer(device, i, None)
+    vkDestroyFramebuffer(device, i)
 
 if setup_cmd:
     vkFreeCommandBuffers(device, cmd_pool, 1, [setup_cmd])
 vkFreeCommandBuffers(device, cmd_pool, 1, [draw_cmd])
 
-vkDestroyCommandPool(device, cmd_pool, None)
+vkDestroyCommandPool(device, cmd_pool)
 
-vkDestroyRenderPass(device, render_pass, None)
+vkDestroyRenderPass(device, render_pass)
 
 for i in views:
-    vkDestroyImageView(device, i, None)
+    vkDestroyImageView(device, i)
 
-vkDestroyImageView(device, depth_view, None)
-vkDestroyImage(device, depth_image, None)
+vkDestroyImageView(device, depth_view)
+vkDestroyImage(device, depth_image)
 
-vkDestroySwapchainKHR(device, swapchain, None)
+vkDestroySwapchainKHR(device, swapchain)
 
-vkDestroyDevice(device, None)
+vkDestroyDevice(device)
 
-vkDestroyDebugReportCallbackEXT(inst, debug_callback, None)
+vkDestroyDebugReportCallbackEXT(inst, debug_callback)
 
-vkDestroySurfaceKHR(inst, surface, None)
-vkDestroyInstance(inst, None)
+vkDestroySurfaceKHR(inst, surface)
+vkDestroyInstance(inst)
 
 sdl2.SDL_DestroyWindow(window)
 sdl2.SDL_Quit()

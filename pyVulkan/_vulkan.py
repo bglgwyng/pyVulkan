@@ -4,56 +4,61 @@ import collections as _collections
 import weakref as _weakref
 import sys
 
+
 class PlatformNotSupportedError(Exception):
-	pass
+    pass
+
 
 class ProcedureNotFoundError(Exception):
-	pass
+    pass
+
 
 class ExtensionNotSupportedError(Exception):
-	pass
+    pass
 
 ffi = _cffi.FFI()
 
 _weakkey_dict = _weakref.WeakKeyDictionary()
 
+
 def _castToPtr2(x, _type):
-	if isinstance(x, ffi.CData):
-		if _type.item==ffi.typeof(x) or (_type.item.cname=='void' and ffi.typeof(x).kind in ['struct', 'union']):
-			return ffi.addressof(x), x
-		return x, x
-	if isinstance(x, _collections.Iterable):
-		if _type.item.kind=='pointer':
-			ptrs = [_castToPtr(i, _type.item) for i in x]
-			ret = ffi.new(_type.item.cname+'[]', [i for i, _ in ptrs])
-			_weakkey_dict[ret] = tuple(i for _, i in ptrs if i!=ffi.NULL)
-		else:
-			ret = ffi.new(_type.item.cname+'[]', x)
-		return ret, ret
-	return ffi.cast(_type, x), x
+    if isinstance(x, ffi.CData):
+        if _type.item == ffi.typeof(x) or (_type.item.cname == 'void' and ffi.typeof(x).kind in ['struct', 'union']):
+            return ffi.addressof(x), x
+        return x, x
+    if isinstance(x, _collections.Iterable):
+        if _type.item.kind == 'pointer':
+            ptrs = [_castToPtr(i, _type.item) for i in x]
+            ret = ffi.new(_type.item.cname + '[]', [i for i, _ in ptrs])
+            _weakkey_dict[ret] = tuple(i for _, i in ptrs if i != ffi.NULL)
+        else:
+            ret = ffi.new(_type.item.cname + '[]', x)
+        return ret, ret
+    return ffi.cast(_type, x), x
+
 
 def _castToPtr3(x, _type):
-	if isinstance(x, str):
-		x = x.encode('ascii')
-	return _castToPtr2(x, _type)
+    if isinstance(x, str):
+        x = x.encode('ascii')
+    return _castToPtr2(x, _type)
 
-if sys.version_info<(3, 0):
-	def _cdef(header):
-		ffi.cdef(_pkg_resources.resource_string(__name__, header))
-	_castToPtr = _castToPtr2
+if sys.version_info < (3, 0):
+    def _cdef(header):
+        ffi.cdef(_pkg_resources.resource_string(__name__, header))
+    _castToPtr = _castToPtr2
 else:
-	def _cdef(header):
-		ffi.cdef(_pkg_resources.resource_string(__name__, header).decode())
-	_castToPtr = _castToPtr3
+    def _cdef(header):
+        ffi.cdef(_pkg_resources.resource_string(__name__, header).decode())
+    _castToPtr = _castToPtr3
 
-if sys.platform=='win32':
-	_cdef('vulkan_win32_cffi.h')
-	_lib = ffi.dlopen('vulkan-1.dll')
+if sys.platform == 'win32':
+    _cdef('vulkan_win32_cffi.h')
+    _lib = ffi.dlopen('vulkan-1.dll')
 elif sys.platform.startswith('linux'):
-	_cdef('vulkan_linux_cffi.h')
-	_lib = ffi.dlopen('libvulkan.so')
+    _cdef('vulkan_linux_cffi.h')
+    _lib = ffi.dlopen('libvulkan.so')
 else:
-	raise PlatformNotSupportedError()
+    raise PlatformNotSupportedError()
 
 VK_ATTACHMENT_LOAD_OP_LOAD = 0
 VK_ATTACHMENT_LOAD_OP_CLEAR = 1
@@ -733,17 +738,21 @@ VK_EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT_NV = 2
 VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT_NV = 4
 VK_VALIDATION_CHECK_ALL_EXT = 0
 
+
 def VK_MAKE_VERSION(major, minor, patch):
-	return (((major) << 22) | ((minor) << 12) | (patch))
+    return (((major) << 22) | ((minor) << 12) | (patch))
+
 
 def VK_VERSION_MAJOR(version):
-	return version>>22
+    return version >> 22
+
 
 def VK_VERSION_MINOR(version):
-	return (version>>12)&0x3ff
+    return (version >> 12) & 0x3ff
+
 
 def VK_VERSION_PATCH(version):
-	return version&0xfff
+    return version & 0xfff
 
 VK_API_VERSION = VK_MAKE_VERSION(1, 0, 0)
 VK_API_VERSION_1_0 = VK_MAKE_VERSION(1, 0, 0)
@@ -858,87 +867,135 @@ VK_EXT_validation_flags = 1
 VK_EXT_VALIDATION_FLAGS_SPEC_VERSION = 1
 VK_EXT_VALIDATION_FLAGS_EXTENSION_NAME = "VK_EXT_validation_flags"
 
+
 class VkException(Exception):
-	pass
+    pass
+
 
 class VkError(Exception):
-	pass
+    pass
+
 
 class VkIncomplete(VkException):
-	pass
+    pass
+
+
 class VkNotReady(VkException):
-	pass
+    pass
+
+
 class VkTimeout(VkException):
-	pass
+    pass
+
+
 class VkEventSet(VkException):
-	pass
+    pass
+
+
 class VkEventReset(VkException):
-	pass
+    pass
+
+
 class VkSuboptimalKHR(VkException):
-	pass
+    pass
+
 
 class VkErrorOutOfHostMemory(VkError):
-	pass
+    pass
+
+
 class VkErrorOutOfDeviceMemory(VkError):
-	pass
+    pass
+
+
 class VkErrorInitializationFailed(VkError):
-	pass
+    pass
+
+
 class VkErrorDeviceLost(VkError):
-	pass
+    pass
+
+
 class VkErrorMemoryMapFailed(VkError):
-	pass
+    pass
+
+
 class VkErrorLayerNotPresent(VkError):
-	pass
+    pass
+
+
 class VkErrorExtensionNotPresent(VkError):
-	pass
+    pass
+
+
 class VkErrorFeatureNotPresent(VkError):
-	pass
+    pass
+
+
 class VkErrorIncompatibleDriver(VkError):
-	pass
+    pass
+
+
 class VkErrorTooManyObjects(VkError):
-	pass
+    pass
+
+
 class VkErrorFormatNotSupported(VkError):
-	pass
+    pass
+
+
 class VkErrorFragmentedPool(VkError):
-	pass
+    pass
+
+
 class VkErrorSurfaceLostKHR(VkError):
-	pass
+    pass
+
+
 class VkErrorNativeWindowInUseKHR(VkError):
-	pass
+    pass
+
+
 class VkErrorOutOfDateKHR(VkError):
-	pass
+    pass
+
+
 class VkErrorIncompatibleDisplayKHR(VkError):
-	pass
+    pass
+
+
 class VkErrorValidationFailedEXT(VkError):
-	pass
+    pass
+
+
 class VkErrorInvalidShaderNV(VkError):
-	pass
+    pass
 
 _exception_codes = {
-	VK_INCOMPLETE:VkIncomplete,
-	VK_NOT_READY:VkNotReady,
-	VK_TIMEOUT:VkTimeout,
-	VK_EVENT_SET:VkEventSet,
-	VK_EVENT_RESET:VkEventReset,
-	VK_SUBOPTIMAL_KHR:VkSuboptimalKHR,
-	VK_ERROR_OUT_OF_HOST_MEMORY:VkErrorOutOfHostMemory,
-	VK_ERROR_OUT_OF_DEVICE_MEMORY:VkErrorOutOfDeviceMemory,
-	VK_ERROR_INITIALIZATION_FAILED:VkErrorInitializationFailed,
-	VK_ERROR_DEVICE_LOST:VkErrorDeviceLost,
-	VK_ERROR_MEMORY_MAP_FAILED:VkErrorMemoryMapFailed,
-	VK_ERROR_LAYER_NOT_PRESENT:VkErrorLayerNotPresent,
-	VK_ERROR_EXTENSION_NOT_PRESENT:VkErrorExtensionNotPresent,
-	VK_ERROR_FEATURE_NOT_PRESENT:VkErrorFeatureNotPresent,
-	VK_ERROR_INCOMPATIBLE_DRIVER:VkErrorIncompatibleDriver,
-	VK_ERROR_TOO_MANY_OBJECTS:VkErrorTooManyObjects,
-	VK_ERROR_FORMAT_NOT_SUPPORTED:VkErrorFormatNotSupported,
-	VK_ERROR_FRAGMENTED_POOL:VkErrorFragmentedPool,
-	VK_ERROR_SURFACE_LOST_KHR:VkErrorSurfaceLostKHR,
-	VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:VkErrorNativeWindowInUseKHR,
-	VK_ERROR_OUT_OF_DATE_KHR:VkErrorOutOfDateKHR,
-	VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:VkErrorIncompatibleDisplayKHR,
-	VK_ERROR_VALIDATION_FAILED_EXT:VkErrorValidationFailedEXT,
-	VK_ERROR_INVALID_SHADER_NV:VkErrorInvalidShaderNV
+    VK_INCOMPLETE: VkIncomplete,
+    VK_NOT_READY: VkNotReady,
+    VK_TIMEOUT: VkTimeout,
+    VK_EVENT_SET: VkEventSet,
+    VK_EVENT_RESET: VkEventReset,
+    VK_SUBOPTIMAL_KHR: VkSuboptimalKHR,
+    VK_ERROR_OUT_OF_HOST_MEMORY: VkErrorOutOfHostMemory,
+    VK_ERROR_OUT_OF_DEVICE_MEMORY: VkErrorOutOfDeviceMemory,
+    VK_ERROR_INITIALIZATION_FAILED: VkErrorInitializationFailed,
+    VK_ERROR_DEVICE_LOST: VkErrorDeviceLost,
+    VK_ERROR_MEMORY_MAP_FAILED: VkErrorMemoryMapFailed,
+    VK_ERROR_LAYER_NOT_PRESENT: VkErrorLayerNotPresent,
+    VK_ERROR_EXTENSION_NOT_PRESENT: VkErrorExtensionNotPresent,
+    VK_ERROR_FEATURE_NOT_PRESENT: VkErrorFeatureNotPresent,
+    VK_ERROR_INCOMPATIBLE_DRIVER: VkErrorIncompatibleDriver,
+    VK_ERROR_TOO_MANY_OBJECTS: VkErrorTooManyObjects,
+    VK_ERROR_FORMAT_NOT_SUPPORTED: VkErrorFormatNotSupported,
+    VK_ERROR_FRAGMENTED_POOL: VkErrorFragmentedPool,
+    VK_ERROR_SURFACE_LOST_KHR: VkErrorSurfaceLostKHR,
+    VK_ERROR_NATIVE_WINDOW_IN_USE_KHR: VkErrorNativeWindowInUseKHR,
+    VK_ERROR_OUT_OF_DATE_KHR: VkErrorOutOfDateKHR,
+    VK_ERROR_INCOMPATIBLE_DISPLAY_KHR: VkErrorIncompatibleDisplayKHR,
+    VK_ERROR_VALIDATION_FAILED_EXT: VkErrorValidationFailedEXT,
+    VK_ERROR_INVALID_SHADER_NV: VkErrorInvalidShaderNV
 }
 
 vkInternalAllocationNotification = ffi.callback('PFN_vkInternalAllocationNotification')
@@ -949,1556 +1006,1907 @@ vkFreeFunction = ffi.callback('PFN_vkFreeFunction')
 vkVoidFunction = ffi.callback('PFN_vkVoidFunction')
 vkDebugReportCallbackEXT = ffi.callback('PFN_vkDebugReportCallbackEXT')
 
+
 def _new(ctype, **kwargs):
-	_type = ffi.typeof(ctype)
-	kwargs = {k:kwargs[k] for k in kwargs if kwargs[k]}
-	ptrs = {k:_castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind=='pointer'}
-	ret = ffi.new(_type.cname+'*', dict(kwargs, **{k:v for k, (v, _) in ptrs.items()}))[0]
-	_weakkey_dict[ret] = tuple(v for _, v in ptrs.values() if v!=ffi.NULL)
-	return ret
+    _type = ffi.typeof(ctype)
+    kwargs = {k: kwargs[k] for k in kwargs if kwargs[k]}
+    ptrs = {k: _castToPtr(kwargs[k], dict(_type.fields)[k].type) for k in kwargs if dict(_type.fields)[k].type.kind == 'pointer'}
+    ret = ffi.new(_type.cname + '*', dict(kwargs, **{k: v for k, (v, _) in ptrs.items()}))[0]
+    _weakkey_dict[ret] = tuple(v for _, v in ptrs.values() if v != ffi.NULL)
+    return ret
 
 
 def VkOffset2D(x=None, y=None):
-	return _new('VkOffset2D', x=x, y=y)
+    return _new('VkOffset2D', x=x, y=y)
+
 
 def VkOffset3D(x=None, y=None, z=None):
-	return _new('VkOffset3D', x=x, y=y, z=z)
+    return _new('VkOffset3D', x=x, y=y, z=z)
+
 
 def VkExtent2D(width=None, height=None):
-	return _new('VkExtent2D', width=width, height=height)
+    return _new('VkExtent2D', width=width, height=height)
+
 
 def VkExtent3D(width=None, height=None, depth=None):
-	return _new('VkExtent3D', width=width, height=height, depth=depth)
+    return _new('VkExtent3D', width=width, height=height, depth=depth)
+
 
 def VkViewport(x=None, y=None, width=None, height=None, minDepth=None, maxDepth=None):
-	return _new('VkViewport', x=x, y=y, width=width, height=height, minDepth=minDepth, maxDepth=maxDepth)
+    return _new('VkViewport', x=x, y=y, width=width, height=height, minDepth=minDepth, maxDepth=maxDepth)
+
 
 def VkRect2D(offset=None, extent=None):
-	return _new('VkRect2D', offset=offset, extent=extent)
+    return _new('VkRect2D', offset=offset, extent=extent)
+
 
 def VkRect3D(offset=None, extent=None):
-	return _new('VkRect3D', offset=offset, extent=extent)
+    return _new('VkRect3D', offset=offset, extent=extent)
+
 
 def VkClearRect(rect=None, baseArrayLayer=None, layerCount=None):
-	return _new('VkClearRect', rect=rect, baseArrayLayer=baseArrayLayer, layerCount=layerCount)
+    return _new('VkClearRect', rect=rect, baseArrayLayer=baseArrayLayer, layerCount=layerCount)
+
 
 def VkComponentMapping(r=None, g=None, b=None, a=None):
-	return _new('VkComponentMapping', r=r, g=g, b=b, a=a)
+    return _new('VkComponentMapping', r=r, g=g, b=b, a=a)
+
 
 def VkPhysicalDeviceLimits(maxImageDimension1D=None, maxImageDimension2D=None, maxImageDimension3D=None, maxImageDimensionCube=None, maxImageArrayLayers=None, maxTexelBufferElements=None, maxUniformBufferRange=None, maxStorageBufferRange=None, maxPushConstantsSize=None, maxMemoryAllocationCount=None, maxSamplerAllocationCount=None, bufferImageGranularity=None, sparseAddressSpaceSize=None, maxBoundDescriptorSets=None, maxPerStageDescriptorSamplers=None, maxPerStageDescriptorUniformBuffers=None, maxPerStageDescriptorStorageBuffers=None, maxPerStageDescriptorSampledImages=None, maxPerStageDescriptorStorageImages=None, maxPerStageDescriptorInputAttachments=None, maxPerStageResources=None, maxDescriptorSetSamplers=None, maxDescriptorSetUniformBuffers=None, maxDescriptorSetUniformBuffersDynamic=None, maxDescriptorSetStorageBuffers=None, maxDescriptorSetStorageBuffersDynamic=None, maxDescriptorSetSampledImages=None, maxDescriptorSetStorageImages=None, maxDescriptorSetInputAttachments=None, maxVertexInputAttributes=None, maxVertexInputBindings=None, maxVertexInputAttributeOffset=None, maxVertexInputBindingStride=None, maxVertexOutputComponents=None, maxTessellationGenerationLevel=None, maxTessellationPatchSize=None, maxTessellationControlPerVertexInputComponents=None, maxTessellationControlPerVertexOutputComponents=None, maxTessellationControlPerPatchOutputComponents=None, maxTessellationControlTotalOutputComponents=None, maxTessellationEvaluationInputComponents=None, maxTessellationEvaluationOutputComponents=None, maxGeometryShaderInvocations=None, maxGeometryInputComponents=None, maxGeometryOutputComponents=None, maxGeometryOutputVertices=None, maxGeometryTotalOutputComponents=None, maxFragmentInputComponents=None, maxFragmentOutputAttachments=None, maxFragmentDualSrcAttachments=None, maxFragmentCombinedOutputResources=None, maxComputeSharedMemorySize=None, maxComputeWorkGroupCount=None, maxComputeWorkGroupInvocations=None, maxComputeWorkGroupSize=None, subPixelPrecisionBits=None, subTexelPrecisionBits=None, mipmapPrecisionBits=None, maxDrawIndexedIndexValue=None, maxDrawIndirectCount=None, maxSamplerLodBias=None, maxSamplerAnisotropy=None, maxViewports=None, maxViewportDimensions=None, viewportBoundsRange=None, viewportSubPixelBits=None, minMemoryMapAlignment=None, minTexelBufferOffsetAlignment=None, minUniformBufferOffsetAlignment=None, minStorageBufferOffsetAlignment=None, minTexelOffset=None, maxTexelOffset=None, minTexelGatherOffset=None, maxTexelGatherOffset=None, minInterpolationOffset=None, maxInterpolationOffset=None, subPixelInterpolationOffsetBits=None, maxFramebufferWidth=None, maxFramebufferHeight=None, maxFramebufferLayers=None, framebufferColorSampleCounts=None, framebufferDepthSampleCounts=None, framebufferStencilSampleCounts=None, framebufferNoAttachmentsSampleCounts=None, maxColorAttachments=None, sampledImageColorSampleCounts=None, sampledImageIntegerSampleCounts=None, sampledImageDepthSampleCounts=None, sampledImageStencilSampleCounts=None, storageImageSampleCounts=None, maxSampleMaskWords=None, timestampComputeAndGraphics=None, timestampPeriod=None, maxClipDistances=None, maxCullDistances=None, maxCombinedClipAndCullDistances=None, discreteQueuePriorities=None, pointSizeRange=None, lineWidthRange=None, pointSizeGranularity=None, lineWidthGranularity=None, strictLines=None, standardSampleLocations=None, optimalBufferCopyOffsetAlignment=None, optimalBufferCopyRowPitchAlignment=None, nonCoherentAtomSize=None):
-	return _new('VkPhysicalDeviceLimits', maxImageDimension1D=maxImageDimension1D, maxImageDimension2D=maxImageDimension2D, maxImageDimension3D=maxImageDimension3D, maxImageDimensionCube=maxImageDimensionCube, maxImageArrayLayers=maxImageArrayLayers, maxTexelBufferElements=maxTexelBufferElements, maxUniformBufferRange=maxUniformBufferRange, maxStorageBufferRange=maxStorageBufferRange, maxPushConstantsSize=maxPushConstantsSize, maxMemoryAllocationCount=maxMemoryAllocationCount, maxSamplerAllocationCount=maxSamplerAllocationCount, bufferImageGranularity=bufferImageGranularity, sparseAddressSpaceSize=sparseAddressSpaceSize, maxBoundDescriptorSets=maxBoundDescriptorSets, maxPerStageDescriptorSamplers=maxPerStageDescriptorSamplers, maxPerStageDescriptorUniformBuffers=maxPerStageDescriptorUniformBuffers, maxPerStageDescriptorStorageBuffers=maxPerStageDescriptorStorageBuffers, maxPerStageDescriptorSampledImages=maxPerStageDescriptorSampledImages, maxPerStageDescriptorStorageImages=maxPerStageDescriptorStorageImages, maxPerStageDescriptorInputAttachments=maxPerStageDescriptorInputAttachments, maxPerStageResources=maxPerStageResources, maxDescriptorSetSamplers=maxDescriptorSetSamplers, maxDescriptorSetUniformBuffers=maxDescriptorSetUniformBuffers, maxDescriptorSetUniformBuffersDynamic=maxDescriptorSetUniformBuffersDynamic, maxDescriptorSetStorageBuffers=maxDescriptorSetStorageBuffers, maxDescriptorSetStorageBuffersDynamic=maxDescriptorSetStorageBuffersDynamic, maxDescriptorSetSampledImages=maxDescriptorSetSampledImages, maxDescriptorSetStorageImages=maxDescriptorSetStorageImages, maxDescriptorSetInputAttachments=maxDescriptorSetInputAttachments, maxVertexInputAttributes=maxVertexInputAttributes, maxVertexInputBindings=maxVertexInputBindings, maxVertexInputAttributeOffset=maxVertexInputAttributeOffset, maxVertexInputBindingStride=maxVertexInputBindingStride, maxVertexOutputComponents=maxVertexOutputComponents, maxTessellationGenerationLevel=maxTessellationGenerationLevel, maxTessellationPatchSize=maxTessellationPatchSize, maxTessellationControlPerVertexInputComponents=maxTessellationControlPerVertexInputComponents, maxTessellationControlPerVertexOutputComponents=maxTessellationControlPerVertexOutputComponents, maxTessellationControlPerPatchOutputComponents=maxTessellationControlPerPatchOutputComponents, maxTessellationControlTotalOutputComponents=maxTessellationControlTotalOutputComponents, maxTessellationEvaluationInputComponents=maxTessellationEvaluationInputComponents, maxTessellationEvaluationOutputComponents=maxTessellationEvaluationOutputComponents, maxGeometryShaderInvocations=maxGeometryShaderInvocations, maxGeometryInputComponents=maxGeometryInputComponents, maxGeometryOutputComponents=maxGeometryOutputComponents, maxGeometryOutputVertices=maxGeometryOutputVertices, maxGeometryTotalOutputComponents=maxGeometryTotalOutputComponents, maxFragmentInputComponents=maxFragmentInputComponents, maxFragmentOutputAttachments=maxFragmentOutputAttachments, maxFragmentDualSrcAttachments=maxFragmentDualSrcAttachments, maxFragmentCombinedOutputResources=maxFragmentCombinedOutputResources, maxComputeSharedMemorySize=maxComputeSharedMemorySize, maxComputeWorkGroupCount=maxComputeWorkGroupCount, maxComputeWorkGroupInvocations=maxComputeWorkGroupInvocations, maxComputeWorkGroupSize=maxComputeWorkGroupSize, subPixelPrecisionBits=subPixelPrecisionBits, subTexelPrecisionBits=subTexelPrecisionBits, mipmapPrecisionBits=mipmapPrecisionBits, maxDrawIndexedIndexValue=maxDrawIndexedIndexValue, maxDrawIndirectCount=maxDrawIndirectCount, maxSamplerLodBias=maxSamplerLodBias, maxSamplerAnisotropy=maxSamplerAnisotropy, maxViewports=maxViewports, maxViewportDimensions=maxViewportDimensions, viewportBoundsRange=viewportBoundsRange, viewportSubPixelBits=viewportSubPixelBits, minMemoryMapAlignment=minMemoryMapAlignment, minTexelBufferOffsetAlignment=minTexelBufferOffsetAlignment, minUniformBufferOffsetAlignment=minUniformBufferOffsetAlignment, minStorageBufferOffsetAlignment=minStorageBufferOffsetAlignment, minTexelOffset=minTexelOffset, maxTexelOffset=maxTexelOffset, minTexelGatherOffset=minTexelGatherOffset, maxTexelGatherOffset=maxTexelGatherOffset, minInterpolationOffset=minInterpolationOffset, maxInterpolationOffset=maxInterpolationOffset, subPixelInterpolationOffsetBits=subPixelInterpolationOffsetBits, maxFramebufferWidth=maxFramebufferWidth, maxFramebufferHeight=maxFramebufferHeight, maxFramebufferLayers=maxFramebufferLayers, framebufferColorSampleCounts=framebufferColorSampleCounts, framebufferDepthSampleCounts=framebufferDepthSampleCounts, framebufferStencilSampleCounts=framebufferStencilSampleCounts, framebufferNoAttachmentsSampleCounts=framebufferNoAttachmentsSampleCounts, maxColorAttachments=maxColorAttachments, sampledImageColorSampleCounts=sampledImageColorSampleCounts, sampledImageIntegerSampleCounts=sampledImageIntegerSampleCounts, sampledImageDepthSampleCounts=sampledImageDepthSampleCounts, sampledImageStencilSampleCounts=sampledImageStencilSampleCounts, storageImageSampleCounts=storageImageSampleCounts, maxSampleMaskWords=maxSampleMaskWords, timestampComputeAndGraphics=timestampComputeAndGraphics, timestampPeriod=timestampPeriod, maxClipDistances=maxClipDistances, maxCullDistances=maxCullDistances, maxCombinedClipAndCullDistances=maxCombinedClipAndCullDistances, discreteQueuePriorities=discreteQueuePriorities, pointSizeRange=pointSizeRange, lineWidthRange=lineWidthRange, pointSizeGranularity=pointSizeGranularity, lineWidthGranularity=lineWidthGranularity, strictLines=strictLines, standardSampleLocations=standardSampleLocations, optimalBufferCopyOffsetAlignment=optimalBufferCopyOffsetAlignment, optimalBufferCopyRowPitchAlignment=optimalBufferCopyRowPitchAlignment, nonCoherentAtomSize=nonCoherentAtomSize)
+    return _new('VkPhysicalDeviceLimits', maxImageDimension1D=maxImageDimension1D, maxImageDimension2D=maxImageDimension2D, maxImageDimension3D=maxImageDimension3D, maxImageDimensionCube=maxImageDimensionCube, maxImageArrayLayers=maxImageArrayLayers, maxTexelBufferElements=maxTexelBufferElements, maxUniformBufferRange=maxUniformBufferRange, maxStorageBufferRange=maxStorageBufferRange, maxPushConstantsSize=maxPushConstantsSize, maxMemoryAllocationCount=maxMemoryAllocationCount, maxSamplerAllocationCount=maxSamplerAllocationCount, bufferImageGranularity=bufferImageGranularity, sparseAddressSpaceSize=sparseAddressSpaceSize, maxBoundDescriptorSets=maxBoundDescriptorSets, maxPerStageDescriptorSamplers=maxPerStageDescriptorSamplers, maxPerStageDescriptorUniformBuffers=maxPerStageDescriptorUniformBuffers, maxPerStageDescriptorStorageBuffers=maxPerStageDescriptorStorageBuffers, maxPerStageDescriptorSampledImages=maxPerStageDescriptorSampledImages, maxPerStageDescriptorStorageImages=maxPerStageDescriptorStorageImages, maxPerStageDescriptorInputAttachments=maxPerStageDescriptorInputAttachments, maxPerStageResources=maxPerStageResources, maxDescriptorSetSamplers=maxDescriptorSetSamplers, maxDescriptorSetUniformBuffers=maxDescriptorSetUniformBuffers, maxDescriptorSetUniformBuffersDynamic=maxDescriptorSetUniformBuffersDynamic, maxDescriptorSetStorageBuffers=maxDescriptorSetStorageBuffers, maxDescriptorSetStorageBuffersDynamic=maxDescriptorSetStorageBuffersDynamic, maxDescriptorSetSampledImages=maxDescriptorSetSampledImages, maxDescriptorSetStorageImages=maxDescriptorSetStorageImages, maxDescriptorSetInputAttachments=maxDescriptorSetInputAttachments, maxVertexInputAttributes=maxVertexInputAttributes, maxVertexInputBindings=maxVertexInputBindings, maxVertexInputAttributeOffset=maxVertexInputAttributeOffset, maxVertexInputBindingStride=maxVertexInputBindingStride, maxVertexOutputComponents=maxVertexOutputComponents, maxTessellationGenerationLevel=maxTessellationGenerationLevel, maxTessellationPatchSize=maxTessellationPatchSize, maxTessellationControlPerVertexInputComponents=maxTessellationControlPerVertexInputComponents, maxTessellationControlPerVertexOutputComponents=maxTessellationControlPerVertexOutputComponents, maxTessellationControlPerPatchOutputComponents=maxTessellationControlPerPatchOutputComponents, maxTessellationControlTotalOutputComponents=maxTessellationControlTotalOutputComponents, maxTessellationEvaluationInputComponents=maxTessellationEvaluationInputComponents, maxTessellationEvaluationOutputComponents=maxTessellationEvaluationOutputComponents, maxGeometryShaderInvocations=maxGeometryShaderInvocations, maxGeometryInputComponents=maxGeometryInputComponents, maxGeometryOutputComponents=maxGeometryOutputComponents, maxGeometryOutputVertices=maxGeometryOutputVertices, maxGeometryTotalOutputComponents=maxGeometryTotalOutputComponents, maxFragmentInputComponents=maxFragmentInputComponents, maxFragmentOutputAttachments=maxFragmentOutputAttachments, maxFragmentDualSrcAttachments=maxFragmentDualSrcAttachments, maxFragmentCombinedOutputResources=maxFragmentCombinedOutputResources, maxComputeSharedMemorySize=maxComputeSharedMemorySize, maxComputeWorkGroupCount=maxComputeWorkGroupCount, maxComputeWorkGroupInvocations=maxComputeWorkGroupInvocations, maxComputeWorkGroupSize=maxComputeWorkGroupSize, subPixelPrecisionBits=subPixelPrecisionBits, subTexelPrecisionBits=subTexelPrecisionBits, mipmapPrecisionBits=mipmapPrecisionBits, maxDrawIndexedIndexValue=maxDrawIndexedIndexValue, maxDrawIndirectCount=maxDrawIndirectCount, maxSamplerLodBias=maxSamplerLodBias, maxSamplerAnisotropy=maxSamplerAnisotropy, maxViewports=maxViewports, maxViewportDimensions=maxViewportDimensions, viewportBoundsRange=viewportBoundsRange, viewportSubPixelBits=viewportSubPixelBits, minMemoryMapAlignment=minMemoryMapAlignment, minTexelBufferOffsetAlignment=minTexelBufferOffsetAlignment, minUniformBufferOffsetAlignment=minUniformBufferOffsetAlignment, minStorageBufferOffsetAlignment=minStorageBufferOffsetAlignment, minTexelOffset=minTexelOffset, maxTexelOffset=maxTexelOffset, minTexelGatherOffset=minTexelGatherOffset, maxTexelGatherOffset=maxTexelGatherOffset, minInterpolationOffset=minInterpolationOffset, maxInterpolationOffset=maxInterpolationOffset, subPixelInterpolationOffsetBits=subPixelInterpolationOffsetBits, maxFramebufferWidth=maxFramebufferWidth, maxFramebufferHeight=maxFramebufferHeight, maxFramebufferLayers=maxFramebufferLayers, framebufferColorSampleCounts=framebufferColorSampleCounts, framebufferDepthSampleCounts=framebufferDepthSampleCounts, framebufferStencilSampleCounts=framebufferStencilSampleCounts, framebufferNoAttachmentsSampleCounts=framebufferNoAttachmentsSampleCounts, maxColorAttachments=maxColorAttachments, sampledImageColorSampleCounts=sampledImageColorSampleCounts, sampledImageIntegerSampleCounts=sampledImageIntegerSampleCounts, sampledImageDepthSampleCounts=sampledImageDepthSampleCounts, sampledImageStencilSampleCounts=sampledImageStencilSampleCounts, storageImageSampleCounts=storageImageSampleCounts, maxSampleMaskWords=maxSampleMaskWords, timestampComputeAndGraphics=timestampComputeAndGraphics, timestampPeriod=timestampPeriod, maxClipDistances=maxClipDistances, maxCullDistances=maxCullDistances, maxCombinedClipAndCullDistances=maxCombinedClipAndCullDistances, discreteQueuePriorities=discreteQueuePriorities, pointSizeRange=pointSizeRange, lineWidthRange=lineWidthRange, pointSizeGranularity=pointSizeGranularity, lineWidthGranularity=lineWidthGranularity, strictLines=strictLines, standardSampleLocations=standardSampleLocations, optimalBufferCopyOffsetAlignment=optimalBufferCopyOffsetAlignment, optimalBufferCopyRowPitchAlignment=optimalBufferCopyRowPitchAlignment, nonCoherentAtomSize=nonCoherentAtomSize)
+
 
 def VkPhysicalDeviceSparseProperties(residencyStandard2DBlockShape=None, residencyStandard2DMultisampleBlockShape=None, residencyStandard3DBlockShape=None, residencyAlignedMipSize=None, residencyNonResidentStrict=None):
-	return _new('VkPhysicalDeviceSparseProperties', residencyStandard2DBlockShape=residencyStandard2DBlockShape, residencyStandard2DMultisampleBlockShape=residencyStandard2DMultisampleBlockShape, residencyStandard3DBlockShape=residencyStandard3DBlockShape, residencyAlignedMipSize=residencyAlignedMipSize, residencyNonResidentStrict=residencyNonResidentStrict)
+    return _new('VkPhysicalDeviceSparseProperties', residencyStandard2DBlockShape=residencyStandard2DBlockShape, residencyStandard2DMultisampleBlockShape=residencyStandard2DMultisampleBlockShape, residencyStandard3DBlockShape=residencyStandard3DBlockShape, residencyAlignedMipSize=residencyAlignedMipSize, residencyNonResidentStrict=residencyNonResidentStrict)
+
 
 def VkPhysicalDeviceProperties(apiVersion=None, driverVersion=None, vendorID=None, deviceID=None, deviceType=None, deviceName=None, pipelineCacheUUID=None, limits=None, sparseProperties=None):
-	return _new('VkPhysicalDeviceProperties', apiVersion=apiVersion, driverVersion=driverVersion, vendorID=vendorID, deviceID=deviceID, deviceType=deviceType, deviceName=deviceName, pipelineCacheUUID=pipelineCacheUUID, limits=limits, sparseProperties=sparseProperties)
+    return _new('VkPhysicalDeviceProperties', apiVersion=apiVersion, driverVersion=driverVersion, vendorID=vendorID, deviceID=deviceID, deviceType=deviceType, deviceName=deviceName, pipelineCacheUUID=pipelineCacheUUID, limits=limits, sparseProperties=sparseProperties)
+
 
 def VkExtensionProperties(extensionName=None, specVersion=None):
-	return _new('VkExtensionProperties', extensionName=extensionName, specVersion=specVersion)
+    return _new('VkExtensionProperties', extensionName=extensionName, specVersion=specVersion)
+
 
 def VkLayerProperties(layerName=None, specVersion=None, implementationVersion=None, description=None):
-	return _new('VkLayerProperties', layerName=layerName, specVersion=specVersion, implementationVersion=implementationVersion, description=description)
+    return _new('VkLayerProperties', layerName=layerName, specVersion=specVersion, implementationVersion=implementationVersion, description=description)
+
 
 def VkApplicationInfo(sType=VK_STRUCTURE_TYPE_APPLICATION_INFO, pNext=None, pApplicationName=None, applicationVersion=None, pEngineName=None, engineVersion=None, apiVersion=None):
-	return _new('VkApplicationInfo', sType=sType, pNext=pNext, pApplicationName=pApplicationName, applicationVersion=applicationVersion, pEngineName=pEngineName, engineVersion=engineVersion, apiVersion=apiVersion)
+    return _new('VkApplicationInfo', sType=sType, pNext=pNext, pApplicationName=pApplicationName, applicationVersion=applicationVersion, pEngineName=pEngineName, engineVersion=engineVersion, apiVersion=apiVersion)
+
 
 def VkAllocationCallbacks(pUserData=None, pfnAllocation=None, pfnReallocation=None, pfnFree=None, pfnInternalAllocation=None, pfnInternalFree=None):
-	return _new('VkAllocationCallbacks', pUserData=pUserData, pfnAllocation=pfnAllocation, pfnReallocation=pfnReallocation, pfnFree=pfnFree, pfnInternalAllocation=pfnInternalAllocation, pfnInternalFree=pfnInternalFree)
+    return _new('VkAllocationCallbacks', pUserData=pUserData, pfnAllocation=pfnAllocation, pfnReallocation=pfnReallocation, pfnFree=pfnFree, pfnInternalAllocation=pfnInternalAllocation, pfnInternalFree=pfnInternalFree)
+
 
 def VkDeviceQueueCreateInfo(sType=VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, pNext=None, flags=None, queueFamilyIndex=None, queueCount=None, pQueuePriorities=[]):
-	if queueCount is None:
-		queueCount = len(pQueuePriorities)
-	return _new('VkDeviceQueueCreateInfo', sType=sType, pNext=pNext, flags=flags, queueFamilyIndex=queueFamilyIndex, queueCount=queueCount, pQueuePriorities=pQueuePriorities)
+    if queueCount is None:
+        queueCount = len(pQueuePriorities)
+    return _new('VkDeviceQueueCreateInfo', sType=sType, pNext=pNext, flags=flags, queueFamilyIndex=queueFamilyIndex, queueCount=queueCount, pQueuePriorities=pQueuePriorities)
+
 
 def VkPhysicalDeviceFeatures(robustBufferAccess=None, fullDrawIndexUint32=None, imageCubeArray=None, independentBlend=None, geometryShader=None, tessellationShader=None, sampleRateShading=None, dualSrcBlend=None, logicOp=None, multiDrawIndirect=None, drawIndirectFirstInstance=None, depthClamp=None, depthBiasClamp=None, fillModeNonSolid=None, depthBounds=None, wideLines=None, largePoints=None, alphaToOne=None, multiViewport=None, samplerAnisotropy=None, textureCompressionETC2=None, textureCompressionASTC_LDR=None, textureCompressionBC=None, occlusionQueryPrecise=None, pipelineStatisticsQuery=None, vertexPipelineStoresAndAtomics=None, fragmentStoresAndAtomics=None, shaderTessellationAndGeometryPointSize=None, shaderImageGatherExtended=None, shaderStorageImageExtendedFormats=None, shaderStorageImageMultisample=None, shaderStorageImageReadWithoutFormat=None, shaderStorageImageWriteWithoutFormat=None, shaderUniformBufferArrayDynamicIndexing=None, shaderSampledImageArrayDynamicIndexing=None, shaderStorageBufferArrayDynamicIndexing=None, shaderStorageImageArrayDynamicIndexing=None, shaderClipDistance=None, shaderCullDistance=None, shaderFloat64=None, shaderInt64=None, shaderInt16=None, shaderResourceResidency=None, shaderResourceMinLod=None, sparseBinding=None, sparseResidencyBuffer=None, sparseResidencyImage2D=None, sparseResidencyImage3D=None, sparseResidency2Samples=None, sparseResidency4Samples=None, sparseResidency8Samples=None, sparseResidency16Samples=None, sparseResidencyAliased=None, variableMultisampleRate=None, inheritedQueries=None):
-	return _new('VkPhysicalDeviceFeatures', robustBufferAccess=robustBufferAccess, fullDrawIndexUint32=fullDrawIndexUint32, imageCubeArray=imageCubeArray, independentBlend=independentBlend, geometryShader=geometryShader, tessellationShader=tessellationShader, sampleRateShading=sampleRateShading, dualSrcBlend=dualSrcBlend, logicOp=logicOp, multiDrawIndirect=multiDrawIndirect, drawIndirectFirstInstance=drawIndirectFirstInstance, depthClamp=depthClamp, depthBiasClamp=depthBiasClamp, fillModeNonSolid=fillModeNonSolid, depthBounds=depthBounds, wideLines=wideLines, largePoints=largePoints, alphaToOne=alphaToOne, multiViewport=multiViewport, samplerAnisotropy=samplerAnisotropy, textureCompressionETC2=textureCompressionETC2, textureCompressionASTC_LDR=textureCompressionASTC_LDR, textureCompressionBC=textureCompressionBC, occlusionQueryPrecise=occlusionQueryPrecise, pipelineStatisticsQuery=pipelineStatisticsQuery, vertexPipelineStoresAndAtomics=vertexPipelineStoresAndAtomics, fragmentStoresAndAtomics=fragmentStoresAndAtomics, shaderTessellationAndGeometryPointSize=shaderTessellationAndGeometryPointSize, shaderImageGatherExtended=shaderImageGatherExtended, shaderStorageImageExtendedFormats=shaderStorageImageExtendedFormats, shaderStorageImageMultisample=shaderStorageImageMultisample, shaderStorageImageReadWithoutFormat=shaderStorageImageReadWithoutFormat, shaderStorageImageWriteWithoutFormat=shaderStorageImageWriteWithoutFormat, shaderUniformBufferArrayDynamicIndexing=shaderUniformBufferArrayDynamicIndexing, shaderSampledImageArrayDynamicIndexing=shaderSampledImageArrayDynamicIndexing, shaderStorageBufferArrayDynamicIndexing=shaderStorageBufferArrayDynamicIndexing, shaderStorageImageArrayDynamicIndexing=shaderStorageImageArrayDynamicIndexing, shaderClipDistance=shaderClipDistance, shaderCullDistance=shaderCullDistance, shaderFloat64=shaderFloat64, shaderInt64=shaderInt64, shaderInt16=shaderInt16, shaderResourceResidency=shaderResourceResidency, shaderResourceMinLod=shaderResourceMinLod, sparseBinding=sparseBinding, sparseResidencyBuffer=sparseResidencyBuffer, sparseResidencyImage2D=sparseResidencyImage2D, sparseResidencyImage3D=sparseResidencyImage3D, sparseResidency2Samples=sparseResidency2Samples, sparseResidency4Samples=sparseResidency4Samples, sparseResidency8Samples=sparseResidency8Samples, sparseResidency16Samples=sparseResidency16Samples, sparseResidencyAliased=sparseResidencyAliased, variableMultisampleRate=variableMultisampleRate, inheritedQueries=inheritedQueries)
+    return _new('VkPhysicalDeviceFeatures', robustBufferAccess=robustBufferAccess, fullDrawIndexUint32=fullDrawIndexUint32, imageCubeArray=imageCubeArray, independentBlend=independentBlend, geometryShader=geometryShader, tessellationShader=tessellationShader, sampleRateShading=sampleRateShading, dualSrcBlend=dualSrcBlend, logicOp=logicOp, multiDrawIndirect=multiDrawIndirect, drawIndirectFirstInstance=drawIndirectFirstInstance, depthClamp=depthClamp, depthBiasClamp=depthBiasClamp, fillModeNonSolid=fillModeNonSolid, depthBounds=depthBounds, wideLines=wideLines, largePoints=largePoints, alphaToOne=alphaToOne, multiViewport=multiViewport, samplerAnisotropy=samplerAnisotropy, textureCompressionETC2=textureCompressionETC2, textureCompressionASTC_LDR=textureCompressionASTC_LDR, textureCompressionBC=textureCompressionBC, occlusionQueryPrecise=occlusionQueryPrecise, pipelineStatisticsQuery=pipelineStatisticsQuery, vertexPipelineStoresAndAtomics=vertexPipelineStoresAndAtomics, fragmentStoresAndAtomics=fragmentStoresAndAtomics, shaderTessellationAndGeometryPointSize=shaderTessellationAndGeometryPointSize, shaderImageGatherExtended=shaderImageGatherExtended, shaderStorageImageExtendedFormats=shaderStorageImageExtendedFormats, shaderStorageImageMultisample=shaderStorageImageMultisample, shaderStorageImageReadWithoutFormat=shaderStorageImageReadWithoutFormat, shaderStorageImageWriteWithoutFormat=shaderStorageImageWriteWithoutFormat, shaderUniformBufferArrayDynamicIndexing=shaderUniformBufferArrayDynamicIndexing, shaderSampledImageArrayDynamicIndexing=shaderSampledImageArrayDynamicIndexing, shaderStorageBufferArrayDynamicIndexing=shaderStorageBufferArrayDynamicIndexing, shaderStorageImageArrayDynamicIndexing=shaderStorageImageArrayDynamicIndexing, shaderClipDistance=shaderClipDistance, shaderCullDistance=shaderCullDistance, shaderFloat64=shaderFloat64, shaderInt64=shaderInt64, shaderInt16=shaderInt16, shaderResourceResidency=shaderResourceResidency, shaderResourceMinLod=shaderResourceMinLod, sparseBinding=sparseBinding, sparseResidencyBuffer=sparseResidencyBuffer, sparseResidencyImage2D=sparseResidencyImage2D, sparseResidencyImage3D=sparseResidencyImage3D, sparseResidency2Samples=sparseResidency2Samples, sparseResidency4Samples=sparseResidency4Samples, sparseResidency8Samples=sparseResidency8Samples, sparseResidency16Samples=sparseResidency16Samples, sparseResidencyAliased=sparseResidencyAliased, variableMultisampleRate=variableMultisampleRate, inheritedQueries=inheritedQueries)
+
 
 def VkDeviceCreateInfo(sType=VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, pNext=None, flags=None, queueCreateInfoCount=None, pQueueCreateInfos=[], enabledLayerCount=None, ppEnabledLayerNames=[], enabledExtensionCount=None, ppEnabledExtensionNames=[], pEnabledFeatures=None):
-	if queueCreateInfoCount is None:
-		queueCreateInfoCount = len(pQueueCreateInfos)
-	if enabledLayerCount is None:
-		enabledLayerCount = len(ppEnabledLayerNames)
-	if enabledExtensionCount is None:
-		enabledExtensionCount = len(ppEnabledExtensionNames)
-	return _new('VkDeviceCreateInfo', sType=sType, pNext=pNext, flags=flags, queueCreateInfoCount=queueCreateInfoCount, pQueueCreateInfos=pQueueCreateInfos, enabledLayerCount=enabledLayerCount, ppEnabledLayerNames=ppEnabledLayerNames, enabledExtensionCount=enabledExtensionCount, ppEnabledExtensionNames=ppEnabledExtensionNames, pEnabledFeatures=pEnabledFeatures)
+    if queueCreateInfoCount is None:
+        queueCreateInfoCount = len(pQueueCreateInfos)
+    if enabledLayerCount is None:
+        enabledLayerCount = len(ppEnabledLayerNames)
+    if enabledExtensionCount is None:
+        enabledExtensionCount = len(ppEnabledExtensionNames)
+    return _new('VkDeviceCreateInfo', sType=sType, pNext=pNext, flags=flags, queueCreateInfoCount=queueCreateInfoCount, pQueueCreateInfos=pQueueCreateInfos, enabledLayerCount=enabledLayerCount, ppEnabledLayerNames=ppEnabledLayerNames, enabledExtensionCount=enabledExtensionCount, ppEnabledExtensionNames=ppEnabledExtensionNames, pEnabledFeatures=pEnabledFeatures)
+
 
 def VkInstanceCreateInfo(sType=VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, pNext=None, flags=None, pApplicationInfo=None, enabledLayerCount=None, ppEnabledLayerNames=[], enabledExtensionCount=None, ppEnabledExtensionNames=[]):
-	if enabledLayerCount is None:
-		enabledLayerCount = len(ppEnabledLayerNames)
-	if enabledExtensionCount is None:
-		enabledExtensionCount = len(ppEnabledExtensionNames)
-	return _new('VkInstanceCreateInfo', sType=sType, pNext=pNext, flags=flags, pApplicationInfo=pApplicationInfo, enabledLayerCount=enabledLayerCount, ppEnabledLayerNames=ppEnabledLayerNames, enabledExtensionCount=enabledExtensionCount, ppEnabledExtensionNames=ppEnabledExtensionNames)
+    if enabledLayerCount is None:
+        enabledLayerCount = len(ppEnabledLayerNames)
+    if enabledExtensionCount is None:
+        enabledExtensionCount = len(ppEnabledExtensionNames)
+    return _new('VkInstanceCreateInfo', sType=sType, pNext=pNext, flags=flags, pApplicationInfo=pApplicationInfo, enabledLayerCount=enabledLayerCount, ppEnabledLayerNames=ppEnabledLayerNames, enabledExtensionCount=enabledExtensionCount, ppEnabledExtensionNames=ppEnabledExtensionNames)
+
 
 def VkQueueFamilyProperties(queueFlags=None, queueCount=None, timestampValidBits=None, minImageTransferGranularity=None):
-	return _new('VkQueueFamilyProperties', queueFlags=queueFlags, queueCount=queueCount, timestampValidBits=timestampValidBits, minImageTransferGranularity=minImageTransferGranularity)
+    return _new('VkQueueFamilyProperties', queueFlags=queueFlags, queueCount=queueCount, timestampValidBits=timestampValidBits, minImageTransferGranularity=minImageTransferGranularity)
+
 
 def VkMemoryType(propertyFlags=None, heapIndex=None):
-	return _new('VkMemoryType', propertyFlags=propertyFlags, heapIndex=heapIndex)
+    return _new('VkMemoryType', propertyFlags=propertyFlags, heapIndex=heapIndex)
+
 
 def VkMemoryHeap(size=None, flags=None):
-	return _new('VkMemoryHeap', size=size, flags=flags)
+    return _new('VkMemoryHeap', size=size, flags=flags)
+
 
 def VkPhysicalDeviceMemoryProperties(memoryTypeCount=None, memoryTypes=None, memoryHeapCount=None, memoryHeaps=None):
-	return _new('VkPhysicalDeviceMemoryProperties', memoryTypeCount=memoryTypeCount, memoryTypes=memoryTypes, memoryHeapCount=memoryHeapCount, memoryHeaps=memoryHeaps)
+    return _new('VkPhysicalDeviceMemoryProperties', memoryTypeCount=memoryTypeCount, memoryTypes=memoryTypes, memoryHeapCount=memoryHeapCount, memoryHeaps=memoryHeaps)
+
 
 def VkMemoryAllocateInfo(sType=VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, pNext=None, allocationSize=None, memoryTypeIndex=None):
-	return _new('VkMemoryAllocateInfo', sType=sType, pNext=pNext, allocationSize=allocationSize, memoryTypeIndex=memoryTypeIndex)
+    return _new('VkMemoryAllocateInfo', sType=sType, pNext=pNext, allocationSize=allocationSize, memoryTypeIndex=memoryTypeIndex)
+
 
 def VkMemoryRequirements(size=None, alignment=None, memoryTypeBits=None):
-	return _new('VkMemoryRequirements', size=size, alignment=alignment, memoryTypeBits=memoryTypeBits)
+    return _new('VkMemoryRequirements', size=size, alignment=alignment, memoryTypeBits=memoryTypeBits)
+
 
 def VkSparseImageFormatProperties(aspectMask=None, imageGranularity=None, flags=None):
-	return _new('VkSparseImageFormatProperties', aspectMask=aspectMask, imageGranularity=imageGranularity, flags=flags)
+    return _new('VkSparseImageFormatProperties', aspectMask=aspectMask, imageGranularity=imageGranularity, flags=flags)
+
 
 def VkSparseImageMemoryRequirements(formatProperties=None, imageMipTailFirstLod=None, imageMipTailSize=None, imageMipTailOffset=None, imageMipTailStride=None):
-	return _new('VkSparseImageMemoryRequirements', formatProperties=formatProperties, imageMipTailFirstLod=imageMipTailFirstLod, imageMipTailSize=imageMipTailSize, imageMipTailOffset=imageMipTailOffset, imageMipTailStride=imageMipTailStride)
+    return _new('VkSparseImageMemoryRequirements', formatProperties=formatProperties, imageMipTailFirstLod=imageMipTailFirstLod, imageMipTailSize=imageMipTailSize, imageMipTailOffset=imageMipTailOffset, imageMipTailStride=imageMipTailStride)
+
 
 def VkMappedMemoryRange(sType=VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE, pNext=None, memory=None, offset=None, size=None):
-	return _new('VkMappedMemoryRange', sType=sType, pNext=pNext, memory=memory, offset=offset, size=size)
+    return _new('VkMappedMemoryRange', sType=sType, pNext=pNext, memory=memory, offset=offset, size=size)
+
 
 def VkFormatProperties(linearTilingFeatures=None, optimalTilingFeatures=None, bufferFeatures=None):
-	return _new('VkFormatProperties', linearTilingFeatures=linearTilingFeatures, optimalTilingFeatures=optimalTilingFeatures, bufferFeatures=bufferFeatures)
+    return _new('VkFormatProperties', linearTilingFeatures=linearTilingFeatures, optimalTilingFeatures=optimalTilingFeatures, bufferFeatures=bufferFeatures)
+
 
 def VkImageFormatProperties(maxExtent=None, maxMipLevels=None, maxArrayLayers=None, sampleCounts=None, maxResourceSize=None):
-	return _new('VkImageFormatProperties', maxExtent=maxExtent, maxMipLevels=maxMipLevels, maxArrayLayers=maxArrayLayers, sampleCounts=sampleCounts, maxResourceSize=maxResourceSize)
+    return _new('VkImageFormatProperties', maxExtent=maxExtent, maxMipLevels=maxMipLevels, maxArrayLayers=maxArrayLayers, sampleCounts=sampleCounts, maxResourceSize=maxResourceSize)
+
 
 def VkDescriptorBufferInfo(buffer=None, offset=None, range=None):
-	return _new('VkDescriptorBufferInfo', buffer=buffer, offset=offset, range=range)
+    return _new('VkDescriptorBufferInfo', buffer=buffer, offset=offset, range=range)
+
 
 def VkDescriptorImageInfo(sampler=None, imageView=None, imageLayout=None):
-	return _new('VkDescriptorImageInfo', sampler=sampler, imageView=imageView, imageLayout=imageLayout)
+    return _new('VkDescriptorImageInfo', sampler=sampler, imageView=imageView, imageLayout=imageLayout)
+
 
 def VkWriteDescriptorSet(sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, pNext=None, dstSet=None, dstBinding=None, dstArrayElement=None, descriptorCount=None, descriptorType=None, pImageInfo=[], pBufferInfo=[], pTexelBufferView=[]):
-	return _new('VkWriteDescriptorSet', sType=sType, pNext=pNext, dstSet=dstSet, dstBinding=dstBinding, dstArrayElement=dstArrayElement, descriptorCount=descriptorCount, descriptorType=descriptorType, pImageInfo=pImageInfo, pBufferInfo=pBufferInfo, pTexelBufferView=pTexelBufferView)
+    return _new('VkWriteDescriptorSet', sType=sType, pNext=pNext, dstSet=dstSet, dstBinding=dstBinding, dstArrayElement=dstArrayElement, descriptorCount=descriptorCount, descriptorType=descriptorType, pImageInfo=pImageInfo, pBufferInfo=pBufferInfo, pTexelBufferView=pTexelBufferView)
+
 
 def VkCopyDescriptorSet(sType=VK_STRUCTURE_TYPE_COPY_DESCRIPTOR_SET, pNext=None, srcSet=None, srcBinding=None, srcArrayElement=None, dstSet=None, dstBinding=None, dstArrayElement=None, descriptorCount=None):
-	return _new('VkCopyDescriptorSet', sType=sType, pNext=pNext, srcSet=srcSet, srcBinding=srcBinding, srcArrayElement=srcArrayElement, dstSet=dstSet, dstBinding=dstBinding, dstArrayElement=dstArrayElement, descriptorCount=descriptorCount)
+    return _new('VkCopyDescriptorSet', sType=sType, pNext=pNext, srcSet=srcSet, srcBinding=srcBinding, srcArrayElement=srcArrayElement, dstSet=dstSet, dstBinding=dstBinding, dstArrayElement=dstArrayElement, descriptorCount=descriptorCount)
+
 
 def VkBufferCreateInfo(sType=VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, pNext=None, flags=None, size=None, usage=None, sharingMode=None, queueFamilyIndexCount=None, pQueueFamilyIndices=[]):
-	if queueFamilyIndexCount is None:
-		queueFamilyIndexCount = len(pQueueFamilyIndices)
-	return _new('VkBufferCreateInfo', sType=sType, pNext=pNext, flags=flags, size=size, usage=usage, sharingMode=sharingMode, queueFamilyIndexCount=queueFamilyIndexCount, pQueueFamilyIndices=pQueueFamilyIndices)
+    if queueFamilyIndexCount is None:
+        queueFamilyIndexCount = len(pQueueFamilyIndices)
+    return _new('VkBufferCreateInfo', sType=sType, pNext=pNext, flags=flags, size=size, usage=usage, sharingMode=sharingMode, queueFamilyIndexCount=queueFamilyIndexCount, pQueueFamilyIndices=pQueueFamilyIndices)
+
 
 def VkBufferViewCreateInfo(sType=VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO, pNext=None, flags=None, buffer=None, format=None, offset=None, range=None):
-	return _new('VkBufferViewCreateInfo', sType=sType, pNext=pNext, flags=flags, buffer=buffer, format=format, offset=offset, range=range)
+    return _new('VkBufferViewCreateInfo', sType=sType, pNext=pNext, flags=flags, buffer=buffer, format=format, offset=offset, range=range)
+
 
 def VkImageSubresource(aspectMask=None, mipLevel=None, arrayLayer=None):
-	return _new('VkImageSubresource', aspectMask=aspectMask, mipLevel=mipLevel, arrayLayer=arrayLayer)
+    return _new('VkImageSubresource', aspectMask=aspectMask, mipLevel=mipLevel, arrayLayer=arrayLayer)
+
 
 def VkImageSubresourceLayers(aspectMask=None, mipLevel=None, baseArrayLayer=None, layerCount=None):
-	return _new('VkImageSubresourceLayers', aspectMask=aspectMask, mipLevel=mipLevel, baseArrayLayer=baseArrayLayer, layerCount=layerCount)
+    return _new('VkImageSubresourceLayers', aspectMask=aspectMask, mipLevel=mipLevel, baseArrayLayer=baseArrayLayer, layerCount=layerCount)
+
 
 def VkImageSubresourceRange(aspectMask=None, baseMipLevel=None, levelCount=None, baseArrayLayer=None, layerCount=None):
-	return _new('VkImageSubresourceRange', aspectMask=aspectMask, baseMipLevel=baseMipLevel, levelCount=levelCount, baseArrayLayer=baseArrayLayer, layerCount=layerCount)
+    return _new('VkImageSubresourceRange', aspectMask=aspectMask, baseMipLevel=baseMipLevel, levelCount=levelCount, baseArrayLayer=baseArrayLayer, layerCount=layerCount)
+
 
 def VkMemoryBarrier(sType=VK_STRUCTURE_TYPE_MEMORY_BARRIER, pNext=None, srcAccessMask=None, dstAccessMask=None):
-	return _new('VkMemoryBarrier', sType=sType, pNext=pNext, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask)
+    return _new('VkMemoryBarrier', sType=sType, pNext=pNext, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask)
+
 
 def VkBufferMemoryBarrier(sType=VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, pNext=None, srcAccessMask=None, dstAccessMask=None, srcQueueFamilyIndex=None, dstQueueFamilyIndex=None, buffer=None, offset=None, size=None):
-	return _new('VkBufferMemoryBarrier', sType=sType, pNext=pNext, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask, srcQueueFamilyIndex=srcQueueFamilyIndex, dstQueueFamilyIndex=dstQueueFamilyIndex, buffer=buffer, offset=offset, size=size)
+    return _new('VkBufferMemoryBarrier', sType=sType, pNext=pNext, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask, srcQueueFamilyIndex=srcQueueFamilyIndex, dstQueueFamilyIndex=dstQueueFamilyIndex, buffer=buffer, offset=offset, size=size)
+
 
 def VkImageMemoryBarrier(sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, pNext=None, srcAccessMask=None, dstAccessMask=None, oldLayout=None, newLayout=None, srcQueueFamilyIndex=None, dstQueueFamilyIndex=None, image=None, subresourceRange=None):
-	return _new('VkImageMemoryBarrier', sType=sType, pNext=pNext, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask, oldLayout=oldLayout, newLayout=newLayout, srcQueueFamilyIndex=srcQueueFamilyIndex, dstQueueFamilyIndex=dstQueueFamilyIndex, image=image, subresourceRange=subresourceRange)
+    return _new('VkImageMemoryBarrier', sType=sType, pNext=pNext, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask, oldLayout=oldLayout, newLayout=newLayout, srcQueueFamilyIndex=srcQueueFamilyIndex, dstQueueFamilyIndex=dstQueueFamilyIndex, image=image, subresourceRange=subresourceRange)
+
 
 def VkImageCreateInfo(sType=VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, pNext=None, flags=None, imageType=None, format=None, extent=None, mipLevels=None, arrayLayers=None, samples=None, tiling=None, usage=None, sharingMode=None, queueFamilyIndexCount=None, pQueueFamilyIndices=[], initialLayout=None):
-	if queueFamilyIndexCount is None:
-		queueFamilyIndexCount = len(pQueueFamilyIndices)
-	return _new('VkImageCreateInfo', sType=sType, pNext=pNext, flags=flags, imageType=imageType, format=format, extent=extent, mipLevels=mipLevels, arrayLayers=arrayLayers, samples=samples, tiling=tiling, usage=usage, sharingMode=sharingMode, queueFamilyIndexCount=queueFamilyIndexCount, pQueueFamilyIndices=pQueueFamilyIndices, initialLayout=initialLayout)
+    if queueFamilyIndexCount is None:
+        queueFamilyIndexCount = len(pQueueFamilyIndices)
+    return _new('VkImageCreateInfo', sType=sType, pNext=pNext, flags=flags, imageType=imageType, format=format, extent=extent, mipLevels=mipLevels, arrayLayers=arrayLayers, samples=samples, tiling=tiling, usage=usage, sharingMode=sharingMode, queueFamilyIndexCount=queueFamilyIndexCount, pQueueFamilyIndices=pQueueFamilyIndices, initialLayout=initialLayout)
+
 
 def VkSubresourceLayout(offset=None, size=None, rowPitch=None, arrayPitch=None, depthPitch=None):
-	return _new('VkSubresourceLayout', offset=offset, size=size, rowPitch=rowPitch, arrayPitch=arrayPitch, depthPitch=depthPitch)
+    return _new('VkSubresourceLayout', offset=offset, size=size, rowPitch=rowPitch, arrayPitch=arrayPitch, depthPitch=depthPitch)
+
 
 def VkImageViewCreateInfo(sType=VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, pNext=None, flags=None, image=None, viewType=None, format=None, components=None, subresourceRange=None):
-	return _new('VkImageViewCreateInfo', sType=sType, pNext=pNext, flags=flags, image=image, viewType=viewType, format=format, components=components, subresourceRange=subresourceRange)
+    return _new('VkImageViewCreateInfo', sType=sType, pNext=pNext, flags=flags, image=image, viewType=viewType, format=format, components=components, subresourceRange=subresourceRange)
+
 
 def VkBufferCopy(srcOffset=None, dstOffset=None, size=None):
-	return _new('VkBufferCopy', srcOffset=srcOffset, dstOffset=dstOffset, size=size)
+    return _new('VkBufferCopy', srcOffset=srcOffset, dstOffset=dstOffset, size=size)
+
 
 def VkSparseMemoryBind(resourceOffset=None, size=None, memory=None, memoryOffset=None, flags=None):
-	return _new('VkSparseMemoryBind', resourceOffset=resourceOffset, size=size, memory=memory, memoryOffset=memoryOffset, flags=flags)
+    return _new('VkSparseMemoryBind', resourceOffset=resourceOffset, size=size, memory=memory, memoryOffset=memoryOffset, flags=flags)
+
 
 def VkSparseImageMemoryBind(subresource=None, offset=None, extent=None, memory=None, memoryOffset=None, flags=None):
-	return _new('VkSparseImageMemoryBind', subresource=subresource, offset=offset, extent=extent, memory=memory, memoryOffset=memoryOffset, flags=flags)
+    return _new('VkSparseImageMemoryBind', subresource=subresource, offset=offset, extent=extent, memory=memory, memoryOffset=memoryOffset, flags=flags)
+
 
 def VkSparseBufferMemoryBindInfo(buffer=None, bindCount=None, pBinds=[]):
-	if bindCount is None:
-		bindCount = len(pBinds)
-	return _new('VkSparseBufferMemoryBindInfo', buffer=buffer, bindCount=bindCount, pBinds=pBinds)
+    if bindCount is None:
+        bindCount = len(pBinds)
+    return _new('VkSparseBufferMemoryBindInfo', buffer=buffer, bindCount=bindCount, pBinds=pBinds)
+
 
 def VkSparseImageOpaqueMemoryBindInfo(image=None, bindCount=None, pBinds=[]):
-	if bindCount is None:
-		bindCount = len(pBinds)
-	return _new('VkSparseImageOpaqueMemoryBindInfo', image=image, bindCount=bindCount, pBinds=pBinds)
+    if bindCount is None:
+        bindCount = len(pBinds)
+    return _new('VkSparseImageOpaqueMemoryBindInfo', image=image, bindCount=bindCount, pBinds=pBinds)
+
 
 def VkSparseImageMemoryBindInfo(image=None, bindCount=None, pBinds=[]):
-	if bindCount is None:
-		bindCount = len(pBinds)
-	return _new('VkSparseImageMemoryBindInfo', image=image, bindCount=bindCount, pBinds=pBinds)
+    if bindCount is None:
+        bindCount = len(pBinds)
+    return _new('VkSparseImageMemoryBindInfo', image=image, bindCount=bindCount, pBinds=pBinds)
+
 
 def VkBindSparseInfo(sType=VK_STRUCTURE_TYPE_BIND_SPARSE_INFO, pNext=None, waitSemaphoreCount=None, pWaitSemaphores=[], bufferBindCount=None, pBufferBinds=[], imageOpaqueBindCount=None, pImageOpaqueBinds=[], imageBindCount=None, pImageBinds=[], signalSemaphoreCount=None, pSignalSemaphores=[]):
-	if waitSemaphoreCount is None:
-		waitSemaphoreCount = len(pWaitSemaphores)
-	if bufferBindCount is None:
-		bufferBindCount = len(pBufferBinds)
-	if imageOpaqueBindCount is None:
-		imageOpaqueBindCount = len(pImageOpaqueBinds)
-	if imageBindCount is None:
-		imageBindCount = len(pImageBinds)
-	if signalSemaphoreCount is None:
-		signalSemaphoreCount = len(pSignalSemaphores)
-	return _new('VkBindSparseInfo', sType=sType, pNext=pNext, waitSemaphoreCount=waitSemaphoreCount, pWaitSemaphores=pWaitSemaphores, bufferBindCount=bufferBindCount, pBufferBinds=pBufferBinds, imageOpaqueBindCount=imageOpaqueBindCount, pImageOpaqueBinds=pImageOpaqueBinds, imageBindCount=imageBindCount, pImageBinds=pImageBinds, signalSemaphoreCount=signalSemaphoreCount, pSignalSemaphores=pSignalSemaphores)
+    if waitSemaphoreCount is None:
+        waitSemaphoreCount = len(pWaitSemaphores)
+    if bufferBindCount is None:
+        bufferBindCount = len(pBufferBinds)
+    if imageOpaqueBindCount is None:
+        imageOpaqueBindCount = len(pImageOpaqueBinds)
+    if imageBindCount is None:
+        imageBindCount = len(pImageBinds)
+    if signalSemaphoreCount is None:
+        signalSemaphoreCount = len(pSignalSemaphores)
+    return _new('VkBindSparseInfo', sType=sType, pNext=pNext, waitSemaphoreCount=waitSemaphoreCount, pWaitSemaphores=pWaitSemaphores, bufferBindCount=bufferBindCount, pBufferBinds=pBufferBinds, imageOpaqueBindCount=imageOpaqueBindCount, pImageOpaqueBinds=pImageOpaqueBinds, imageBindCount=imageBindCount, pImageBinds=pImageBinds, signalSemaphoreCount=signalSemaphoreCount, pSignalSemaphores=pSignalSemaphores)
+
 
 def VkImageCopy(srcSubresource=None, srcOffset=None, dstSubresource=None, dstOffset=None, extent=None):
-	return _new('VkImageCopy', srcSubresource=srcSubresource, srcOffset=srcOffset, dstSubresource=dstSubresource, dstOffset=dstOffset, extent=extent)
+    return _new('VkImageCopy', srcSubresource=srcSubresource, srcOffset=srcOffset, dstSubresource=dstSubresource, dstOffset=dstOffset, extent=extent)
+
 
 def VkImageBlit(srcSubresource=None, srcOffsets=None, dstSubresource=None, dstOffsets=None):
-	return _new('VkImageBlit', srcSubresource=srcSubresource, srcOffsets=srcOffsets, dstSubresource=dstSubresource, dstOffsets=dstOffsets)
+    return _new('VkImageBlit', srcSubresource=srcSubresource, srcOffsets=srcOffsets, dstSubresource=dstSubresource, dstOffsets=dstOffsets)
+
 
 def VkBufferImageCopy(bufferOffset=None, bufferRowLength=None, bufferImageHeight=None, imageSubresource=None, imageOffset=None, imageExtent=None):
-	return _new('VkBufferImageCopy', bufferOffset=bufferOffset, bufferRowLength=bufferRowLength, bufferImageHeight=bufferImageHeight, imageSubresource=imageSubresource, imageOffset=imageOffset, imageExtent=imageExtent)
+    return _new('VkBufferImageCopy', bufferOffset=bufferOffset, bufferRowLength=bufferRowLength, bufferImageHeight=bufferImageHeight, imageSubresource=imageSubresource, imageOffset=imageOffset, imageExtent=imageExtent)
+
 
 def VkImageResolve(srcSubresource=None, srcOffset=None, dstSubresource=None, dstOffset=None, extent=None):
-	return _new('VkImageResolve', srcSubresource=srcSubresource, srcOffset=srcOffset, dstSubresource=dstSubresource, dstOffset=dstOffset, extent=extent)
+    return _new('VkImageResolve', srcSubresource=srcSubresource, srcOffset=srcOffset, dstSubresource=dstSubresource, dstOffset=dstOffset, extent=extent)
+
 
 def VkShaderModuleCreateInfo(sType=VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO, pNext=None, flags=None, codeSize=None, pCode=None):
-	return _new('VkShaderModuleCreateInfo', sType=sType, pNext=pNext, flags=flags, codeSize=codeSize, pCode=pCode)
+    return _new('VkShaderModuleCreateInfo', sType=sType, pNext=pNext, flags=flags, codeSize=codeSize, pCode=pCode)
+
 
 def VkDescriptorSetLayoutBinding(binding=None, descriptorType=None, descriptorCount=None, stageFlags=None, pImmutableSamplers=[]):
-	if descriptorCount is None:
-		descriptorCount = len(pImmutableSamplers)
-	return _new('VkDescriptorSetLayoutBinding', binding=binding, descriptorType=descriptorType, descriptorCount=descriptorCount, stageFlags=stageFlags, pImmutableSamplers=pImmutableSamplers)
+    if descriptorCount is None:
+        descriptorCount = len(pImmutableSamplers)
+    return _new('VkDescriptorSetLayoutBinding', binding=binding, descriptorType=descriptorType, descriptorCount=descriptorCount, stageFlags=stageFlags, pImmutableSamplers=pImmutableSamplers)
+
 
 def VkDescriptorSetLayoutCreateInfo(sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, pNext=None, flags=None, bindingCount=None, pBindings=[]):
-	if bindingCount is None:
-		bindingCount = len(pBindings)
-	return _new('VkDescriptorSetLayoutCreateInfo', sType=sType, pNext=pNext, flags=flags, bindingCount=bindingCount, pBindings=pBindings)
+    if bindingCount is None:
+        bindingCount = len(pBindings)
+    return _new('VkDescriptorSetLayoutCreateInfo', sType=sType, pNext=pNext, flags=flags, bindingCount=bindingCount, pBindings=pBindings)
+
 
 def VkDescriptorPoolSize(type=None, descriptorCount=None):
-	return _new('VkDescriptorPoolSize', type=type, descriptorCount=descriptorCount)
+    return _new('VkDescriptorPoolSize', type=type, descriptorCount=descriptorCount)
+
 
 def VkDescriptorPoolCreateInfo(sType=VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO, pNext=None, flags=None, maxSets=None, poolSizeCount=None, pPoolSizes=[]):
-	if poolSizeCount is None:
-		poolSizeCount = len(pPoolSizes)
-	return _new('VkDescriptorPoolCreateInfo', sType=sType, pNext=pNext, flags=flags, maxSets=maxSets, poolSizeCount=poolSizeCount, pPoolSizes=pPoolSizes)
+    if poolSizeCount is None:
+        poolSizeCount = len(pPoolSizes)
+    return _new('VkDescriptorPoolCreateInfo', sType=sType, pNext=pNext, flags=flags, maxSets=maxSets, poolSizeCount=poolSizeCount, pPoolSizes=pPoolSizes)
+
 
 def VkDescriptorSetAllocateInfo(sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO, pNext=None, descriptorPool=None, descriptorSetCount=None, pSetLayouts=[]):
-	if descriptorSetCount is None:
-		descriptorSetCount = len(pSetLayouts)
-	return _new('VkDescriptorSetAllocateInfo', sType=sType, pNext=pNext, descriptorPool=descriptorPool, descriptorSetCount=descriptorSetCount, pSetLayouts=pSetLayouts)
+    if descriptorSetCount is None:
+        descriptorSetCount = len(pSetLayouts)
+    return _new('VkDescriptorSetAllocateInfo', sType=sType, pNext=pNext, descriptorPool=descriptorPool, descriptorSetCount=descriptorSetCount, pSetLayouts=pSetLayouts)
+
 
 def VkSpecializationMapEntry(constantID=None, offset=None, size=None):
-	return _new('VkSpecializationMapEntry', constantID=constantID, offset=offset, size=size)
+    return _new('VkSpecializationMapEntry', constantID=constantID, offset=offset, size=size)
+
 
 def VkSpecializationInfo(mapEntryCount=None, pMapEntries=[], dataSize=None, pData=[]):
-	if mapEntryCount is None:
-		mapEntryCount = len(pMapEntries)
-	if dataSize is None:
-		dataSize = len(pData)
-	return _new('VkSpecializationInfo', mapEntryCount=mapEntryCount, pMapEntries=pMapEntries, dataSize=dataSize, pData=pData)
+    if mapEntryCount is None:
+        mapEntryCount = len(pMapEntries)
+    if dataSize is None:
+        dataSize = len(pData)
+    return _new('VkSpecializationInfo', mapEntryCount=mapEntryCount, pMapEntries=pMapEntries, dataSize=dataSize, pData=pData)
+
 
 def VkPipelineShaderStageCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, pNext=None, flags=None, stage=None, module=None, pName=None, pSpecializationInfo=None):
-	return _new('VkPipelineShaderStageCreateInfo', sType=sType, pNext=pNext, flags=flags, stage=stage, module=module, pName=pName, pSpecializationInfo=pSpecializationInfo)
+    return _new('VkPipelineShaderStageCreateInfo', sType=sType, pNext=pNext, flags=flags, stage=stage, module=module, pName=pName, pSpecializationInfo=pSpecializationInfo)
+
 
 def VkComputePipelineCreateInfo(sType=VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO, pNext=None, flags=None, stage=None, layout=None, basePipelineHandle=None, basePipelineIndex=None):
-	return _new('VkComputePipelineCreateInfo', sType=sType, pNext=pNext, flags=flags, stage=stage, layout=layout, basePipelineHandle=basePipelineHandle, basePipelineIndex=basePipelineIndex)
+    return _new('VkComputePipelineCreateInfo', sType=sType, pNext=pNext, flags=flags, stage=stage, layout=layout, basePipelineHandle=basePipelineHandle, basePipelineIndex=basePipelineIndex)
+
 
 def VkVertexInputBindingDescription(binding=None, stride=None, inputRate=None):
-	return _new('VkVertexInputBindingDescription', binding=binding, stride=stride, inputRate=inputRate)
+    return _new('VkVertexInputBindingDescription', binding=binding, stride=stride, inputRate=inputRate)
+
 
 def VkVertexInputAttributeDescription(location=None, binding=None, format=None, offset=None):
-	return _new('VkVertexInputAttributeDescription', location=location, binding=binding, format=format, offset=offset)
+    return _new('VkVertexInputAttributeDescription', location=location, binding=binding, format=format, offset=offset)
+
 
 def VkPipelineVertexInputStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO, pNext=None, flags=None, vertexBindingDescriptionCount=None, pVertexBindingDescriptions=[], vertexAttributeDescriptionCount=None, pVertexAttributeDescriptions=[]):
-	if vertexBindingDescriptionCount is None:
-		vertexBindingDescriptionCount = len(pVertexBindingDescriptions)
-	if vertexAttributeDescriptionCount is None:
-		vertexAttributeDescriptionCount = len(pVertexAttributeDescriptions)
-	return _new('VkPipelineVertexInputStateCreateInfo', sType=sType, pNext=pNext, flags=flags, vertexBindingDescriptionCount=vertexBindingDescriptionCount, pVertexBindingDescriptions=pVertexBindingDescriptions, vertexAttributeDescriptionCount=vertexAttributeDescriptionCount, pVertexAttributeDescriptions=pVertexAttributeDescriptions)
+    if vertexBindingDescriptionCount is None:
+        vertexBindingDescriptionCount = len(pVertexBindingDescriptions)
+    if vertexAttributeDescriptionCount is None:
+        vertexAttributeDescriptionCount = len(pVertexAttributeDescriptions)
+    return _new('VkPipelineVertexInputStateCreateInfo', sType=sType, pNext=pNext, flags=flags, vertexBindingDescriptionCount=vertexBindingDescriptionCount, pVertexBindingDescriptions=pVertexBindingDescriptions, vertexAttributeDescriptionCount=vertexAttributeDescriptionCount, pVertexAttributeDescriptions=pVertexAttributeDescriptions)
+
 
 def VkPipelineInputAssemblyStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO, pNext=None, flags=None, topology=None, primitiveRestartEnable=None):
-	return _new('VkPipelineInputAssemblyStateCreateInfo', sType=sType, pNext=pNext, flags=flags, topology=topology, primitiveRestartEnable=primitiveRestartEnable)
+    return _new('VkPipelineInputAssemblyStateCreateInfo', sType=sType, pNext=pNext, flags=flags, topology=topology, primitiveRestartEnable=primitiveRestartEnable)
+
 
 def VkPipelineTessellationStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO, pNext=None, flags=None, patchControlPoints=None):
-	return _new('VkPipelineTessellationStateCreateInfo', sType=sType, pNext=pNext, flags=flags, patchControlPoints=patchControlPoints)
+    return _new('VkPipelineTessellationStateCreateInfo', sType=sType, pNext=pNext, flags=flags, patchControlPoints=patchControlPoints)
+
 
 def VkPipelineViewportStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO, pNext=None, flags=None, viewportCount=None, pViewports=[], scissorCount=None, pScissors=[]):
-	if viewportCount is None:
-		viewportCount = len(pViewports)
-	if scissorCount is None:
-		scissorCount = len(pScissors)
-	return _new('VkPipelineViewportStateCreateInfo', sType=sType, pNext=pNext, flags=flags, viewportCount=viewportCount, pViewports=pViewports, scissorCount=scissorCount, pScissors=pScissors)
+    if viewportCount is None:
+        viewportCount = len(pViewports)
+    if scissorCount is None:
+        scissorCount = len(pScissors)
+    return _new('VkPipelineViewportStateCreateInfo', sType=sType, pNext=pNext, flags=flags, viewportCount=viewportCount, pViewports=pViewports, scissorCount=scissorCount, pScissors=pScissors)
+
 
 def VkPipelineRasterizationStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO, pNext=None, flags=None, depthClampEnable=None, rasterizerDiscardEnable=None, polygonMode=None, cullMode=None, frontFace=None, depthBiasEnable=None, depthBiasConstantFactor=None, depthBiasClamp=None, depthBiasSlopeFactor=None, lineWidth=None):
-	return _new('VkPipelineRasterizationStateCreateInfo', sType=sType, pNext=pNext, flags=flags, depthClampEnable=depthClampEnable, rasterizerDiscardEnable=rasterizerDiscardEnable, polygonMode=polygonMode, cullMode=cullMode, frontFace=frontFace, depthBiasEnable=depthBiasEnable, depthBiasConstantFactor=depthBiasConstantFactor, depthBiasClamp=depthBiasClamp, depthBiasSlopeFactor=depthBiasSlopeFactor, lineWidth=lineWidth)
+    return _new('VkPipelineRasterizationStateCreateInfo', sType=sType, pNext=pNext, flags=flags, depthClampEnable=depthClampEnable, rasterizerDiscardEnable=rasterizerDiscardEnable, polygonMode=polygonMode, cullMode=cullMode, frontFace=frontFace, depthBiasEnable=depthBiasEnable, depthBiasConstantFactor=depthBiasConstantFactor, depthBiasClamp=depthBiasClamp, depthBiasSlopeFactor=depthBiasSlopeFactor, lineWidth=lineWidth)
+
 
 def VkPipelineMultisampleStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO, pNext=None, flags=None, rasterizationSamples=None, sampleShadingEnable=None, minSampleShading=None, pSampleMask=None, alphaToCoverageEnable=None, alphaToOneEnable=None):
-	return _new('VkPipelineMultisampleStateCreateInfo', sType=sType, pNext=pNext, flags=flags, rasterizationSamples=rasterizationSamples, sampleShadingEnable=sampleShadingEnable, minSampleShading=minSampleShading, pSampleMask=pSampleMask, alphaToCoverageEnable=alphaToCoverageEnable, alphaToOneEnable=alphaToOneEnable)
+    return _new('VkPipelineMultisampleStateCreateInfo', sType=sType, pNext=pNext, flags=flags, rasterizationSamples=rasterizationSamples, sampleShadingEnable=sampleShadingEnable, minSampleShading=minSampleShading, pSampleMask=pSampleMask, alphaToCoverageEnable=alphaToCoverageEnable, alphaToOneEnable=alphaToOneEnable)
+
 
 def VkPipelineColorBlendAttachmentState(blendEnable=None, srcColorBlendFactor=None, dstColorBlendFactor=None, colorBlendOp=None, srcAlphaBlendFactor=None, dstAlphaBlendFactor=None, alphaBlendOp=None, colorWriteMask=None):
-	return _new('VkPipelineColorBlendAttachmentState', blendEnable=blendEnable, srcColorBlendFactor=srcColorBlendFactor, dstColorBlendFactor=dstColorBlendFactor, colorBlendOp=colorBlendOp, srcAlphaBlendFactor=srcAlphaBlendFactor, dstAlphaBlendFactor=dstAlphaBlendFactor, alphaBlendOp=alphaBlendOp, colorWriteMask=colorWriteMask)
+    return _new('VkPipelineColorBlendAttachmentState', blendEnable=blendEnable, srcColorBlendFactor=srcColorBlendFactor, dstColorBlendFactor=dstColorBlendFactor, colorBlendOp=colorBlendOp, srcAlphaBlendFactor=srcAlphaBlendFactor, dstAlphaBlendFactor=dstAlphaBlendFactor, alphaBlendOp=alphaBlendOp, colorWriteMask=colorWriteMask)
+
 
 def VkPipelineColorBlendStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO, pNext=None, flags=None, logicOpEnable=None, logicOp=None, attachmentCount=None, pAttachments=[], blendConstants=None):
-	if attachmentCount is None:
-		attachmentCount = len(pAttachments)
-	return _new('VkPipelineColorBlendStateCreateInfo', sType=sType, pNext=pNext, flags=flags, logicOpEnable=logicOpEnable, logicOp=logicOp, attachmentCount=attachmentCount, pAttachments=pAttachments, blendConstants=blendConstants)
+    if attachmentCount is None:
+        attachmentCount = len(pAttachments)
+    return _new('VkPipelineColorBlendStateCreateInfo', sType=sType, pNext=pNext, flags=flags, logicOpEnable=logicOpEnable, logicOp=logicOp, attachmentCount=attachmentCount, pAttachments=pAttachments, blendConstants=blendConstants)
+
 
 def VkPipelineDynamicStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO, pNext=None, flags=None, dynamicStateCount=None, pDynamicStates=[]):
-	if dynamicStateCount is None:
-		dynamicStateCount = len(pDynamicStates)
-	return _new('VkPipelineDynamicStateCreateInfo', sType=sType, pNext=pNext, flags=flags, dynamicStateCount=dynamicStateCount, pDynamicStates=pDynamicStates)
+    if dynamicStateCount is None:
+        dynamicStateCount = len(pDynamicStates)
+    return _new('VkPipelineDynamicStateCreateInfo', sType=sType, pNext=pNext, flags=flags, dynamicStateCount=dynamicStateCount, pDynamicStates=pDynamicStates)
+
 
 def VkStencilOpState(failOp=None, passOp=None, depthFailOp=None, compareOp=None, compareMask=None, writeMask=None, reference=None):
-	return _new('VkStencilOpState', failOp=failOp, passOp=passOp, depthFailOp=depthFailOp, compareOp=compareOp, compareMask=compareMask, writeMask=writeMask, reference=reference)
+    return _new('VkStencilOpState', failOp=failOp, passOp=passOp, depthFailOp=depthFailOp, compareOp=compareOp, compareMask=compareMask, writeMask=writeMask, reference=reference)
+
 
 def VkPipelineDepthStencilStateCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO, pNext=None, flags=None, depthTestEnable=None, depthWriteEnable=None, depthCompareOp=None, depthBoundsTestEnable=None, stencilTestEnable=None, front=None, back=None, minDepthBounds=None, maxDepthBounds=None):
-	return _new('VkPipelineDepthStencilStateCreateInfo', sType=sType, pNext=pNext, flags=flags, depthTestEnable=depthTestEnable, depthWriteEnable=depthWriteEnable, depthCompareOp=depthCompareOp, depthBoundsTestEnable=depthBoundsTestEnable, stencilTestEnable=stencilTestEnable, front=front, back=back, minDepthBounds=minDepthBounds, maxDepthBounds=maxDepthBounds)
+    return _new('VkPipelineDepthStencilStateCreateInfo', sType=sType, pNext=pNext, flags=flags, depthTestEnable=depthTestEnable, depthWriteEnable=depthWriteEnable, depthCompareOp=depthCompareOp, depthBoundsTestEnable=depthBoundsTestEnable, stencilTestEnable=stencilTestEnable, front=front, back=back, minDepthBounds=minDepthBounds, maxDepthBounds=maxDepthBounds)
+
 
 def VkGraphicsPipelineCreateInfo(sType=VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, pNext=None, flags=None, stageCount=None, pStages=[], pVertexInputState=None, pInputAssemblyState=None, pTessellationState=None, pViewportState=None, pRasterizationState=None, pMultisampleState=None, pDepthStencilState=None, pColorBlendState=None, pDynamicState=None, layout=None, renderPass=None, subpass=None, basePipelineHandle=None, basePipelineIndex=None):
-	if stageCount is None:
-		stageCount = len(pStages)
-	return _new('VkGraphicsPipelineCreateInfo', sType=sType, pNext=pNext, flags=flags, stageCount=stageCount, pStages=pStages, pVertexInputState=pVertexInputState, pInputAssemblyState=pInputAssemblyState, pTessellationState=pTessellationState, pViewportState=pViewportState, pRasterizationState=pRasterizationState, pMultisampleState=pMultisampleState, pDepthStencilState=pDepthStencilState, pColorBlendState=pColorBlendState, pDynamicState=pDynamicState, layout=layout, renderPass=renderPass, subpass=subpass, basePipelineHandle=basePipelineHandle, basePipelineIndex=basePipelineIndex)
+    if stageCount is None:
+        stageCount = len(pStages)
+    return _new('VkGraphicsPipelineCreateInfo', sType=sType, pNext=pNext, flags=flags, stageCount=stageCount, pStages=pStages, pVertexInputState=pVertexInputState, pInputAssemblyState=pInputAssemblyState, pTessellationState=pTessellationState, pViewportState=pViewportState, pRasterizationState=pRasterizationState, pMultisampleState=pMultisampleState, pDepthStencilState=pDepthStencilState, pColorBlendState=pColorBlendState, pDynamicState=pDynamicState, layout=layout, renderPass=renderPass, subpass=subpass, basePipelineHandle=basePipelineHandle, basePipelineIndex=basePipelineIndex)
+
 
 def VkPipelineCacheCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO, pNext=None, flags=None, initialDataSize=None, pInitialData=[]):
-	if initialDataSize is None:
-		initialDataSize = len(pInitialData)
-	return _new('VkPipelineCacheCreateInfo', sType=sType, pNext=pNext, flags=flags, initialDataSize=initialDataSize, pInitialData=pInitialData)
+    if initialDataSize is None:
+        initialDataSize = len(pInitialData)
+    return _new('VkPipelineCacheCreateInfo', sType=sType, pNext=pNext, flags=flags, initialDataSize=initialDataSize, pInitialData=pInitialData)
+
 
 def VkPushConstantRange(stageFlags=None, offset=None, size=None):
-	return _new('VkPushConstantRange', stageFlags=stageFlags, offset=offset, size=size)
+    return _new('VkPushConstantRange', stageFlags=stageFlags, offset=offset, size=size)
+
 
 def VkPipelineLayoutCreateInfo(sType=VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO, pNext=None, flags=None, setLayoutCount=None, pSetLayouts=[], pushConstantRangeCount=None, pPushConstantRanges=[]):
-	if setLayoutCount is None:
-		setLayoutCount = len(pSetLayouts)
-	if pushConstantRangeCount is None:
-		pushConstantRangeCount = len(pPushConstantRanges)
-	return _new('VkPipelineLayoutCreateInfo', sType=sType, pNext=pNext, flags=flags, setLayoutCount=setLayoutCount, pSetLayouts=pSetLayouts, pushConstantRangeCount=pushConstantRangeCount, pPushConstantRanges=pPushConstantRanges)
+    if setLayoutCount is None:
+        setLayoutCount = len(pSetLayouts)
+    if pushConstantRangeCount is None:
+        pushConstantRangeCount = len(pPushConstantRanges)
+    return _new('VkPipelineLayoutCreateInfo', sType=sType, pNext=pNext, flags=flags, setLayoutCount=setLayoutCount, pSetLayouts=pSetLayouts, pushConstantRangeCount=pushConstantRangeCount, pPushConstantRanges=pPushConstantRanges)
+
 
 def VkSamplerCreateInfo(sType=VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO, pNext=None, flags=None, magFilter=None, minFilter=None, mipmapMode=None, addressModeU=None, addressModeV=None, addressModeW=None, mipLodBias=None, anisotropyEnable=None, maxAnisotropy=None, compareEnable=None, compareOp=None, minLod=None, maxLod=None, borderColor=None, unnormalizedCoordinates=None):
-	return _new('VkSamplerCreateInfo', sType=sType, pNext=pNext, flags=flags, magFilter=magFilter, minFilter=minFilter, mipmapMode=mipmapMode, addressModeU=addressModeU, addressModeV=addressModeV, addressModeW=addressModeW, mipLodBias=mipLodBias, anisotropyEnable=anisotropyEnable, maxAnisotropy=maxAnisotropy, compareEnable=compareEnable, compareOp=compareOp, minLod=minLod, maxLod=maxLod, borderColor=borderColor, unnormalizedCoordinates=unnormalizedCoordinates)
+    return _new('VkSamplerCreateInfo', sType=sType, pNext=pNext, flags=flags, magFilter=magFilter, minFilter=minFilter, mipmapMode=mipmapMode, addressModeU=addressModeU, addressModeV=addressModeV, addressModeW=addressModeW, mipLodBias=mipLodBias, anisotropyEnable=anisotropyEnable, maxAnisotropy=maxAnisotropy, compareEnable=compareEnable, compareOp=compareOp, minLod=minLod, maxLod=maxLod, borderColor=borderColor, unnormalizedCoordinates=unnormalizedCoordinates)
+
 
 def VkCommandPoolCreateInfo(sType=VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO, pNext=None, flags=None, queueFamilyIndex=None):
-	return _new('VkCommandPoolCreateInfo', sType=sType, pNext=pNext, flags=flags, queueFamilyIndex=queueFamilyIndex)
+    return _new('VkCommandPoolCreateInfo', sType=sType, pNext=pNext, flags=flags, queueFamilyIndex=queueFamilyIndex)
+
 
 def VkCommandBufferAllocateInfo(sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, pNext=None, commandPool=None, level=None, commandBufferCount=None):
-	return _new('VkCommandBufferAllocateInfo', sType=sType, pNext=pNext, commandPool=commandPool, level=level, commandBufferCount=commandBufferCount)
+    return _new('VkCommandBufferAllocateInfo', sType=sType, pNext=pNext, commandPool=commandPool, level=level, commandBufferCount=commandBufferCount)
+
 
 def VkCommandBufferInheritanceInfo(sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO, pNext=None, renderPass=None, subpass=None, framebuffer=None, occlusionQueryEnable=None, queryFlags=None, pipelineStatistics=None):
-	return _new('VkCommandBufferInheritanceInfo', sType=sType, pNext=pNext, renderPass=renderPass, subpass=subpass, framebuffer=framebuffer, occlusionQueryEnable=occlusionQueryEnable, queryFlags=queryFlags, pipelineStatistics=pipelineStatistics)
+    return _new('VkCommandBufferInheritanceInfo', sType=sType, pNext=pNext, renderPass=renderPass, subpass=subpass, framebuffer=framebuffer, occlusionQueryEnable=occlusionQueryEnable, queryFlags=queryFlags, pipelineStatistics=pipelineStatistics)
+
 
 def VkCommandBufferBeginInfo(sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, pNext=None, flags=None, pInheritanceInfo=None):
-	return _new('VkCommandBufferBeginInfo', sType=sType, pNext=pNext, flags=flags, pInheritanceInfo=pInheritanceInfo)
+    return _new('VkCommandBufferBeginInfo', sType=sType, pNext=pNext, flags=flags, pInheritanceInfo=pInheritanceInfo)
+
 
 def VkClearColorValue(float32=None, int32=None, uint32=None):
-	return _new('VkClearColorValue', float32=float32, int32=int32, uint32=uint32)
+    return _new('VkClearColorValue', float32=float32, int32=int32, uint32=uint32)
+
 
 def VkClearDepthStencilValue(depth=None, stencil=None):
-	return _new('VkClearDepthStencilValue', depth=depth, stencil=stencil)
+    return _new('VkClearDepthStencilValue', depth=depth, stencil=stencil)
+
 
 def VkClearValue(color=None, depthStencil=None):
-	return _new('VkClearValue', color=color, depthStencil=depthStencil)
+    return _new('VkClearValue', color=color, depthStencil=depthStencil)
+
 
 def VkRenderPassBeginInfo(sType=VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO, pNext=None, renderPass=None, framebuffer=None, renderArea=None, clearValueCount=None, pClearValues=[]):
-	if clearValueCount is None:
-		clearValueCount = len(pClearValues)
-	return _new('VkRenderPassBeginInfo', sType=sType, pNext=pNext, renderPass=renderPass, framebuffer=framebuffer, renderArea=renderArea, clearValueCount=clearValueCount, pClearValues=pClearValues)
+    if clearValueCount is None:
+        clearValueCount = len(pClearValues)
+    return _new('VkRenderPassBeginInfo', sType=sType, pNext=pNext, renderPass=renderPass, framebuffer=framebuffer, renderArea=renderArea, clearValueCount=clearValueCount, pClearValues=pClearValues)
+
 
 def VkClearAttachment(aspectMask=None, colorAttachment=None, clearValue=None):
-	return _new('VkClearAttachment', aspectMask=aspectMask, colorAttachment=colorAttachment, clearValue=clearValue)
+    return _new('VkClearAttachment', aspectMask=aspectMask, colorAttachment=colorAttachment, clearValue=clearValue)
+
 
 def VkAttachmentDescription(flags=None, format=None, samples=None, loadOp=None, storeOp=None, stencilLoadOp=None, stencilStoreOp=None, initialLayout=None, finalLayout=None):
-	return _new('VkAttachmentDescription', flags=flags, format=format, samples=samples, loadOp=loadOp, storeOp=storeOp, stencilLoadOp=stencilLoadOp, stencilStoreOp=stencilStoreOp, initialLayout=initialLayout, finalLayout=finalLayout)
+    return _new('VkAttachmentDescription', flags=flags, format=format, samples=samples, loadOp=loadOp, storeOp=storeOp, stencilLoadOp=stencilLoadOp, stencilStoreOp=stencilStoreOp, initialLayout=initialLayout, finalLayout=finalLayout)
+
 
 def VkAttachmentReference(attachment=None, layout=None):
-	return _new('VkAttachmentReference', attachment=attachment, layout=layout)
+    return _new('VkAttachmentReference', attachment=attachment, layout=layout)
+
 
 def VkSubpassDescription(flags=None, pipelineBindPoint=None, inputAttachmentCount=None, pInputAttachments=[], colorAttachmentCount=None, pColorAttachments=[], pResolveAttachments=[], pDepthStencilAttachment=None, preserveAttachmentCount=None, pPreserveAttachments=[]):
-	if inputAttachmentCount is None:
-		inputAttachmentCount = len(pInputAttachments)
-	if colorAttachmentCount is None:
-		assert len(pColorAttachments)==len(pResolveAttachments)
-		colorAttachmentCount = len(pColorAttachments)
-	if preserveAttachmentCount is None:
-		preserveAttachmentCount = len(pPreserveAttachments)
-	return _new('VkSubpassDescription', flags=flags, pipelineBindPoint=pipelineBindPoint, inputAttachmentCount=inputAttachmentCount, pInputAttachments=pInputAttachments, colorAttachmentCount=colorAttachmentCount, pColorAttachments=pColorAttachments, pResolveAttachments=pResolveAttachments, pDepthStencilAttachment=pDepthStencilAttachment, preserveAttachmentCount=preserveAttachmentCount, pPreserveAttachments=pPreserveAttachments)
+    if inputAttachmentCount is None:
+        inputAttachmentCount = len(pInputAttachments)
+    if colorAttachmentCount is None:
+        assert len(pColorAttachments) == len(pResolveAttachments)
+        colorAttachmentCount = len(pColorAttachments)
+    if preserveAttachmentCount is None:
+        preserveAttachmentCount = len(pPreserveAttachments)
+    return _new('VkSubpassDescription', flags=flags, pipelineBindPoint=pipelineBindPoint, inputAttachmentCount=inputAttachmentCount, pInputAttachments=pInputAttachments, colorAttachmentCount=colorAttachmentCount, pColorAttachments=pColorAttachments, pResolveAttachments=pResolveAttachments, pDepthStencilAttachment=pDepthStencilAttachment, preserveAttachmentCount=preserveAttachmentCount, pPreserveAttachments=pPreserveAttachments)
+
 
 def VkSubpassDependency(srcSubpass=None, dstSubpass=None, srcStageMask=None, dstStageMask=None, srcAccessMask=None, dstAccessMask=None, dependencyFlags=None):
-	return _new('VkSubpassDependency', srcSubpass=srcSubpass, dstSubpass=dstSubpass, srcStageMask=srcStageMask, dstStageMask=dstStageMask, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask, dependencyFlags=dependencyFlags)
+    return _new('VkSubpassDependency', srcSubpass=srcSubpass, dstSubpass=dstSubpass, srcStageMask=srcStageMask, dstStageMask=dstStageMask, srcAccessMask=srcAccessMask, dstAccessMask=dstAccessMask, dependencyFlags=dependencyFlags)
+
 
 def VkRenderPassCreateInfo(sType=VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO, pNext=None, flags=None, attachmentCount=None, pAttachments=[], subpassCount=None, pSubpasses=[], dependencyCount=None, pDependencies=[]):
-	if attachmentCount is None:
-		attachmentCount = len(pAttachments)
-	if subpassCount is None:
-		subpassCount = len(pSubpasses)
-	if dependencyCount is None:
-		dependencyCount = len(pDependencies)
-	return _new('VkRenderPassCreateInfo', sType=sType, pNext=pNext, flags=flags, attachmentCount=attachmentCount, pAttachments=pAttachments, subpassCount=subpassCount, pSubpasses=pSubpasses, dependencyCount=dependencyCount, pDependencies=pDependencies)
+    if attachmentCount is None:
+        attachmentCount = len(pAttachments)
+    if subpassCount is None:
+        subpassCount = len(pSubpasses)
+    if dependencyCount is None:
+        dependencyCount = len(pDependencies)
+    return _new('VkRenderPassCreateInfo', sType=sType, pNext=pNext, flags=flags, attachmentCount=attachmentCount, pAttachments=pAttachments, subpassCount=subpassCount, pSubpasses=pSubpasses, dependencyCount=dependencyCount, pDependencies=pDependencies)
+
 
 def VkEventCreateInfo(sType=VK_STRUCTURE_TYPE_EVENT_CREATE_INFO, pNext=None, flags=None):
-	return _new('VkEventCreateInfo', sType=sType, pNext=pNext, flags=flags)
+    return _new('VkEventCreateInfo', sType=sType, pNext=pNext, flags=flags)
+
 
 def VkFenceCreateInfo(sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, pNext=None, flags=None):
-	return _new('VkFenceCreateInfo', sType=sType, pNext=pNext, flags=flags)
+    return _new('VkFenceCreateInfo', sType=sType, pNext=pNext, flags=flags)
+
 
 def VkSemaphoreCreateInfo(sType=VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO, pNext=None, flags=None):
-	return _new('VkSemaphoreCreateInfo', sType=sType, pNext=pNext, flags=flags)
+    return _new('VkSemaphoreCreateInfo', sType=sType, pNext=pNext, flags=flags)
+
 
 def VkQueryPoolCreateInfo(sType=VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO, pNext=None, flags=None, queryType=None, queryCount=None, pipelineStatistics=None):
-	return _new('VkQueryPoolCreateInfo', sType=sType, pNext=pNext, flags=flags, queryType=queryType, queryCount=queryCount, pipelineStatistics=pipelineStatistics)
+    return _new('VkQueryPoolCreateInfo', sType=sType, pNext=pNext, flags=flags, queryType=queryType, queryCount=queryCount, pipelineStatistics=pipelineStatistics)
+
 
 def VkFramebufferCreateInfo(sType=VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO, pNext=None, flags=None, renderPass=None, attachmentCount=None, pAttachments=[], width=None, height=None, layers=None):
-	if attachmentCount is None:
-		attachmentCount = len(pAttachments)
-	return _new('VkFramebufferCreateInfo', sType=sType, pNext=pNext, flags=flags, renderPass=renderPass, attachmentCount=attachmentCount, pAttachments=pAttachments, width=width, height=height, layers=layers)
+    if attachmentCount is None:
+        attachmentCount = len(pAttachments)
+    return _new('VkFramebufferCreateInfo', sType=sType, pNext=pNext, flags=flags, renderPass=renderPass, attachmentCount=attachmentCount, pAttachments=pAttachments, width=width, height=height, layers=layers)
+
 
 def VkDrawIndirectCommand(vertexCount=None, instanceCount=None, firstVertex=None, firstInstance=None):
-	return _new('VkDrawIndirectCommand', vertexCount=vertexCount, instanceCount=instanceCount, firstVertex=firstVertex, firstInstance=firstInstance)
+    return _new('VkDrawIndirectCommand', vertexCount=vertexCount, instanceCount=instanceCount, firstVertex=firstVertex, firstInstance=firstInstance)
+
 
 def VkDrawIndexedIndirectCommand(indexCount=None, instanceCount=None, firstIndex=None, vertexOffset=None, firstInstance=None):
-	return _new('VkDrawIndexedIndirectCommand', indexCount=indexCount, instanceCount=instanceCount, firstIndex=firstIndex, vertexOffset=vertexOffset, firstInstance=firstInstance)
+    return _new('VkDrawIndexedIndirectCommand', indexCount=indexCount, instanceCount=instanceCount, firstIndex=firstIndex, vertexOffset=vertexOffset, firstInstance=firstInstance)
+
 
 def VkDispatchIndirectCommand(x=None, y=None, z=None):
-	return _new('VkDispatchIndirectCommand', x=x, y=y, z=z)
+    return _new('VkDispatchIndirectCommand', x=x, y=y, z=z)
+
 
 def VkSubmitInfo(sType=VK_STRUCTURE_TYPE_SUBMIT_INFO, pNext=None, waitSemaphoreCount=None, pWaitSemaphores=[], pWaitDstStageMask=[], commandBufferCount=None, pCommandBuffers=[], signalSemaphoreCount=None, pSignalSemaphores=[]):
-	if waitSemaphoreCount is None:
-		assert len(pWaitSemaphores)==len(pWaitDstStageMask)
-		waitSemaphoreCount = len(pWaitSemaphores)
-	if commandBufferCount is None:
-		commandBufferCount = len(pCommandBuffers)
-	if signalSemaphoreCount is None:
-		signalSemaphoreCount = len(pSignalSemaphores)
-	return _new('VkSubmitInfo', sType=sType, pNext=pNext, waitSemaphoreCount=waitSemaphoreCount, pWaitSemaphores=pWaitSemaphores, pWaitDstStageMask=pWaitDstStageMask, commandBufferCount=commandBufferCount, pCommandBuffers=pCommandBuffers, signalSemaphoreCount=signalSemaphoreCount, pSignalSemaphores=pSignalSemaphores)
+    if waitSemaphoreCount is None:
+        assert len(pWaitSemaphores) == len(pWaitDstStageMask)
+        waitSemaphoreCount = len(pWaitSemaphores)
+    if commandBufferCount is None:
+        commandBufferCount = len(pCommandBuffers)
+    if signalSemaphoreCount is None:
+        signalSemaphoreCount = len(pSignalSemaphores)
+    return _new('VkSubmitInfo', sType=sType, pNext=pNext, waitSemaphoreCount=waitSemaphoreCount, pWaitSemaphores=pWaitSemaphores, pWaitDstStageMask=pWaitDstStageMask, commandBufferCount=commandBufferCount, pCommandBuffers=pCommandBuffers, signalSemaphoreCount=signalSemaphoreCount, pSignalSemaphores=pSignalSemaphores)
+
 
 def VkDisplayPropertiesKHR(display=None, displayName=None, physicalDimensions=None, physicalResolution=None, supportedTransforms=None, planeReorderPossible=None, persistentContent=None):
-	return _new('VkDisplayPropertiesKHR', display=display, displayName=displayName, physicalDimensions=physicalDimensions, physicalResolution=physicalResolution, supportedTransforms=supportedTransforms, planeReorderPossible=planeReorderPossible, persistentContent=persistentContent)
+    return _new('VkDisplayPropertiesKHR', display=display, displayName=displayName, physicalDimensions=physicalDimensions, physicalResolution=physicalResolution, supportedTransforms=supportedTransforms, planeReorderPossible=planeReorderPossible, persistentContent=persistentContent)
+
 
 def VkDisplayPlanePropertiesKHR(currentDisplay=None, currentStackIndex=None):
-	return _new('VkDisplayPlanePropertiesKHR', currentDisplay=currentDisplay, currentStackIndex=currentStackIndex)
+    return _new('VkDisplayPlanePropertiesKHR', currentDisplay=currentDisplay, currentStackIndex=currentStackIndex)
+
 
 def VkDisplayModeParametersKHR(visibleRegion=None, refreshRate=None):
-	return _new('VkDisplayModeParametersKHR', visibleRegion=visibleRegion, refreshRate=refreshRate)
+    return _new('VkDisplayModeParametersKHR', visibleRegion=visibleRegion, refreshRate=refreshRate)
+
 
 def VkDisplayModePropertiesKHR(displayMode=None, parameters=None):
-	return _new('VkDisplayModePropertiesKHR', displayMode=displayMode, parameters=parameters)
+    return _new('VkDisplayModePropertiesKHR', displayMode=displayMode, parameters=parameters)
+
 
 def VkDisplayModeCreateInfoKHR(sType=VK_STRUCTURE_TYPE_DISPLAY_MODE_CREATE_INFO_KHR, pNext=None, flags=None, parameters=None):
-	return _new('VkDisplayModeCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, parameters=parameters)
+    return _new('VkDisplayModeCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, parameters=parameters)
+
 
 def VkDisplayPlaneCapabilitiesKHR(supportedAlpha=None, minSrcPosition=None, maxSrcPosition=None, minSrcExtent=None, maxSrcExtent=None, minDstPosition=None, maxDstPosition=None, minDstExtent=None, maxDstExtent=None):
-	return _new('VkDisplayPlaneCapabilitiesKHR', supportedAlpha=supportedAlpha, minSrcPosition=minSrcPosition, maxSrcPosition=maxSrcPosition, minSrcExtent=minSrcExtent, maxSrcExtent=maxSrcExtent, minDstPosition=minDstPosition, maxDstPosition=maxDstPosition, minDstExtent=minDstExtent, maxDstExtent=maxDstExtent)
+    return _new('VkDisplayPlaneCapabilitiesKHR', supportedAlpha=supportedAlpha, minSrcPosition=minSrcPosition, maxSrcPosition=maxSrcPosition, minSrcExtent=minSrcExtent, maxSrcExtent=maxSrcExtent, minDstPosition=minDstPosition, maxDstPosition=maxDstPosition, minDstExtent=minDstExtent, maxDstExtent=maxDstExtent)
+
 
 def VkDisplaySurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, displayMode=None, planeIndex=None, planeStackIndex=None, transform=None, globalAlpha=None, alphaMode=None, imageExtent=None):
-	return _new('VkDisplaySurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, displayMode=displayMode, planeIndex=planeIndex, planeStackIndex=planeStackIndex, transform=transform, globalAlpha=globalAlpha, alphaMode=alphaMode, imageExtent=imageExtent)
+    return _new('VkDisplaySurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, displayMode=displayMode, planeIndex=planeIndex, planeStackIndex=planeStackIndex, transform=transform, globalAlpha=globalAlpha, alphaMode=alphaMode, imageExtent=imageExtent)
+
 
 def VkDisplayPresentInfoKHR(sType=VK_STRUCTURE_TYPE_DISPLAY_PRESENT_INFO_KHR, pNext=None, srcRect=None, dstRect=None, persistent=None):
-	return _new('VkDisplayPresentInfoKHR', sType=sType, pNext=pNext, srcRect=srcRect, dstRect=dstRect, persistent=persistent)
+    return _new('VkDisplayPresentInfoKHR', sType=sType, pNext=pNext, srcRect=srcRect, dstRect=dstRect, persistent=persistent)
+
 
 def VkSurfaceCapabilitiesKHR(minImageCount=None, maxImageCount=None, currentExtent=None, minImageExtent=None, maxImageExtent=None, maxImageArrayLayers=None, supportedTransforms=None, currentTransform=None, supportedCompositeAlpha=None, supportedUsageFlags=None):
-	return _new('VkSurfaceCapabilitiesKHR', minImageCount=minImageCount, maxImageCount=maxImageCount, currentExtent=currentExtent, minImageExtent=minImageExtent, maxImageExtent=maxImageExtent, maxImageArrayLayers=maxImageArrayLayers, supportedTransforms=supportedTransforms, currentTransform=currentTransform, supportedCompositeAlpha=supportedCompositeAlpha, supportedUsageFlags=supportedUsageFlags)
+    return _new('VkSurfaceCapabilitiesKHR', minImageCount=minImageCount, maxImageCount=maxImageCount, currentExtent=currentExtent, minImageExtent=minImageExtent, maxImageExtent=maxImageExtent, maxImageArrayLayers=maxImageArrayLayers, supportedTransforms=supportedTransforms, currentTransform=currentTransform, supportedCompositeAlpha=supportedCompositeAlpha, supportedUsageFlags=supportedUsageFlags)
+
 
 def VkAndroidSurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, window=None):
-	return _new('VkAndroidSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, window=window)
+    return _new('VkAndroidSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, window=window)
+
 
 def VkMirSurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_MIR_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, connection=None, mirSurface=None):
-	return _new('VkMirSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, connection=connection, mirSurface=mirSurface)
+    return _new('VkMirSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, connection=connection, mirSurface=mirSurface)
+
 
 def VkWaylandSurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, display=None, surface=None):
-	return _new('VkWaylandSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, display=display, surface=surface)
+    return _new('VkWaylandSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, display=display, surface=surface)
+
 
 def VkWin32SurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, hinstance=None, hwnd=None):
-	return _new('VkWin32SurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, hinstance=hinstance, hwnd=hwnd)
+    return _new('VkWin32SurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, hinstance=hinstance, hwnd=hwnd)
+
 
 def VkXlibSurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, dpy=None, window=None):
-	return _new('VkXlibSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, dpy=dpy, window=window)
+    return _new('VkXlibSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, dpy=dpy, window=window)
+
 
 def VkXcbSurfaceCreateInfoKHR(sType=VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR, pNext=None, flags=None, connection=None, window=None):
-	return _new('VkXcbSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, connection=connection, window=window)
+    return _new('VkXcbSurfaceCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, connection=connection, window=window)
+
 
 def VkSurfaceFormatKHR(format=None, colorSpace=None):
-	return _new('VkSurfaceFormatKHR', format=format, colorSpace=colorSpace)
+    return _new('VkSurfaceFormatKHR', format=format, colorSpace=colorSpace)
+
 
 def VkSwapchainCreateInfoKHR(sType=VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR, pNext=None, flags=None, surface=None, minImageCount=None, imageFormat=None, imageColorSpace=None, imageExtent=None, imageArrayLayers=None, imageUsage=None, imageSharingMode=None, queueFamilyIndexCount=None, pQueueFamilyIndices=[], preTransform=None, compositeAlpha=None, presentMode=None, clipped=None, oldSwapchain=None):
-	if queueFamilyIndexCount is None:
-		queueFamilyIndexCount = len(pQueueFamilyIndices)
-	return _new('VkSwapchainCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, surface=surface, minImageCount=minImageCount, imageFormat=imageFormat, imageColorSpace=imageColorSpace, imageExtent=imageExtent, imageArrayLayers=imageArrayLayers, imageUsage=imageUsage, imageSharingMode=imageSharingMode, queueFamilyIndexCount=queueFamilyIndexCount, pQueueFamilyIndices=pQueueFamilyIndices, preTransform=preTransform, compositeAlpha=compositeAlpha, presentMode=presentMode, clipped=clipped, oldSwapchain=oldSwapchain)
+    if queueFamilyIndexCount is None:
+        queueFamilyIndexCount = len(pQueueFamilyIndices)
+    return _new('VkSwapchainCreateInfoKHR', sType=sType, pNext=pNext, flags=flags, surface=surface, minImageCount=minImageCount, imageFormat=imageFormat, imageColorSpace=imageColorSpace, imageExtent=imageExtent, imageArrayLayers=imageArrayLayers, imageUsage=imageUsage, imageSharingMode=imageSharingMode, queueFamilyIndexCount=queueFamilyIndexCount, pQueueFamilyIndices=pQueueFamilyIndices, preTransform=preTransform, compositeAlpha=compositeAlpha, presentMode=presentMode, clipped=clipped, oldSwapchain=oldSwapchain)
+
 
 def VkPresentInfoKHR(sType=VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, pNext=None, waitSemaphoreCount=None, pWaitSemaphores=[], swapchainCount=None, pSwapchains=[], pImageIndices=[], pResults=[]):
-	if waitSemaphoreCount is None:
-		waitSemaphoreCount = len(pWaitSemaphores)
-	if swapchainCount is None:
-		assert len(pSwapchains)==len(pImageIndices)==len(pResults)
-		swapchainCount = len(pSwapchains)
-	return _new('VkPresentInfoKHR', sType=sType, pNext=pNext, waitSemaphoreCount=waitSemaphoreCount, pWaitSemaphores=pWaitSemaphores, swapchainCount=swapchainCount, pSwapchains=pSwapchains, pImageIndices=pImageIndices, pResults=pResults)
+    if waitSemaphoreCount is None:
+        waitSemaphoreCount = len(pWaitSemaphores)
+    if swapchainCount is None:
+        assert len(pSwapchains) == len(pImageIndices) == len(pResults)
+        swapchainCount = len(pSwapchains)
+    return _new('VkPresentInfoKHR', sType=sType, pNext=pNext, waitSemaphoreCount=waitSemaphoreCount, pWaitSemaphores=pWaitSemaphores, swapchainCount=swapchainCount, pSwapchains=pSwapchains, pImageIndices=pImageIndices, pResults=pResults)
+
 
 def VkDebugReportCallbackCreateInfoEXT(sType=VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT, pNext=None, flags=None, pfnCallback=None, pUserData=None):
-	return _new('VkDebugReportCallbackCreateInfoEXT', sType=sType, pNext=pNext, flags=flags, pfnCallback=pfnCallback, pUserData=pUserData)
+    return _new('VkDebugReportCallbackCreateInfoEXT', sType=sType, pNext=pNext, flags=flags, pfnCallback=pfnCallback, pUserData=pUserData)
+
 
 def VkValidationFlagsEXT(sType=None, pNext=None, disabledValidationCheckCount=None, pDisabledValidationChecks=[]):
-	if disabledValidationCheckCount is None:
-		disabledValidationCheckCount = len(pDisabledValidationChecks)
-	return _new('VkValidationFlagsEXT', sType=sType, pNext=pNext, disabledValidationCheckCount=disabledValidationCheckCount, pDisabledValidationChecks=pDisabledValidationChecks)
+    if disabledValidationCheckCount is None:
+        disabledValidationCheckCount = len(pDisabledValidationChecks)
+    return _new('VkValidationFlagsEXT', sType=sType, pNext=pNext, disabledValidationCheckCount=disabledValidationCheckCount, pDisabledValidationChecks=pDisabledValidationChecks)
+
 
 def VkPipelineRasterizationStateRasterizationOrderAMD(sType=VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_RASTERIZATION_ORDER_AMD, pNext=None, rasterizationOrder=None):
-	return _new('VkPipelineRasterizationStateRasterizationOrderAMD', sType=sType, pNext=pNext, rasterizationOrder=rasterizationOrder)
+    return _new('VkPipelineRasterizationStateRasterizationOrderAMD', sType=sType, pNext=pNext, rasterizationOrder=rasterizationOrder)
+
 
 def VkDebugMarkerObjectNameInfoEXT(sType=VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT, pNext=None, objectType=None, object=None, pObjectName=None):
-	return _new('VkDebugMarkerObjectNameInfoEXT', sType=sType, pNext=pNext, objectType=objectType, object=object, pObjectName=pObjectName)
+    return _new('VkDebugMarkerObjectNameInfoEXT', sType=sType, pNext=pNext, objectType=objectType, object=object, pObjectName=pObjectName)
+
 
 def VkDebugMarkerObjectTagInfoEXT(sType=VK_STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_TAG_INFO_EXT, pNext=None, objectType=None, object=None, tagName=None, tagSize=None, pTag=[]):
-	if tagSize is None:
-		tagSize = len(pTag)
-	return _new('VkDebugMarkerObjectTagInfoEXT', sType=sType, pNext=pNext, objectType=objectType, object=object, tagName=tagName, tagSize=tagSize, pTag=pTag)
+    if tagSize is None:
+        tagSize = len(pTag)
+    return _new('VkDebugMarkerObjectTagInfoEXT', sType=sType, pNext=pNext, objectType=objectType, object=object, tagName=tagName, tagSize=tagSize, pTag=pTag)
+
 
 def VkDebugMarkerMarkerInfoEXT(sType=VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT, pNext=None, pMarkerName=None, color=None):
-	return _new('VkDebugMarkerMarkerInfoEXT', sType=sType, pNext=pNext, pMarkerName=pMarkerName, color=color)
+    return _new('VkDebugMarkerMarkerInfoEXT', sType=sType, pNext=pNext, pMarkerName=pMarkerName, color=color)
+
 
 def VkDedicatedAllocationImageCreateInfoNV(sType=VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_IMAGE_CREATE_INFO_NV, pNext=None, dedicatedAllocation=None):
-	return _new('VkDedicatedAllocationImageCreateInfoNV', sType=sType, pNext=pNext, dedicatedAllocation=dedicatedAllocation)
+    return _new('VkDedicatedAllocationImageCreateInfoNV', sType=sType, pNext=pNext, dedicatedAllocation=dedicatedAllocation)
+
 
 def VkDedicatedAllocationBufferCreateInfoNV(sType=VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV, pNext=None, dedicatedAllocation=None):
-	return _new('VkDedicatedAllocationBufferCreateInfoNV', sType=sType, pNext=pNext, dedicatedAllocation=dedicatedAllocation)
+    return _new('VkDedicatedAllocationBufferCreateInfoNV', sType=sType, pNext=pNext, dedicatedAllocation=dedicatedAllocation)
+
 
 def VkDedicatedAllocationMemoryAllocateInfoNV(sType=VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV, pNext=None, image=None, buffer=None):
-	return _new('VkDedicatedAllocationMemoryAllocateInfoNV', sType=sType, pNext=pNext, image=image, buffer=buffer)
+    return _new('VkDedicatedAllocationMemoryAllocateInfoNV', sType=sType, pNext=pNext, image=image, buffer=buffer)
+
 
 def VkExternalImageFormatPropertiesNV(imageFormatProperties=None, externalMemoryFeatures=None, exportFromImportedHandleTypes=None, compatibleHandleTypes=None):
-	return _new('VkExternalImageFormatPropertiesNV', imageFormatProperties=imageFormatProperties, externalMemoryFeatures=externalMemoryFeatures, exportFromImportedHandleTypes=exportFromImportedHandleTypes, compatibleHandleTypes=compatibleHandleTypes)
+    return _new('VkExternalImageFormatPropertiesNV', imageFormatProperties=imageFormatProperties, externalMemoryFeatures=externalMemoryFeatures, exportFromImportedHandleTypes=exportFromImportedHandleTypes, compatibleHandleTypes=compatibleHandleTypes)
+
 
 def VkExternalMemoryImageCreateInfoNV(sType=VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_NV, pNext=None, handleTypes=None):
-	return _new('VkExternalMemoryImageCreateInfoNV', sType=sType, pNext=pNext, handleTypes=handleTypes)
+    return _new('VkExternalMemoryImageCreateInfoNV', sType=sType, pNext=pNext, handleTypes=handleTypes)
+
 
 def VkExportMemoryAllocateInfoNV(sType=VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_NV, pNext=None, handleTypes=None):
-	return _new('VkExportMemoryAllocateInfoNV', sType=sType, pNext=pNext, handleTypes=handleTypes)
+    return _new('VkExportMemoryAllocateInfoNV', sType=sType, pNext=pNext, handleTypes=handleTypes)
+
 
 def VkImportMemoryWin32HandleInfoNV(sType=VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_NV, pNext=None, handleType=None, handle=None):
-	return _new('VkImportMemoryWin32HandleInfoNV', sType=sType, pNext=pNext, handleType=handleType, handle=handle)
+    return _new('VkImportMemoryWin32HandleInfoNV', sType=sType, pNext=pNext, handleType=handleType, handle=handle)
+
 
 def VkExportMemoryWin32HandleInfoNV(sType=VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_NV, pNext=None, pAttributes=None, dwAccess=None):
-	return _new('VkExportMemoryWin32HandleInfoNV', sType=sType, pNext=pNext, pAttributes=pAttributes, dwAccess=dwAccess)
+    return _new('VkExportMemoryWin32HandleInfoNV', sType=sType, pNext=pNext, pAttributes=pAttributes, dwAccess=dwAccess)
+
 
 def VkWin32KeyedMutexAcquireReleaseInfoNV(sType=VK_STRUCTURE_TYPE_WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_NV, pNext=None, acquireCount=None, pAcquireSyncs=[], pAcquireKeys=[], pAcquireTimeoutMilliseconds=[], releaseCount=None, pReleaseSyncs=[], pReleaseKeys=[]):
-	if acquireCount is None:
-		assert len(pAcquireSyncs)==len(pAcquireKeys)==len(pAcquireTimeoutMilliseconds)
-		acquireCount = len(pAcquireSyncs)
-	if releaseCount is None:
-		assert len(pReleaseSyncs)==len(pReleaseKeys)
-		releaseCount = len(pReleaseSyncs)
-	return _new('VkWin32KeyedMutexAcquireReleaseInfoNV', sType=sType, pNext=pNext, acquireCount=acquireCount, pAcquireSyncs=pAcquireSyncs, pAcquireKeys=pAcquireKeys, pAcquireTimeoutMilliseconds=pAcquireTimeoutMilliseconds, releaseCount=releaseCount, pReleaseSyncs=pReleaseSyncs, pReleaseKeys=pReleaseKeys)
+    if acquireCount is None:
+        assert len(pAcquireSyncs) == len(pAcquireKeys) == len(pAcquireTimeoutMilliseconds)
+        acquireCount = len(pAcquireSyncs)
+    if releaseCount is None:
+        assert len(pReleaseSyncs) == len(pReleaseKeys)
+        releaseCount = len(pReleaseSyncs)
+    return _new('VkWin32KeyedMutexAcquireReleaseInfoNV', sType=sType, pNext=pNext, acquireCount=acquireCount, pAcquireSyncs=pAcquireSyncs, pAcquireKeys=pAcquireKeys, pAcquireTimeoutMilliseconds=pAcquireTimeoutMilliseconds, releaseCount=releaseCount, pReleaseSyncs=pReleaseSyncs, pReleaseKeys=pReleaseKeys)
+
 
 def _callApi(fn, *args):
-	def _(x, _type):
-		if x is None:
-			return ffi.NULL
-		if _type.kind=='pointer':
-			ptr, _ = _castToPtr(x, _type)
-			return ptr
-		return x
+    def _(x, _type):
+        if x is None:
+            return ffi.NULL
+        if _type.kind == 'pointer':
+            ptr, _ = _castToPtr(x, _type)
+            return ptr
+        return x
 
-	return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
-
-
+    return fn(*(_(i, j) for i, j in zip(args, ffi.typeof(fn).args)))
 
 
+def vkCreateInstance(pCreateInfo, pAllocator=None):
+    pInstance = ffi.new('VkInstance*')
+    result = _callApi(_lib.vkCreateInstance, pCreateInfo, pAllocator, pInstance)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pInstance[0]
 
-
-def vkCreateInstance(pCreateInfo, pAllocator):
-	pInstance = ffi.new('VkInstance*')
-	result = _callApi(_lib.vkCreateInstance, pCreateInfo, pAllocator, pInstance)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pInstance[0]
 
 def vkGetPhysicalDeviceProperties(physicalDevice):
-	pProperties = ffi.new('VkPhysicalDeviceProperties*')
-	_callApi(_lib.vkGetPhysicalDeviceProperties, physicalDevice, pProperties)
-	return pProperties[0]
+    pProperties = ffi.new('VkPhysicalDeviceProperties*')
+    _callApi(_lib.vkGetPhysicalDeviceProperties, physicalDevice, pProperties)
+    return pProperties[0]
+
 
 def vkGetPhysicalDeviceMemoryProperties(physicalDevice):
-	pMemoryProperties = ffi.new('VkPhysicalDeviceMemoryProperties*')
-	_callApi(_lib.vkGetPhysicalDeviceMemoryProperties, physicalDevice, pMemoryProperties)
-	return pMemoryProperties[0]
+    pMemoryProperties = ffi.new('VkPhysicalDeviceMemoryProperties*')
+    _callApi(_lib.vkGetPhysicalDeviceMemoryProperties, physicalDevice, pMemoryProperties)
+    return pMemoryProperties[0]
+
 
 def vkGetPhysicalDeviceFeatures(physicalDevice):
-	pFeatures = ffi.new('VkPhysicalDeviceFeatures*')
-	_callApi(_lib.vkGetPhysicalDeviceFeatures, physicalDevice, pFeatures)
-	return pFeatures[0]
+    pFeatures = ffi.new('VkPhysicalDeviceFeatures*')
+    _callApi(_lib.vkGetPhysicalDeviceFeatures, physicalDevice, pFeatures)
+    return pFeatures[0]
+
 
 def vkGetPhysicalDeviceFormatProperties(physicalDevice, format):
-	pFormatProperties = ffi.new('VkFormatProperties*')
-	_callApi(_lib.vkGetPhysicalDeviceFormatProperties, physicalDevice, format, pFormatProperties)
-	return pFormatProperties[0]
+    pFormatProperties = ffi.new('VkFormatProperties*')
+    _callApi(_lib.vkGetPhysicalDeviceFormatProperties, physicalDevice, format, pFormatProperties)
+    return pFormatProperties[0]
 
-def vkGetPhysicalDeviceImageFormatProperties(physicalDevice, format, type, tiling, usage, flags):
-	pImageFormatProperties = ffi.new('VkImageFormatProperties*')
-	result = _callApi(_lib.vkGetPhysicalDeviceImageFormatProperties, physicalDevice, format, type, tiling, usage, flags, pImageFormatProperties)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pImageFormatProperties[0]
 
-def vkCreateDevice(physicalDevice, pCreateInfo, pAllocator):
-	pDevice = ffi.new('VkDevice*')
-	result = _callApi(_lib.vkCreateDevice, physicalDevice, pCreateInfo, pAllocator, pDevice)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pDevice[0]
+def vkGetPhysicalDeviceImageFormatProperties(physicalDevice, format, type, tiling, usage, flags=None):
+    pImageFormatProperties = ffi.new('VkImageFormatProperties*')
+    result = _callApi(_lib.vkGetPhysicalDeviceImageFormatProperties, physicalDevice, format, type, tiling, usage, flags, pImageFormatProperties)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pImageFormatProperties[0]
+
+
+def vkCreateDevice(physicalDevice, pCreateInfo, pAllocator=None):
+    pDevice = ffi.new('VkDevice*')
+    result = _callApi(_lib.vkCreateDevice, physicalDevice, pCreateInfo, pAllocator, pDevice)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pDevice[0]
+
 
 def vkGetDeviceQueue(device, queueFamilyIndex, queueIndex):
-	pQueue = ffi.new('VkQueue*')
-	_callApi(_lib.vkGetDeviceQueue, device, queueFamilyIndex, queueIndex, pQueue)
-	return pQueue[0]
+    pQueue = ffi.new('VkQueue*')
+    _callApi(_lib.vkGetDeviceQueue, device, queueFamilyIndex, queueIndex, pQueue)
+    return pQueue[0]
 
-def vkAllocateMemory(device, pAllocateInfo, pAllocator):
-	pMemory = ffi.new('VkDeviceMemory*')
-	result = _callApi(_lib.vkAllocateMemory, device, pAllocateInfo, pAllocator, pMemory)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pMemory[0]
 
-def vkMapMemory(device, memory, offset, size, flags):
-	ppData = ffi.new('void**')
-	result = _callApi(_lib.vkMapMemory, device, memory, offset, size, flags, ppData)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return ppData[0]
+def vkAllocateMemory(device, pAllocateInfo, pAllocator=None):
+    pMemory = ffi.new('VkDeviceMemory*')
+    result = _callApi(_lib.vkAllocateMemory, device, pAllocateInfo, pAllocator, pMemory)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pMemory[0]
+
+
+def vkMapMemory(device, memory, offset, size, flags=None):
+    ppData = ffi.new('void**')
+    result = _callApi(_lib.vkMapMemory, device, memory, offset, size, flags, ppData)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return ppData[0]
+
 
 def vkGetDeviceMemoryCommitment(device, memory):
-	pCommittedMemoryInBytes = ffi.new('VkDeviceSize*')
-	_callApi(_lib.vkGetDeviceMemoryCommitment, device, memory, pCommittedMemoryInBytes)
-	return pCommittedMemoryInBytes[0]
+    pCommittedMemoryInBytes = ffi.new('VkDeviceSize*')
+    _callApi(_lib.vkGetDeviceMemoryCommitment, device, memory, pCommittedMemoryInBytes)
+    return pCommittedMemoryInBytes[0]
+
 
 def vkGetBufferMemoryRequirements(device, buffer):
-	pMemoryRequirements = ffi.new('VkMemoryRequirements*')
-	_callApi(_lib.vkGetBufferMemoryRequirements, device, buffer, pMemoryRequirements)
-	return pMemoryRequirements[0]
+    pMemoryRequirements = ffi.new('VkMemoryRequirements*')
+    _callApi(_lib.vkGetBufferMemoryRequirements, device, buffer, pMemoryRequirements)
+    return pMemoryRequirements[0]
+
 
 def vkGetImageMemoryRequirements(device, image):
-	pMemoryRequirements = ffi.new('VkMemoryRequirements*')
-	_callApi(_lib.vkGetImageMemoryRequirements, device, image, pMemoryRequirements)
-	return pMemoryRequirements[0]
+    pMemoryRequirements = ffi.new('VkMemoryRequirements*')
+    _callApi(_lib.vkGetImageMemoryRequirements, device, image, pMemoryRequirements)
+    return pMemoryRequirements[0]
 
-def vkCreateFence(device, pCreateInfo, pAllocator):
-	pFence = ffi.new('VkFence*')
-	result = _callApi(_lib.vkCreateFence, device, pCreateInfo, pAllocator, pFence)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pFence[0]
 
-def vkCreateSemaphore(device, pCreateInfo, pAllocator):
-	pSemaphore = ffi.new('VkSemaphore*')
-	result = _callApi(_lib.vkCreateSemaphore, device, pCreateInfo, pAllocator, pSemaphore)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pSemaphore[0]
+def vkCreateFence(device, pCreateInfo, pAllocator=None):
+    pFence = ffi.new('VkFence*')
+    result = _callApi(_lib.vkCreateFence, device, pCreateInfo, pAllocator, pFence)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pFence[0]
 
-def vkCreateEvent(device, pCreateInfo, pAllocator):
-	pEvent = ffi.new('VkEvent*')
-	result = _callApi(_lib.vkCreateEvent, device, pCreateInfo, pAllocator, pEvent)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pEvent[0]
 
-def vkCreateQueryPool(device, pCreateInfo, pAllocator):
-	pQueryPool = ffi.new('VkQueryPool*')
-	result = _callApi(_lib.vkCreateQueryPool, device, pCreateInfo, pAllocator, pQueryPool)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pQueryPool[0]
+def vkCreateSemaphore(device, pCreateInfo, pAllocator=None):
+    pSemaphore = ffi.new('VkSemaphore*')
+    result = _callApi(_lib.vkCreateSemaphore, device, pCreateInfo, pAllocator, pSemaphore)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pSemaphore[0]
 
-def vkCreateBuffer(device, pCreateInfo, pAllocator):
-	pBuffer = ffi.new('VkBuffer*')
-	result = _callApi(_lib.vkCreateBuffer, device, pCreateInfo, pAllocator, pBuffer)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pBuffer[0]
 
-def vkCreateBufferView(device, pCreateInfo, pAllocator):
-	pView = ffi.new('VkBufferView*')
-	result = _callApi(_lib.vkCreateBufferView, device, pCreateInfo, pAllocator, pView)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pView[0]
+def vkCreateEvent(device, pCreateInfo, pAllocator=None):
+    pEvent = ffi.new('VkEvent*')
+    result = _callApi(_lib.vkCreateEvent, device, pCreateInfo, pAllocator, pEvent)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pEvent[0]
 
-def vkCreateImage(device, pCreateInfo, pAllocator):
-	pImage = ffi.new('VkImage*')
-	result = _callApi(_lib.vkCreateImage, device, pCreateInfo, pAllocator, pImage)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pImage[0]
+
+def vkCreateQueryPool(device, pCreateInfo, pAllocator=None):
+    pQueryPool = ffi.new('VkQueryPool*')
+    result = _callApi(_lib.vkCreateQueryPool, device, pCreateInfo, pAllocator, pQueryPool)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pQueryPool[0]
+
+
+def vkCreateBuffer(device, pCreateInfo, pAllocator=None):
+    pBuffer = ffi.new('VkBuffer*')
+    result = _callApi(_lib.vkCreateBuffer, device, pCreateInfo, pAllocator, pBuffer)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pBuffer[0]
+
+
+def vkCreateBufferView(device, pCreateInfo, pAllocator=None):
+    pView = ffi.new('VkBufferView*')
+    result = _callApi(_lib.vkCreateBufferView, device, pCreateInfo, pAllocator, pView)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pView[0]
+
+
+def vkCreateImage(device, pCreateInfo, pAllocator=None):
+    pImage = ffi.new('VkImage*')
+    result = _callApi(_lib.vkCreateImage, device, pCreateInfo, pAllocator, pImage)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pImage[0]
+
 
 def vkGetImageSubresourceLayout(device, image, pSubresource):
-	pLayout = ffi.new('VkSubresourceLayout*')
-	_callApi(_lib.vkGetImageSubresourceLayout, device, image, pSubresource, pLayout)
-	return pLayout[0]
+    pLayout = ffi.new('VkSubresourceLayout*')
+    _callApi(_lib.vkGetImageSubresourceLayout, device, image, pSubresource, pLayout)
+    return pLayout[0]
 
-def vkCreateImageView(device, pCreateInfo, pAllocator):
-	pView = ffi.new('VkImageView*')
-	result = _callApi(_lib.vkCreateImageView, device, pCreateInfo, pAllocator, pView)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pView[0]
 
-def vkCreateShaderModule(device, pCreateInfo, pAllocator):
-	pShaderModule = ffi.new('VkShaderModule*')
-	result = _callApi(_lib.vkCreateShaderModule, device, pCreateInfo, pAllocator, pShaderModule)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pShaderModule[0]
+def vkCreateImageView(device, pCreateInfo, pAllocator=None):
+    pView = ffi.new('VkImageView*')
+    result = _callApi(_lib.vkCreateImageView, device, pCreateInfo, pAllocator, pView)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pView[0]
 
-def vkCreatePipelineCache(device, pCreateInfo, pAllocator):
-	pPipelineCache = ffi.new('VkPipelineCache*')
-	result = _callApi(_lib.vkCreatePipelineCache, device, pCreateInfo, pAllocator, pPipelineCache)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pPipelineCache[0]
 
-def vkCreatePipelineLayout(device, pCreateInfo, pAllocator):
-	pPipelineLayout = ffi.new('VkPipelineLayout*')
-	result = _callApi(_lib.vkCreatePipelineLayout, device, pCreateInfo, pAllocator, pPipelineLayout)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pPipelineLayout[0]
+def vkCreateShaderModule(device, pCreateInfo, pAllocator=None):
+    pShaderModule = ffi.new('VkShaderModule*')
+    result = _callApi(_lib.vkCreateShaderModule, device, pCreateInfo, pAllocator, pShaderModule)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pShaderModule[0]
 
-def vkCreateSampler(device, pCreateInfo, pAllocator):
-	pSampler = ffi.new('VkSampler*')
-	result = _callApi(_lib.vkCreateSampler, device, pCreateInfo, pAllocator, pSampler)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pSampler[0]
 
-def vkCreateDescriptorSetLayout(device, pCreateInfo, pAllocator):
-	pSetLayout = ffi.new('VkDescriptorSetLayout*')
-	result = _callApi(_lib.vkCreateDescriptorSetLayout, device, pCreateInfo, pAllocator, pSetLayout)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pSetLayout[0]
+def vkCreatePipelineCache(device, pCreateInfo, pAllocator=None):
+    pPipelineCache = ffi.new('VkPipelineCache*')
+    result = _callApi(_lib.vkCreatePipelineCache, device, pCreateInfo, pAllocator, pPipelineCache)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pPipelineCache[0]
 
-def vkCreateDescriptorPool(device, pCreateInfo, pAllocator):
-	pDescriptorPool = ffi.new('VkDescriptorPool*')
-	result = _callApi(_lib.vkCreateDescriptorPool, device, pCreateInfo, pAllocator, pDescriptorPool)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pDescriptorPool[0]
 
-def vkCreateFramebuffer(device, pCreateInfo, pAllocator):
-	pFramebuffer = ffi.new('VkFramebuffer*')
-	result = _callApi(_lib.vkCreateFramebuffer, device, pCreateInfo, pAllocator, pFramebuffer)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pFramebuffer[0]
+def vkCreatePipelineLayout(device, pCreateInfo, pAllocator=None):
+    pPipelineLayout = ffi.new('VkPipelineLayout*')
+    result = _callApi(_lib.vkCreatePipelineLayout, device, pCreateInfo, pAllocator, pPipelineLayout)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pPipelineLayout[0]
 
-def vkCreateRenderPass(device, pCreateInfo, pAllocator):
-	pRenderPass = ffi.new('VkRenderPass*')
-	result = _callApi(_lib.vkCreateRenderPass, device, pCreateInfo, pAllocator, pRenderPass)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pRenderPass[0]
+
+def vkCreateSampler(device, pCreateInfo, pAllocator=None):
+    pSampler = ffi.new('VkSampler*')
+    result = _callApi(_lib.vkCreateSampler, device, pCreateInfo, pAllocator, pSampler)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pSampler[0]
+
+
+def vkCreateDescriptorSetLayout(device, pCreateInfo, pAllocator=None):
+    pSetLayout = ffi.new('VkDescriptorSetLayout*')
+    result = _callApi(_lib.vkCreateDescriptorSetLayout, device, pCreateInfo, pAllocator, pSetLayout)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pSetLayout[0]
+
+
+def vkCreateDescriptorPool(device, pCreateInfo, pAllocator=None):
+    pDescriptorPool = ffi.new('VkDescriptorPool*')
+    result = _callApi(_lib.vkCreateDescriptorPool, device, pCreateInfo, pAllocator, pDescriptorPool)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pDescriptorPool[0]
+
+
+def vkCreateFramebuffer(device, pCreateInfo, pAllocator=None):
+    pFramebuffer = ffi.new('VkFramebuffer*')
+    result = _callApi(_lib.vkCreateFramebuffer, device, pCreateInfo, pAllocator, pFramebuffer)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pFramebuffer[0]
+
+
+def vkCreateRenderPass(device, pCreateInfo, pAllocator=None):
+    pRenderPass = ffi.new('VkRenderPass*')
+    result = _callApi(_lib.vkCreateRenderPass, device, pCreateInfo, pAllocator, pRenderPass)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pRenderPass[0]
+
 
 def vkGetRenderAreaGranularity(device, renderPass):
-	pGranularity = ffi.new('VkExtent2D*')
-	_callApi(_lib.vkGetRenderAreaGranularity, device, renderPass, pGranularity)
-	return pGranularity[0]
+    pGranularity = ffi.new('VkExtent2D*')
+    _callApi(_lib.vkGetRenderAreaGranularity, device, renderPass, pGranularity)
+    return pGranularity[0]
 
-def vkCreateCommandPool(device, pCreateInfo, pAllocator):
-	pCommandPool = ffi.new('VkCommandPool*')
-	result = _callApi(_lib.vkCreateCommandPool, device, pCreateInfo, pAllocator, pCommandPool)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pCommandPool[0]
+
+def vkCreateCommandPool(device, pCreateInfo, pAllocator=None):
+    pCommandPool = ffi.new('VkCommandPool*')
+    result = _callApi(_lib.vkCreateCommandPool, device, pCreateInfo, pAllocator, pCommandPool)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pCommandPool[0]
+
 
 def _wrap_vkCreateAndroidSurfaceKHR(fn):
-    def vkCreateAndroidSurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateAndroidSurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateAndroidSurfaceKHR
+
+
 def _wrap_vkCreateDisplayModeKHR(fn):
-    def vkCreateDisplayModeKHR(physicalDevice, display, pCreateInfo, pAllocator):
-    	pMode = ffi.new('VkDisplayModeKHR*')
-    	result = _callApi(fn, physicalDevice, display, pCreateInfo, pAllocator, pMode)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pMode[0]
+    def vkCreateDisplayModeKHR(physicalDevice, display, pCreateInfo, pAllocator=None):
+        pMode = ffi.new('VkDisplayModeKHR*')
+        result = _callApi(fn, physicalDevice, display, pCreateInfo, pAllocator, pMode)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pMode[0]
     return vkCreateDisplayModeKHR
+
+
 def _wrap_vkGetDisplayPlaneCapabilitiesKHR(fn):
     def vkGetDisplayPlaneCapabilitiesKHR(physicalDevice, mode, planeIndex):
-    	pCapabilities = ffi.new('VkDisplayPlaneCapabilitiesKHR*')
-    	result = _callApi(fn, physicalDevice, mode, planeIndex, pCapabilities)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pCapabilities[0]
+        pCapabilities = ffi.new('VkDisplayPlaneCapabilitiesKHR*')
+        result = _callApi(fn, physicalDevice, mode, planeIndex, pCapabilities)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pCapabilities[0]
     return vkGetDisplayPlaneCapabilitiesKHR
+
+
 def _wrap_vkCreateDisplayPlaneSurfaceKHR(fn):
-    def vkCreateDisplayPlaneSurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateDisplayPlaneSurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateDisplayPlaneSurfaceKHR
+
+
 def _wrap_vkCreateMirSurfaceKHR(fn):
-    def vkCreateMirSurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateMirSurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateMirSurfaceKHR
+
+
 def _wrap_vkGetPhysicalDeviceMirPresentationSupportKHR(fn):
     def vkGetPhysicalDeviceMirPresentationSupportKHR(physicalDevice, queueFamilyIndex):
-    	connection = ffi.new('MirConnection*')
-    	_callApi(fn, physicalDevice, queueFamilyIndex, connection)
-    	return connection[0]
+        connection = ffi.new('MirConnection*')
+        _callApi(fn, physicalDevice, queueFamilyIndex, connection)
+        return connection[0]
     return vkGetPhysicalDeviceMirPresentationSupportKHR
+
+
 def _wrap_vkGetPhysicalDeviceSurfaceSupportKHR(fn):
     def vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface):
-    	pSupported = ffi.new('VkBool32*')
-    	result = _callApi(fn, physicalDevice, queueFamilyIndex, surface, pSupported)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSupported[0]
+        pSupported = ffi.new('VkBool32*')
+        result = _callApi(fn, physicalDevice, queueFamilyIndex, surface, pSupported)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSupported[0]
     return vkGetPhysicalDeviceSurfaceSupportKHR
+
+
 def _wrap_vkGetPhysicalDeviceSurfaceCapabilitiesKHR(fn):
     def vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface):
-    	pSurfaceCapabilities = ffi.new('VkSurfaceCapabilitiesKHR*')
-    	result = _callApi(fn, physicalDevice, surface, pSurfaceCapabilities)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurfaceCapabilities[0]
+        pSurfaceCapabilities = ffi.new('VkSurfaceCapabilitiesKHR*')
+        result = _callApi(fn, physicalDevice, surface, pSurfaceCapabilities)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurfaceCapabilities[0]
     return vkGetPhysicalDeviceSurfaceCapabilitiesKHR
+
+
 def _wrap_vkCreateSwapchainKHR(fn):
-    def vkCreateSwapchainKHR(device, pCreateInfo, pAllocator):
-    	pSwapchain = ffi.new('VkSwapchainKHR*')
-    	result = _callApi(fn, device, pCreateInfo, pAllocator, pSwapchain)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSwapchain[0]
+    def vkCreateSwapchainKHR(device, pCreateInfo, pAllocator=None):
+        pSwapchain = ffi.new('VkSwapchainKHR*')
+        result = _callApi(fn, device, pCreateInfo, pAllocator, pSwapchain)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSwapchain[0]
     return vkCreateSwapchainKHR
+
+
 def _wrap_vkAcquireNextImageKHR(fn):
-    def vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence):
-    	pImageIndex = ffi.new('uint32_t*')
-    	result = _callApi(fn, device, swapchain, timeout, semaphore, fence, pImageIndex)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pImageIndex[0]
+    def vkAcquireNextImageKHR(device, swapchain, timeout, semaphore=None, fence=None):
+        pImageIndex = ffi.new('uint32_t*')
+        result = _callApi(fn, device, swapchain, timeout, semaphore, fence, pImageIndex)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pImageIndex[0]
     return vkAcquireNextImageKHR
+
+
 def _wrap_vkCreateWaylandSurfaceKHR(fn):
-    def vkCreateWaylandSurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateWaylandSurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateWaylandSurfaceKHR
+
+
 def _wrap_vkGetPhysicalDeviceWaylandPresentationSupportKHR(fn):
     def vkGetPhysicalDeviceWaylandPresentationSupportKHR(physicalDevice, queueFamilyIndex):
-    	display = ffi.new('struct wl_display*')
-    	_callApi(fn, physicalDevice, queueFamilyIndex, display)
-    	return display[0]
+        display = ffi.new('struct wl_display*')
+        _callApi(fn, physicalDevice, queueFamilyIndex, display)
+        return display[0]
     return vkGetPhysicalDeviceWaylandPresentationSupportKHR
+
+
 def _wrap_vkCreateWin32SurfaceKHR(fn):
-    def vkCreateWin32SurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateWin32SurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateWin32SurfaceKHR
+
+
 def _wrap_vkCreateXlibSurfaceKHR(fn):
-    def vkCreateXlibSurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateXlibSurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateXlibSurfaceKHR
+
+
 def _wrap_vkCreateXcbSurfaceKHR(fn):
-    def vkCreateXcbSurfaceKHR(instance, pCreateInfo, pAllocator):
-    	pSurface = ffi.new('VkSurfaceKHR*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurface[0]
+    def vkCreateXcbSurfaceKHR(instance, pCreateInfo, pAllocator=None):
+        pSurface = ffi.new('VkSurfaceKHR*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pSurface)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurface[0]
     return vkCreateXcbSurfaceKHR
+
+
 def _wrap_vkCreateDebugReportCallbackEXT(fn):
-    def vkCreateDebugReportCallbackEXT(instance, pCreateInfo, pAllocator):
-    	pCallback = ffi.new('VkDebugReportCallbackEXT*')
-    	result = _callApi(fn, instance, pCreateInfo, pAllocator, pCallback)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pCallback[0]
+    def vkCreateDebugReportCallbackEXT(instance, pCreateInfo, pAllocator=None):
+        pCallback = ffi.new('VkDebugReportCallbackEXT*')
+        result = _callApi(fn, instance, pCreateInfo, pAllocator, pCallback)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pCallback[0]
     return vkCreateDebugReportCallbackEXT
+
+
 def _wrap_vkGetPhysicalDeviceExternalImageFormatPropertiesNV(fn):
     def vkGetPhysicalDeviceExternalImageFormatPropertiesNV(physicalDevice, format, type, tiling, usage, flags, externalHandleType):
-    	pExternalImageFormatProperties = ffi.new('VkExternalImageFormatPropertiesNV*')
-    	result = _callApi(fn, physicalDevice, format, type, tiling, usage, flags, externalHandleType, pExternalImageFormatProperties)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pExternalImageFormatProperties[0]
+        pExternalImageFormatProperties = ffi.new('VkExternalImageFormatPropertiesNV*')
+        result = _callApi(fn, physicalDevice, format, type, tiling, usage, flags, externalHandleType, pExternalImageFormatProperties)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pExternalImageFormatProperties[0]
     return vkGetPhysicalDeviceExternalImageFormatPropertiesNV
+
+
 def _wrap_vkGetMemoryWin32HandleNV(fn):
     def vkGetMemoryWin32HandleNV(device, memory, handleType):
-    	pHandle = ffi.new('HANDLE*')
-    	result = _callApi(fn, device, memory, handleType, pHandle)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pHandle[0]
+        pHandle = ffi.new('HANDLE*')
+        result = _callApi(fn, device, memory, handleType, pHandle)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pHandle[0]
     return vkGetMemoryWin32HandleNV
 
+
 def vkEnumeratePhysicalDevices(instance):
-	pPhysicalDeviceCount = ffi.new('uint32_t*')
-	result = _callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, ffi.NULL)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	pPhysicalDevices = ffi.new('VkPhysicalDevice[]', pPhysicalDeviceCount[0])
-	result = _callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, pPhysicalDevices)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pPhysicalDevices
+    pPhysicalDeviceCount = ffi.new('uint32_t*')
+    result = _callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, ffi.NULL)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    pPhysicalDevices = ffi.new('VkPhysicalDevice[]', pPhysicalDeviceCount[0])
+    result = _callApi(_lib.vkEnumeratePhysicalDevices, instance, pPhysicalDeviceCount, pPhysicalDevices)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pPhysicalDevices
+
 
 def vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice):
-	pQueueFamilyPropertyCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkGetPhysicalDeviceQueueFamilyProperties, physicalDevice, pQueueFamilyPropertyCount, ffi.NULL)
-	pQueueFamilyProperties = ffi.new('VkQueueFamilyProperties[]', pQueueFamilyPropertyCount[0])
-	_callApi(_lib.vkGetPhysicalDeviceQueueFamilyProperties, physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties)
-	return pQueueFamilyProperties
+    pQueueFamilyPropertyCount = ffi.new('uint32_t*')
+    _callApi(_lib.vkGetPhysicalDeviceQueueFamilyProperties, physicalDevice, pQueueFamilyPropertyCount, ffi.NULL)
+    pQueueFamilyProperties = ffi.new('VkQueueFamilyProperties[]', pQueueFamilyPropertyCount[0])
+    _callApi(_lib.vkGetPhysicalDeviceQueueFamilyProperties, physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties)
+    return pQueueFamilyProperties
+
 
 def vkEnumerateInstanceLayerProperties():
-	pPropertyCount = ffi.new('uint32_t*')
-	result = _callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, ffi.NULL)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	pProperties = ffi.new('VkLayerProperties[]', pPropertyCount[0])
-	result = _callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, pProperties)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pProperties
+    pPropertyCount = ffi.new('uint32_t*')
+    result = _callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, ffi.NULL)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    pProperties = ffi.new('VkLayerProperties[]', pPropertyCount[0])
+    result = _callApi(_lib.vkEnumerateInstanceLayerProperties, pPropertyCount, pProperties)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pProperties
 
-def vkEnumerateInstanceExtensionProperties(pLayerName):
-	pPropertyCount = ffi.new('uint32_t*')
-	result = _callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, ffi.NULL)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	pProperties = ffi.new('VkExtensionProperties[]', pPropertyCount[0])
-	result = _callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, pProperties)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pProperties
+
+def vkEnumerateInstanceExtensionProperties(pLayerName=None):
+    pPropertyCount = ffi.new('uint32_t*')
+    result = _callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, ffi.NULL)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    pProperties = ffi.new('VkExtensionProperties[]', pPropertyCount[0])
+    result = _callApi(_lib.vkEnumerateInstanceExtensionProperties, pLayerName, pPropertyCount, pProperties)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pProperties
+
 
 def vkEnumerateDeviceLayerProperties(physicalDevice):
-	pPropertyCount = ffi.new('uint32_t*')
-	result = _callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, ffi.NULL)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	pProperties = ffi.new('VkLayerProperties[]', pPropertyCount[0])
-	result = _callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, pProperties)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pProperties
+    pPropertyCount = ffi.new('uint32_t*')
+    result = _callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, ffi.NULL)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    pProperties = ffi.new('VkLayerProperties[]', pPropertyCount[0])
+    result = _callApi(_lib.vkEnumerateDeviceLayerProperties, physicalDevice, pPropertyCount, pProperties)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pProperties
 
-def vkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName):
-	pPropertyCount = ffi.new('uint32_t*')
-	result = _callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, ffi.NULL)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	pProperties = ffi.new('VkExtensionProperties[]', pPropertyCount[0])
-	result = _callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, pProperties)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pProperties
+
+def vkEnumerateDeviceExtensionProperties(physicalDevice, pLayerName=None):
+    pPropertyCount = ffi.new('uint32_t*')
+    result = _callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, ffi.NULL)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    pProperties = ffi.new('VkExtensionProperties[]', pPropertyCount[0])
+    result = _callApi(_lib.vkEnumerateDeviceExtensionProperties, physicalDevice, pLayerName, pPropertyCount, pProperties)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pProperties
+
 
 def vkGetImageSparseMemoryRequirements(device, image):
-	pSparseMemoryRequirementCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkGetImageSparseMemoryRequirements, device, image, pSparseMemoryRequirementCount, ffi.NULL)
-	pSparseMemoryRequirements = ffi.new('VkSparseImageMemoryRequirements[]', pSparseMemoryRequirementCount[0])
-	_callApi(_lib.vkGetImageSparseMemoryRequirements, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements)
-	return pSparseMemoryRequirements
+    pSparseMemoryRequirementCount = ffi.new('uint32_t*')
+    _callApi(_lib.vkGetImageSparseMemoryRequirements, device, image, pSparseMemoryRequirementCount, ffi.NULL)
+    pSparseMemoryRequirements = ffi.new('VkSparseImageMemoryRequirements[]', pSparseMemoryRequirementCount[0])
+    _callApi(_lib.vkGetImageSparseMemoryRequirements, device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements)
+    return pSparseMemoryRequirements
+
 
 def vkGetPhysicalDeviceSparseImageFormatProperties(physicalDevice, format, type, samples, usage, tiling):
-	pPropertyCount = ffi.new('uint32_t*')
-	_callApi(_lib.vkGetPhysicalDeviceSparseImageFormatProperties, physicalDevice, format, type, samples, usage, tiling, pPropertyCount, ffi.NULL)
-	pProperties = ffi.new('VkSparseImageFormatProperties[]', pPropertyCount[0])
-	_callApi(_lib.vkGetPhysicalDeviceSparseImageFormatProperties, physicalDevice, format, type, samples, usage, tiling, pPropertyCount, pProperties)
-	return pProperties
+    pPropertyCount = ffi.new('uint32_t*')
+    _callApi(_lib.vkGetPhysicalDeviceSparseImageFormatProperties, physicalDevice, format, type, samples, usage, tiling, pPropertyCount, ffi.NULL)
+    pProperties = ffi.new('VkSparseImageFormatProperties[]', pPropertyCount[0])
+    _callApi(_lib.vkGetPhysicalDeviceSparseImageFormatProperties, physicalDevice, format, type, samples, usage, tiling, pPropertyCount, pProperties)
+    return pProperties
+
 
 def vkGetPipelineCacheData(device, pipelineCache):
-	pDataSize = ffi.new('size_t*')
-	result = _callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, ffi.NULL)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	pData = ffi.new('void[]', pDataSize[0])
-	result = _callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, pData)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pData
+    pDataSize = ffi.new('size_t*')
+    result = _callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, ffi.NULL)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    pData = ffi.new('void[]', pDataSize[0])
+    result = _callApi(_lib.vkGetPipelineCacheData, device, pipelineCache, pDataSize, pData)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pData
+
 
 def _wrap_vkGetPhysicalDeviceDisplayPropertiesKHR(fn):
     def vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice):
-    	pPropertyCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pProperties = ffi.new('VkDisplayPropertiesKHR[]', pPropertyCount[0])
-    	result = _callApi(fn, physicalDevice, pPropertyCount, pProperties)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pProperties
+        pPropertyCount = ffi.new('uint32_t*')
+        result = _callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pProperties = ffi.new('VkDisplayPropertiesKHR[]', pPropertyCount[0])
+        result = _callApi(fn, physicalDevice, pPropertyCount, pProperties)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pProperties
     return vkGetPhysicalDeviceDisplayPropertiesKHR
+
+
 def _wrap_vkGetPhysicalDeviceDisplayPlanePropertiesKHR(fn):
     def vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice):
-    	pPropertyCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pProperties = ffi.new('VkDisplayPlanePropertiesKHR[]', pPropertyCount[0])
-    	result = _callApi(fn, physicalDevice, pPropertyCount, pProperties)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pProperties
+        pPropertyCount = ffi.new('uint32_t*')
+        result = _callApi(fn, physicalDevice, pPropertyCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pProperties = ffi.new('VkDisplayPlanePropertiesKHR[]', pPropertyCount[0])
+        result = _callApi(fn, physicalDevice, pPropertyCount, pProperties)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pProperties
     return vkGetPhysicalDeviceDisplayPlanePropertiesKHR
+
+
 def _wrap_vkGetDisplayPlaneSupportedDisplaysKHR(fn):
     def vkGetDisplayPlaneSupportedDisplaysKHR(physicalDevice, planeIndex):
-    	pDisplayCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, physicalDevice, planeIndex, pDisplayCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pDisplays = ffi.new('VkDisplayKHR[]', pDisplayCount[0])
-    	result = _callApi(fn, physicalDevice, planeIndex, pDisplayCount, pDisplays)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pDisplays
+        pDisplayCount = ffi.new('uint32_t*')
+        result = _callApi(fn, physicalDevice, planeIndex, pDisplayCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pDisplays = ffi.new('VkDisplayKHR[]', pDisplayCount[0])
+        result = _callApi(fn, physicalDevice, planeIndex, pDisplayCount, pDisplays)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pDisplays
     return vkGetDisplayPlaneSupportedDisplaysKHR
+
+
 def _wrap_vkGetDisplayModePropertiesKHR(fn):
     def vkGetDisplayModePropertiesKHR(physicalDevice, display):
-    	pPropertyCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, physicalDevice, display, pPropertyCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pProperties = ffi.new('VkDisplayModePropertiesKHR[]', pPropertyCount[0])
-    	result = _callApi(fn, physicalDevice, display, pPropertyCount, pProperties)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pProperties
+        pPropertyCount = ffi.new('uint32_t*')
+        result = _callApi(fn, physicalDevice, display, pPropertyCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pProperties = ffi.new('VkDisplayModePropertiesKHR[]', pPropertyCount[0])
+        result = _callApi(fn, physicalDevice, display, pPropertyCount, pProperties)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pProperties
     return vkGetDisplayModePropertiesKHR
+
+
 def _wrap_vkGetPhysicalDeviceSurfaceFormatsKHR(fn):
     def vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface):
-    	pSurfaceFormatCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, physicalDevice, surface, pSurfaceFormatCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pSurfaceFormats = ffi.new('VkSurfaceFormatKHR[]', pSurfaceFormatCount[0])
-    	result = _callApi(fn, physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSurfaceFormats
+        pSurfaceFormatCount = ffi.new('uint32_t*')
+        result = _callApi(fn, physicalDevice, surface, pSurfaceFormatCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pSurfaceFormats = ffi.new('VkSurfaceFormatKHR[]', pSurfaceFormatCount[0])
+        result = _callApi(fn, physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSurfaceFormats
     return vkGetPhysicalDeviceSurfaceFormatsKHR
+
+
 def _wrap_vkGetPhysicalDeviceSurfacePresentModesKHR(fn):
     def vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface):
-    	pPresentModeCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, physicalDevice, surface, pPresentModeCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pPresentModes = ffi.new('VkPresentModeKHR[]', pPresentModeCount[0])
-    	result = _callApi(fn, physicalDevice, surface, pPresentModeCount, pPresentModes)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pPresentModes
+        pPresentModeCount = ffi.new('uint32_t*')
+        result = _callApi(fn, physicalDevice, surface, pPresentModeCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pPresentModes = ffi.new('VkPresentModeKHR[]', pPresentModeCount[0])
+        result = _callApi(fn, physicalDevice, surface, pPresentModeCount, pPresentModes)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pPresentModes
     return vkGetPhysicalDeviceSurfacePresentModesKHR
+
+
 def _wrap_vkGetSwapchainImagesKHR(fn):
     def vkGetSwapchainImagesKHR(device, swapchain):
-    	pSwapchainImageCount = ffi.new('uint32_t*')
-    	result = _callApi(fn, device, swapchain, pSwapchainImageCount, ffi.NULL)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	pSwapchainImages = ffi.new('VkImage[]', pSwapchainImageCount[0])
-    	result = _callApi(fn, device, swapchain, pSwapchainImageCount, pSwapchainImages)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSwapchainImages
+        pSwapchainImageCount = ffi.new('uint32_t*')
+        result = _callApi(fn, device, swapchain, pSwapchainImageCount, ffi.NULL)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        pSwapchainImages = ffi.new('VkImage[]', pSwapchainImageCount[0])
+        result = _callApi(fn, device, swapchain, pSwapchainImageCount, pSwapchainImages)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSwapchainImages
     return vkGetSwapchainImagesKHR
 
-def vkCreateGraphicsPipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator):
-	pPipelines = ffi.new('VkPipeline*')
-	result = _callApi(_lib.vkCreateGraphicsPipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pPipelines
 
-def vkCreateComputePipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator):
-	pPipelines = ffi.new('VkPipeline*')
-	result = _callApi(_lib.vkCreateComputePipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pPipelines
+def vkCreateGraphicsPipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator=None):
+    pPipelines = ffi.new('VkPipeline*')
+    result = _callApi(_lib.vkCreateGraphicsPipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pPipelines
+
+
+def vkCreateComputePipelines(device, pipelineCache, createInfoCount, pCreateInfos, pAllocator=None):
+    pPipelines = ffi.new('VkPipeline*')
+    result = _callApi(_lib.vkCreateComputePipelines, device, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pPipelines
+
 
 def vkAllocateDescriptorSets(device, pAllocateInfo):
-	pDescriptorSets = ffi.new('VkDescriptorSet*')
-	result = _callApi(_lib.vkAllocateDescriptorSets, device, pAllocateInfo, pDescriptorSets)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pDescriptorSets
+    pDescriptorSets = ffi.new('VkDescriptorSet*')
+    result = _callApi(_lib.vkAllocateDescriptorSets, device, pAllocateInfo, pDescriptorSets)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pDescriptorSets
+
 
 def vkAllocateCommandBuffers(device, pAllocateInfo):
-	pCommandBuffers = ffi.new('VkCommandBuffer*')
-	result = _callApi(_lib.vkAllocateCommandBuffers, device, pAllocateInfo, pCommandBuffers)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
-	return pCommandBuffers
+    pCommandBuffers = ffi.new('VkCommandBuffer*')
+    result = _callApi(_lib.vkAllocateCommandBuffers, device, pAllocateInfo, pCommandBuffers)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+    return pCommandBuffers
+
 
 def _wrap_vkCreateSharedSwapchainsKHR(fn):
-    def vkCreateSharedSwapchainsKHR(device, swapchainCount, pCreateInfos, pAllocator):
-    	pSwapchains = ffi.new('VkSwapchainKHR*')
-    	result = _callApi(fn, device, swapchainCount, pCreateInfos, pAllocator, pSwapchains)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
-    	return pSwapchains
+    def vkCreateSharedSwapchainsKHR(device, swapchainCount, pCreateInfos, pAllocator=None):
+        pSwapchains = ffi.new('VkSwapchainKHR*')
+        result = _callApi(fn, device, swapchainCount, pCreateInfos, pAllocator, pSwapchains)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
+        return pSwapchains
     return vkCreateSharedSwapchainsKHR
 
-def vkDestroyInstance(instance, pAllocator):
-	_callApi(_lib.vkDestroyInstance, instance, pAllocator)
 
-def vkDestroyDevice(device, pAllocator):
-	_callApi(_lib.vkDestroyDevice, device, pAllocator)
+def vkDestroyInstance(instance=None, pAllocator=None):
+    _callApi(_lib.vkDestroyInstance, instance, pAllocator)
 
-def vkQueueSubmit(queue, submitCount, pSubmits, fence):
-	result = _callApi(_lib.vkQueueSubmit, queue, submitCount, pSubmits, fence)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+
+def vkDestroyDevice(device=None, pAllocator=None):
+    _callApi(_lib.vkDestroyDevice, device, pAllocator)
+
+
+def vkQueueSubmit(queue, submitCount, pSubmits, fence=None):
+    result = _callApi(_lib.vkQueueSubmit, queue, submitCount, pSubmits, fence)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkQueueWaitIdle(queue):
-	result = _callApi(_lib.vkQueueWaitIdle, queue)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkQueueWaitIdle, queue)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkDeviceWaitIdle(device):
-	result = _callApi(_lib.vkDeviceWaitIdle, device)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkDeviceWaitIdle, device)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkFreeMemory(device, memory, pAllocator):
-	_callApi(_lib.vkFreeMemory, device, memory, pAllocator)
+
+def vkFreeMemory(device, memory=None, pAllocator=None):
+    _callApi(_lib.vkFreeMemory, device, memory, pAllocator)
+
 
 def vkUnmapMemory(device, memory):
-	_callApi(_lib.vkUnmapMemory, device, memory)
+    _callApi(_lib.vkUnmapMemory, device, memory)
+
 
 def vkFlushMappedMemoryRanges(device, memoryRangeCount, pMemoryRanges):
-	result = _callApi(_lib.vkFlushMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkFlushMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkInvalidateMappedMemoryRanges(device, memoryRangeCount, pMemoryRanges):
-	result = _callApi(_lib.vkInvalidateMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkInvalidateMappedMemoryRanges, device, memoryRangeCount, pMemoryRanges)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkBindBufferMemory(device, buffer, memory, memoryOffset):
-	result = _callApi(_lib.vkBindBufferMemory, device, buffer, memory, memoryOffset)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkBindBufferMemory, device, buffer, memory, memoryOffset)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkBindImageMemory(device, image, memory, memoryOffset):
-	result = _callApi(_lib.vkBindImageMemory, device, image, memory, memoryOffset)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkBindImageMemory, device, image, memory, memoryOffset)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkQueueBindSparse(queue, bindInfoCount, pBindInfo, fence):
-	result = _callApi(_lib.vkQueueBindSparse, queue, bindInfoCount, pBindInfo, fence)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
 
-def vkDestroyFence(device, fence, pAllocator):
-	_callApi(_lib.vkDestroyFence, device, fence, pAllocator)
+def vkQueueBindSparse(queue, bindInfoCount, pBindInfo, fence=None):
+    result = _callApi(_lib.vkQueueBindSparse, queue, bindInfoCount, pBindInfo, fence)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
+
+def vkDestroyFence(device, fence=None, pAllocator=None):
+    _callApi(_lib.vkDestroyFence, device, fence, pAllocator)
+
 
 def vkResetFences(device, fenceCount, pFences):
-	result = _callApi(_lib.vkResetFences, device, fenceCount, pFences)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkResetFences, device, fenceCount, pFences)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkGetFenceStatus(device, fence):
-	result = _callApi(_lib.vkGetFenceStatus, device, fence)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkGetFenceStatus, device, fence)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkWaitForFences(device, fenceCount, pFences, waitAll, timeout):
-	result = _callApi(_lib.vkWaitForFences, device, fenceCount, pFences, waitAll, timeout)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkWaitForFences, device, fenceCount, pFences, waitAll, timeout)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkDestroySemaphore(device, semaphore, pAllocator):
-	_callApi(_lib.vkDestroySemaphore, device, semaphore, pAllocator)
 
-def vkDestroyEvent(device, event, pAllocator):
-	_callApi(_lib.vkDestroyEvent, device, event, pAllocator)
+def vkDestroySemaphore(device, semaphore=None, pAllocator=None):
+    _callApi(_lib.vkDestroySemaphore, device, semaphore, pAllocator)
+
+
+def vkDestroyEvent(device, event=None, pAllocator=None):
+    _callApi(_lib.vkDestroyEvent, device, event, pAllocator)
+
 
 def vkGetEventStatus(device, event):
-	result = _callApi(_lib.vkGetEventStatus, device, event)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkGetEventStatus, device, event)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkSetEvent(device, event):
-	result = _callApi(_lib.vkSetEvent, device, event)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkSetEvent, device, event)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkResetEvent(device, event):
-	result = _callApi(_lib.vkResetEvent, device, event)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkResetEvent, device, event)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkDestroyQueryPool(device, queryPool, pAllocator):
-	_callApi(_lib.vkDestroyQueryPool, device, queryPool, pAllocator)
 
-def vkGetQueryPoolResults(device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags):
-	result = _callApi(_lib.vkGetQueryPoolResults, device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+def vkDestroyQueryPool(device, queryPool=None, pAllocator=None):
+    _callApi(_lib.vkDestroyQueryPool, device, queryPool, pAllocator)
 
-def vkDestroyBuffer(device, buffer, pAllocator):
-	_callApi(_lib.vkDestroyBuffer, device, buffer, pAllocator)
 
-def vkDestroyBufferView(device, bufferView, pAllocator):
-	_callApi(_lib.vkDestroyBufferView, device, bufferView, pAllocator)
+def vkGetQueryPoolResults(device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags=None):
+    result = _callApi(_lib.vkGetQueryPoolResults, device, queryPool, firstQuery, queryCount, dataSize, pData, stride, flags)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkDestroyImage(device, image, pAllocator):
-	_callApi(_lib.vkDestroyImage, device, image, pAllocator)
 
-def vkDestroyImageView(device, imageView, pAllocator):
-	_callApi(_lib.vkDestroyImageView, device, imageView, pAllocator)
+def vkDestroyBuffer(device, buffer=None, pAllocator=None):
+    _callApi(_lib.vkDestroyBuffer, device, buffer, pAllocator)
 
-def vkDestroyShaderModule(device, shaderModule, pAllocator):
-	_callApi(_lib.vkDestroyShaderModule, device, shaderModule, pAllocator)
 
-def vkDestroyPipelineCache(device, pipelineCache, pAllocator):
-	_callApi(_lib.vkDestroyPipelineCache, device, pipelineCache, pAllocator)
+def vkDestroyBufferView(device, bufferView=None, pAllocator=None):
+    _callApi(_lib.vkDestroyBufferView, device, bufferView, pAllocator)
+
+
+def vkDestroyImage(device, image=None, pAllocator=None):
+    _callApi(_lib.vkDestroyImage, device, image, pAllocator)
+
+
+def vkDestroyImageView(device, imageView=None, pAllocator=None):
+    _callApi(_lib.vkDestroyImageView, device, imageView, pAllocator)
+
+
+def vkDestroyShaderModule(device, shaderModule=None, pAllocator=None):
+    _callApi(_lib.vkDestroyShaderModule, device, shaderModule, pAllocator)
+
+
+def vkDestroyPipelineCache(device, pipelineCache=None, pAllocator=None):
+    _callApi(_lib.vkDestroyPipelineCache, device, pipelineCache, pAllocator)
+
 
 def vkMergePipelineCaches(device, dstCache, srcCacheCount, pSrcCaches):
-	result = _callApi(_lib.vkMergePipelineCaches, device, dstCache, srcCacheCount, pSrcCaches)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkMergePipelineCaches, device, dstCache, srcCacheCount, pSrcCaches)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkDestroyPipeline(device, pipeline, pAllocator):
-	_callApi(_lib.vkDestroyPipeline, device, pipeline, pAllocator)
 
-def vkDestroyPipelineLayout(device, pipelineLayout, pAllocator):
-	_callApi(_lib.vkDestroyPipelineLayout, device, pipelineLayout, pAllocator)
+def vkDestroyPipeline(device, pipeline=None, pAllocator=None):
+    _callApi(_lib.vkDestroyPipeline, device, pipeline, pAllocator)
 
-def vkDestroySampler(device, sampler, pAllocator):
-	_callApi(_lib.vkDestroySampler, device, sampler, pAllocator)
 
-def vkDestroyDescriptorSetLayout(device, descriptorSetLayout, pAllocator):
-	_callApi(_lib.vkDestroyDescriptorSetLayout, device, descriptorSetLayout, pAllocator)
+def vkDestroyPipelineLayout(device, pipelineLayout=None, pAllocator=None):
+    _callApi(_lib.vkDestroyPipelineLayout, device, pipelineLayout, pAllocator)
 
-def vkDestroyDescriptorPool(device, descriptorPool, pAllocator):
-	_callApi(_lib.vkDestroyDescriptorPool, device, descriptorPool, pAllocator)
 
-def vkResetDescriptorPool(device, descriptorPool, flags):
-	result = _callApi(_lib.vkResetDescriptorPool, device, descriptorPool, flags)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+def vkDestroySampler(device, sampler=None, pAllocator=None):
+    _callApi(_lib.vkDestroySampler, device, sampler, pAllocator)
+
+
+def vkDestroyDescriptorSetLayout(device, descriptorSetLayout=None, pAllocator=None):
+    _callApi(_lib.vkDestroyDescriptorSetLayout, device, descriptorSetLayout, pAllocator)
+
+
+def vkDestroyDescriptorPool(device, descriptorPool=None, pAllocator=None):
+    _callApi(_lib.vkDestroyDescriptorPool, device, descriptorPool, pAllocator)
+
+
+def vkResetDescriptorPool(device, descriptorPool, flags=None):
+    result = _callApi(_lib.vkResetDescriptorPool, device, descriptorPool, flags)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkFreeDescriptorSets(device, descriptorPool, descriptorSetCount, pDescriptorSets):
-	result = _callApi(_lib.vkFreeDescriptorSets, device, descriptorPool, descriptorSetCount, pDescriptorSets)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkFreeDescriptorSets, device, descriptorPool, descriptorSetCount, pDescriptorSets)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkUpdateDescriptorSets(device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies):
-	_callApi(_lib.vkUpdateDescriptorSets, device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies)
+    _callApi(_lib.vkUpdateDescriptorSets, device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies)
 
-def vkDestroyFramebuffer(device, framebuffer, pAllocator):
-	_callApi(_lib.vkDestroyFramebuffer, device, framebuffer, pAllocator)
 
-def vkDestroyRenderPass(device, renderPass, pAllocator):
-	_callApi(_lib.vkDestroyRenderPass, device, renderPass, pAllocator)
+def vkDestroyFramebuffer(device, framebuffer=None, pAllocator=None):
+    _callApi(_lib.vkDestroyFramebuffer, device, framebuffer, pAllocator)
 
-def vkDestroyCommandPool(device, commandPool, pAllocator):
-	_callApi(_lib.vkDestroyCommandPool, device, commandPool, pAllocator)
 
-def vkResetCommandPool(device, commandPool, flags):
-	result = _callApi(_lib.vkResetCommandPool, device, commandPool, flags)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+def vkDestroyRenderPass(device, renderPass=None, pAllocator=None):
+    _callApi(_lib.vkDestroyRenderPass, device, renderPass, pAllocator)
+
+
+def vkDestroyCommandPool(device, commandPool=None, pAllocator=None):
+    _callApi(_lib.vkDestroyCommandPool, device, commandPool, pAllocator)
+
+
+def vkResetCommandPool(device, commandPool, flags=None):
+    result = _callApi(_lib.vkResetCommandPool, device, commandPool, flags)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkFreeCommandBuffers(device, commandPool, commandBufferCount, pCommandBuffers):
-	_callApi(_lib.vkFreeCommandBuffers, device, commandPool, commandBufferCount, pCommandBuffers)
+    _callApi(_lib.vkFreeCommandBuffers, device, commandPool, commandBufferCount, pCommandBuffers)
+
 
 def vkBeginCommandBuffer(commandBuffer, pBeginInfo):
-	result = _callApi(_lib.vkBeginCommandBuffer, commandBuffer, pBeginInfo)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkBeginCommandBuffer, commandBuffer, pBeginInfo)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkEndCommandBuffer(commandBuffer):
-	result = _callApi(_lib.vkEndCommandBuffer, commandBuffer)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+    result = _callApi(_lib.vkEndCommandBuffer, commandBuffer)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
 
-def vkResetCommandBuffer(commandBuffer, flags):
-	result = _callApi(_lib.vkResetCommandBuffer, commandBuffer, flags)
-	if result!=VK_SUCCESS:
-		raise _exception_codes[result]
+
+def vkResetCommandBuffer(commandBuffer, flags=None):
+    result = _callApi(_lib.vkResetCommandBuffer, commandBuffer, flags)
+    if result != VK_SUCCESS:
+        raise _exception_codes[result]
+
 
 def vkCmdBindPipeline(commandBuffer, pipelineBindPoint, pipeline):
-	_callApi(_lib.vkCmdBindPipeline, commandBuffer, pipelineBindPoint, pipeline)
+    _callApi(_lib.vkCmdBindPipeline, commandBuffer, pipelineBindPoint, pipeline)
+
 
 def vkCmdSetViewport(commandBuffer, firstViewport, viewportCount, pViewports):
-	_callApi(_lib.vkCmdSetViewport, commandBuffer, firstViewport, viewportCount, pViewports)
+    _callApi(_lib.vkCmdSetViewport, commandBuffer, firstViewport, viewportCount, pViewports)
+
 
 def vkCmdSetScissor(commandBuffer, firstScissor, scissorCount, pScissors):
-	_callApi(_lib.vkCmdSetScissor, commandBuffer, firstScissor, scissorCount, pScissors)
+    _callApi(_lib.vkCmdSetScissor, commandBuffer, firstScissor, scissorCount, pScissors)
+
 
 def vkCmdSetLineWidth(commandBuffer, lineWidth):
-	_callApi(_lib.vkCmdSetLineWidth, commandBuffer, lineWidth)
+    _callApi(_lib.vkCmdSetLineWidth, commandBuffer, lineWidth)
+
 
 def vkCmdSetDepthBias(commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor):
-	_callApi(_lib.vkCmdSetDepthBias, commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)
+    _callApi(_lib.vkCmdSetDepthBias, commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)
+
 
 def vkCmdSetBlendConstants(commandBuffer, blendConstants):
-	_callApi(_lib.vkCmdSetBlendConstants, commandBuffer, blendConstants)
+    _callApi(_lib.vkCmdSetBlendConstants, commandBuffer, blendConstants)
+
 
 def vkCmdSetDepthBounds(commandBuffer, minDepthBounds, maxDepthBounds):
-	_callApi(_lib.vkCmdSetDepthBounds, commandBuffer, minDepthBounds, maxDepthBounds)
+    _callApi(_lib.vkCmdSetDepthBounds, commandBuffer, minDepthBounds, maxDepthBounds)
+
 
 def vkCmdSetStencilCompareMask(commandBuffer, faceMask, compareMask):
-	_callApi(_lib.vkCmdSetStencilCompareMask, commandBuffer, faceMask, compareMask)
+    _callApi(_lib.vkCmdSetStencilCompareMask, commandBuffer, faceMask, compareMask)
+
 
 def vkCmdSetStencilWriteMask(commandBuffer, faceMask, writeMask):
-	_callApi(_lib.vkCmdSetStencilWriteMask, commandBuffer, faceMask, writeMask)
+    _callApi(_lib.vkCmdSetStencilWriteMask, commandBuffer, faceMask, writeMask)
+
 
 def vkCmdSetStencilReference(commandBuffer, faceMask, reference):
-	_callApi(_lib.vkCmdSetStencilReference, commandBuffer, faceMask, reference)
+    _callApi(_lib.vkCmdSetStencilReference, commandBuffer, faceMask, reference)
+
 
 def vkCmdBindDescriptorSets(commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount, pDescriptorSets, dynamicOffsetCount, pDynamicOffsets):
-	_callApi(_lib.vkCmdBindDescriptorSets, commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount, pDescriptorSets, dynamicOffsetCount, pDynamicOffsets)
+    _callApi(_lib.vkCmdBindDescriptorSets, commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount, pDescriptorSets, dynamicOffsetCount, pDynamicOffsets)
+
 
 def vkCmdBindIndexBuffer(commandBuffer, buffer, offset, indexType):
-	_callApi(_lib.vkCmdBindIndexBuffer, commandBuffer, buffer, offset, indexType)
+    _callApi(_lib.vkCmdBindIndexBuffer, commandBuffer, buffer, offset, indexType)
+
 
 def vkCmdBindVertexBuffers(commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets):
-	_callApi(_lib.vkCmdBindVertexBuffers, commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets)
+    _callApi(_lib.vkCmdBindVertexBuffers, commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets)
+
 
 def vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance):
-	_callApi(_lib.vkCmdDraw, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)
+    _callApi(_lib.vkCmdDraw, commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)
+
 
 def vkCmdDrawIndexed(commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance):
-	_callApi(_lib.vkCmdDrawIndexed, commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
+    _callApi(_lib.vkCmdDrawIndexed, commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)
+
 
 def vkCmdDrawIndirect(commandBuffer, buffer, offset, drawCount, stride):
-	_callApi(_lib.vkCmdDrawIndirect, commandBuffer, buffer, offset, drawCount, stride)
+    _callApi(_lib.vkCmdDrawIndirect, commandBuffer, buffer, offset, drawCount, stride)
+
 
 def vkCmdDrawIndexedIndirect(commandBuffer, buffer, offset, drawCount, stride):
-	_callApi(_lib.vkCmdDrawIndexedIndirect, commandBuffer, buffer, offset, drawCount, stride)
+    _callApi(_lib.vkCmdDrawIndexedIndirect, commandBuffer, buffer, offset, drawCount, stride)
+
 
 def vkCmdDispatch(commandBuffer, x, y, z):
-	_callApi(_lib.vkCmdDispatch, commandBuffer, x, y, z)
+    _callApi(_lib.vkCmdDispatch, commandBuffer, x, y, z)
+
 
 def vkCmdDispatchIndirect(commandBuffer, buffer, offset):
-	_callApi(_lib.vkCmdDispatchIndirect, commandBuffer, buffer, offset)
+    _callApi(_lib.vkCmdDispatchIndirect, commandBuffer, buffer, offset)
+
 
 def vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions):
-	_callApi(_lib.vkCmdCopyBuffer, commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions)
+    _callApi(_lib.vkCmdCopyBuffer, commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions)
+
 
 def vkCmdCopyImage(commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions):
-	_callApi(_lib.vkCmdCopyImage, commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions)
+    _callApi(_lib.vkCmdCopyImage, commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions)
+
 
 def vkCmdBlitImage(commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions, filter):
-	_callApi(_lib.vkCmdBlitImage, commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions, filter)
+    _callApi(_lib.vkCmdBlitImage, commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions, filter)
+
 
 def vkCmdCopyBufferToImage(commandBuffer, srcBuffer, dstImage, dstImageLayout, regionCount, pRegions):
-	_callApi(_lib.vkCmdCopyBufferToImage, commandBuffer, srcBuffer, dstImage, dstImageLayout, regionCount, pRegions)
+    _callApi(_lib.vkCmdCopyBufferToImage, commandBuffer, srcBuffer, dstImage, dstImageLayout, regionCount, pRegions)
+
 
 def vkCmdCopyImageToBuffer(commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions):
-	_callApi(_lib.vkCmdCopyImageToBuffer, commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions)
+    _callApi(_lib.vkCmdCopyImageToBuffer, commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions)
+
 
 def vkCmdUpdateBuffer(commandBuffer, dstBuffer, dstOffset, dataSize, pData):
-	_callApi(_lib.vkCmdUpdateBuffer, commandBuffer, dstBuffer, dstOffset, dataSize, pData)
+    _callApi(_lib.vkCmdUpdateBuffer, commandBuffer, dstBuffer, dstOffset, dataSize, pData)
+
 
 def vkCmdFillBuffer(commandBuffer, dstBuffer, dstOffset, size, data):
-	_callApi(_lib.vkCmdFillBuffer, commandBuffer, dstBuffer, dstOffset, size, data)
+    _callApi(_lib.vkCmdFillBuffer, commandBuffer, dstBuffer, dstOffset, size, data)
+
 
 def vkCmdClearColorImage(commandBuffer, image, imageLayout, pColor, rangeCount, pRanges):
-	_callApi(_lib.vkCmdClearColorImage, commandBuffer, image, imageLayout, pColor, rangeCount, pRanges)
+    _callApi(_lib.vkCmdClearColorImage, commandBuffer, image, imageLayout, pColor, rangeCount, pRanges)
+
 
 def vkCmdClearDepthStencilImage(commandBuffer, image, imageLayout, pDepthStencil, rangeCount, pRanges):
-	_callApi(_lib.vkCmdClearDepthStencilImage, commandBuffer, image, imageLayout, pDepthStencil, rangeCount, pRanges)
+    _callApi(_lib.vkCmdClearDepthStencilImage, commandBuffer, image, imageLayout, pDepthStencil, rangeCount, pRanges)
+
 
 def vkCmdClearAttachments(commandBuffer, attachmentCount, pAttachments, rectCount, pRects):
-	_callApi(_lib.vkCmdClearAttachments, commandBuffer, attachmentCount, pAttachments, rectCount, pRects)
+    _callApi(_lib.vkCmdClearAttachments, commandBuffer, attachmentCount, pAttachments, rectCount, pRects)
+
 
 def vkCmdResolveImage(commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions):
-	_callApi(_lib.vkCmdResolveImage, commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions)
+    _callApi(_lib.vkCmdResolveImage, commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions)
+
 
 def vkCmdSetEvent(commandBuffer, event, stageMask):
-	_callApi(_lib.vkCmdSetEvent, commandBuffer, event, stageMask)
+    _callApi(_lib.vkCmdSetEvent, commandBuffer, event, stageMask)
+
 
 def vkCmdResetEvent(commandBuffer, event, stageMask):
-	_callApi(_lib.vkCmdResetEvent, commandBuffer, event, stageMask)
+    _callApi(_lib.vkCmdResetEvent, commandBuffer, event, stageMask)
+
 
 def vkCmdWaitEvents(commandBuffer, eventCount, pEvents, srcStageMask, dstStageMask, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers):
-	_callApi(_lib.vkCmdWaitEvents, commandBuffer, eventCount, pEvents, srcStageMask, dstStageMask, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers)
+    _callApi(_lib.vkCmdWaitEvents, commandBuffer, eventCount, pEvents, srcStageMask, dstStageMask, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers)
+
 
 def vkCmdPipelineBarrier(commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers):
-	_callApi(_lib.vkCmdPipelineBarrier, commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers)
+    _callApi(_lib.vkCmdPipelineBarrier, commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers)
 
-def vkCmdBeginQuery(commandBuffer, queryPool, query, flags):
-	_callApi(_lib.vkCmdBeginQuery, commandBuffer, queryPool, query, flags)
+
+def vkCmdBeginQuery(commandBuffer, queryPool, query, flags=None):
+    _callApi(_lib.vkCmdBeginQuery, commandBuffer, queryPool, query, flags)
+
 
 def vkCmdEndQuery(commandBuffer, queryPool, query):
-	_callApi(_lib.vkCmdEndQuery, commandBuffer, queryPool, query)
+    _callApi(_lib.vkCmdEndQuery, commandBuffer, queryPool, query)
+
 
 def vkCmdResetQueryPool(commandBuffer, queryPool, firstQuery, queryCount):
-	_callApi(_lib.vkCmdResetQueryPool, commandBuffer, queryPool, firstQuery, queryCount)
+    _callApi(_lib.vkCmdResetQueryPool, commandBuffer, queryPool, firstQuery, queryCount)
+
 
 def vkCmdWriteTimestamp(commandBuffer, pipelineStage, queryPool, query):
-	_callApi(_lib.vkCmdWriteTimestamp, commandBuffer, pipelineStage, queryPool, query)
+    _callApi(_lib.vkCmdWriteTimestamp, commandBuffer, pipelineStage, queryPool, query)
 
-def vkCmdCopyQueryPoolResults(commandBuffer, queryPool, firstQuery, queryCount, dstBuffer, dstOffset, stride, flags):
-	_callApi(_lib.vkCmdCopyQueryPoolResults, commandBuffer, queryPool, firstQuery, queryCount, dstBuffer, dstOffset, stride, flags)
+
+def vkCmdCopyQueryPoolResults(commandBuffer, queryPool, firstQuery, queryCount, dstBuffer, dstOffset, stride, flags=None):
+    _callApi(_lib.vkCmdCopyQueryPoolResults, commandBuffer, queryPool, firstQuery, queryCount, dstBuffer, dstOffset, stride, flags)
+
 
 def vkCmdPushConstants(commandBuffer, layout, stageFlags, offset, size, pValues):
-	_callApi(_lib.vkCmdPushConstants, commandBuffer, layout, stageFlags, offset, size, pValues)
+    _callApi(_lib.vkCmdPushConstants, commandBuffer, layout, stageFlags, offset, size, pValues)
+
 
 def vkCmdBeginRenderPass(commandBuffer, pRenderPassBegin, contents):
-	_callApi(_lib.vkCmdBeginRenderPass, commandBuffer, pRenderPassBegin, contents)
+    _callApi(_lib.vkCmdBeginRenderPass, commandBuffer, pRenderPassBegin, contents)
+
 
 def vkCmdNextSubpass(commandBuffer, contents):
-	_callApi(_lib.vkCmdNextSubpass, commandBuffer, contents)
+    _callApi(_lib.vkCmdNextSubpass, commandBuffer, contents)
+
 
 def vkCmdEndRenderPass(commandBuffer):
-	_callApi(_lib.vkCmdEndRenderPass, commandBuffer)
+    _callApi(_lib.vkCmdEndRenderPass, commandBuffer)
+
 
 def vkCmdExecuteCommands(commandBuffer, commandBufferCount, pCommandBuffers):
-	_callApi(_lib.vkCmdExecuteCommands, commandBuffer, commandBufferCount, pCommandBuffers)
+    _callApi(_lib.vkCmdExecuteCommands, commandBuffer, commandBufferCount, pCommandBuffers)
+
 
 def _wrap_vkDestroySurfaceKHR(fn):
-    def vkDestroySurfaceKHR(instance, surface, pAllocator):
-    	_callApi(fn, instance, surface, pAllocator)
+    def vkDestroySurfaceKHR(instance, surface=None, pAllocator=None):
+        _callApi(fn, instance, surface, pAllocator)
     return vkDestroySurfaceKHR
+
+
 def _wrap_vkDestroySwapchainKHR(fn):
-    def vkDestroySwapchainKHR(device, swapchain, pAllocator):
-    	_callApi(fn, device, swapchain, pAllocator)
+    def vkDestroySwapchainKHR(device, swapchain=None, pAllocator=None):
+        _callApi(fn, device, swapchain, pAllocator)
     return vkDestroySwapchainKHR
+
+
 def _wrap_vkQueuePresentKHR(fn):
     def vkQueuePresentKHR(queue, pPresentInfo):
-    	result = _callApi(fn, queue, pPresentInfo)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
+        result = _callApi(fn, queue, pPresentInfo)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
     return vkQueuePresentKHR
+
+
 def _wrap_vkGetPhysicalDeviceWin32PresentationSupportKHR(fn):
     def vkGetPhysicalDeviceWin32PresentationSupportKHR(physicalDevice, queueFamilyIndex):
-    	_callApi(fn, physicalDevice, queueFamilyIndex)
+        _callApi(fn, physicalDevice, queueFamilyIndex)
     return vkGetPhysicalDeviceWin32PresentationSupportKHR
+
+
 def _wrap_vkGetPhysicalDeviceXlibPresentationSupportKHR(fn):
     def vkGetPhysicalDeviceXlibPresentationSupportKHR(physicalDevice, queueFamilyIndex, dpy, visualID):
-    	_callApi(fn, physicalDevice, queueFamilyIndex, dpy, visualID)
+        _callApi(fn, physicalDevice, queueFamilyIndex, dpy, visualID)
     return vkGetPhysicalDeviceXlibPresentationSupportKHR
+
+
 def _wrap_vkGetPhysicalDeviceXcbPresentationSupportKHR(fn):
     def vkGetPhysicalDeviceXcbPresentationSupportKHR(physicalDevice, queueFamilyIndex, connection, visual_id):
-    	_callApi(fn, physicalDevice, queueFamilyIndex, connection, visual_id)
+        _callApi(fn, physicalDevice, queueFamilyIndex, connection, visual_id)
     return vkGetPhysicalDeviceXcbPresentationSupportKHR
+
+
 def _wrap_vkDestroyDebugReportCallbackEXT(fn):
-    def vkDestroyDebugReportCallbackEXT(instance, callback, pAllocator):
-    	_callApi(fn, instance, callback, pAllocator)
+    def vkDestroyDebugReportCallbackEXT(instance, callback, pAllocator=None):
+        _callApi(fn, instance, callback, pAllocator)
     return vkDestroyDebugReportCallbackEXT
+
+
 def _wrap_vkDebugReportMessageEXT(fn):
     def vkDebugReportMessageEXT(instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage):
-    	_callApi(fn, instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage)
+        _callApi(fn, instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage)
     return vkDebugReportMessageEXT
+
+
 def _wrap_vkDebugMarkerSetObjectNameEXT(fn):
     def vkDebugMarkerSetObjectNameEXT(device, pNameInfo):
-    	result = _callApi(fn, device, pNameInfo)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
+        result = _callApi(fn, device, pNameInfo)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
     return vkDebugMarkerSetObjectNameEXT
+
+
 def _wrap_vkDebugMarkerSetObjectTagEXT(fn):
     def vkDebugMarkerSetObjectTagEXT(device, pTagInfo):
-    	result = _callApi(fn, device, pTagInfo)
-    	if result!=VK_SUCCESS:
-    		raise _exception_codes[result]
+        result = _callApi(fn, device, pTagInfo)
+        if result != VK_SUCCESS:
+            raise _exception_codes[result]
     return vkDebugMarkerSetObjectTagEXT
+
+
 def _wrap_vkCmdDebugMarkerBeginEXT(fn):
     def vkCmdDebugMarkerBeginEXT(commandBuffer, pMarkerInfo):
-    	_callApi(fn, commandBuffer, pMarkerInfo)
+        _callApi(fn, commandBuffer, pMarkerInfo)
     return vkCmdDebugMarkerBeginEXT
+
+
 def _wrap_vkCmdDebugMarkerEndEXT(fn):
     def vkCmdDebugMarkerEndEXT(commandBuffer):
-    	_callApi(fn, commandBuffer)
+        _callApi(fn, commandBuffer)
     return vkCmdDebugMarkerEndEXT
+
+
 def _wrap_vkCmdDebugMarkerInsertEXT(fn):
     def vkCmdDebugMarkerInsertEXT(commandBuffer, pMarkerInfo):
-    	_callApi(fn, commandBuffer, pMarkerInfo)
+        _callApi(fn, commandBuffer, pMarkerInfo)
     return vkCmdDebugMarkerInsertEXT
+
+
 def _wrap_vkCmdDrawIndirectCountAMD(fn):
     def vkCmdDrawIndirectCountAMD(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride):
-    	_callApi(fn, commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride)
+        _callApi(fn, commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride)
     return vkCmdDrawIndirectCountAMD
+
+
 def _wrap_vkCmdDrawIndexedIndirectCountAMD(fn):
     def vkCmdDrawIndexedIndirectCountAMD(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride):
-    	_callApi(fn, commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride)
+        _callApi(fn, commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride)
     return vkCmdDrawIndexedIndirectCountAMD
 
-
 _instance_ext_funcs = {
-	'vkCreateXlibSurfaceKHR':_wrap_vkCreateXlibSurfaceKHR,
-	'vkGetPhysicalDeviceXlibPresentationSupportKHR':_wrap_vkGetPhysicalDeviceXlibPresentationSupportKHR,
-	'vkCreateXcbSurfaceKHR':_wrap_vkCreateXcbSurfaceKHR,
-	'vkGetPhysicalDeviceXcbPresentationSupportKHR':_wrap_vkGetPhysicalDeviceXcbPresentationSupportKHR,
-	'vkCreateWaylandSurfaceKHR':_wrap_vkCreateWaylandSurfaceKHR,
-	'vkGetPhysicalDeviceWaylandPresentationSupportKHR':_wrap_vkGetPhysicalDeviceWaylandPresentationSupportKHR,
-	'vkCreateMirSurfaceKHR':_wrap_vkCreateMirSurfaceKHR,
-	'vkGetPhysicalDeviceMirPresentationSupportKHR':_wrap_vkGetPhysicalDeviceMirPresentationSupportKHR,
-	'vkCreateWin32SurfaceKHR':_wrap_vkCreateWin32SurfaceKHR,
-	'vkGetPhysicalDeviceWin32PresentationSupportKHR':_wrap_vkGetPhysicalDeviceWin32PresentationSupportKHR,
-	'vkCreateAndroidSurfaceKHR':_wrap_vkCreateAndroidSurfaceKHR,
-	'vkDestroySurfaceKHR':_wrap_vkDestroySurfaceKHR,
-	'vkGetPhysicalDeviceSurfaceSupportKHR':_wrap_vkGetPhysicalDeviceSurfaceSupportKHR,
-	'vkGetPhysicalDeviceSurfaceCapabilitiesKHR':_wrap_vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
-	'vkGetPhysicalDeviceSurfaceFormatsKHR':_wrap_vkGetPhysicalDeviceSurfaceFormatsKHR,
-	'vkGetPhysicalDeviceSurfacePresentModesKHR':_wrap_vkGetPhysicalDeviceSurfacePresentModesKHR,
-	'vkGetPhysicalDeviceDisplayPropertiesKHR':_wrap_vkGetPhysicalDeviceDisplayPropertiesKHR,
-	'vkGetPhysicalDeviceDisplayPlanePropertiesKHR':_wrap_vkGetPhysicalDeviceDisplayPlanePropertiesKHR,
-	'vkGetDisplayPlaneSupportedDisplaysKHR':_wrap_vkGetDisplayPlaneSupportedDisplaysKHR,
-	'vkGetDisplayModePropertiesKHR':_wrap_vkGetDisplayModePropertiesKHR,
-	'vkCreateDisplayModeKHR':_wrap_vkCreateDisplayModeKHR,
-	'vkGetDisplayPlaneCapabilitiesKHR':_wrap_vkGetDisplayPlaneCapabilitiesKHR,
-	'vkCreateDisplayPlaneSurfaceKHR':_wrap_vkCreateDisplayPlaneSurfaceKHR,
-	'vkCreateDebugReportCallbackEXT':_wrap_vkCreateDebugReportCallbackEXT,
-	'vkDestroyDebugReportCallbackEXT':_wrap_vkDestroyDebugReportCallbackEXT,
-	'vkDebugReportMessageEXT':_wrap_vkDebugReportMessageEXT,
-	'vkGetPhysicalDeviceExternalImageFormatPropertiesNV':_wrap_vkGetPhysicalDeviceExternalImageFormatPropertiesNV
+    'vkCreateXlibSurfaceKHR': _wrap_vkCreateXlibSurfaceKHR,
+    'vkGetPhysicalDeviceXlibPresentationSupportKHR': _wrap_vkGetPhysicalDeviceXlibPresentationSupportKHR,
+    'vkCreateXcbSurfaceKHR': _wrap_vkCreateXcbSurfaceKHR,
+    'vkGetPhysicalDeviceXcbPresentationSupportKHR': _wrap_vkGetPhysicalDeviceXcbPresentationSupportKHR,
+    'vkCreateWaylandSurfaceKHR': _wrap_vkCreateWaylandSurfaceKHR,
+    'vkGetPhysicalDeviceWaylandPresentationSupportKHR': _wrap_vkGetPhysicalDeviceWaylandPresentationSupportKHR,
+    'vkCreateMirSurfaceKHR': _wrap_vkCreateMirSurfaceKHR,
+    'vkGetPhysicalDeviceMirPresentationSupportKHR': _wrap_vkGetPhysicalDeviceMirPresentationSupportKHR,
+    'vkCreateWin32SurfaceKHR': _wrap_vkCreateWin32SurfaceKHR,
+    'vkGetPhysicalDeviceWin32PresentationSupportKHR': _wrap_vkGetPhysicalDeviceWin32PresentationSupportKHR,
+    'vkCreateAndroidSurfaceKHR': _wrap_vkCreateAndroidSurfaceKHR,
+    'vkDestroySurfaceKHR': _wrap_vkDestroySurfaceKHR,
+    'vkGetPhysicalDeviceSurfaceSupportKHR': _wrap_vkGetPhysicalDeviceSurfaceSupportKHR,
+    'vkGetPhysicalDeviceSurfaceCapabilitiesKHR': _wrap_vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
+    'vkGetPhysicalDeviceSurfaceFormatsKHR': _wrap_vkGetPhysicalDeviceSurfaceFormatsKHR,
+    'vkGetPhysicalDeviceSurfacePresentModesKHR': _wrap_vkGetPhysicalDeviceSurfacePresentModesKHR,
+    'vkGetPhysicalDeviceDisplayPropertiesKHR': _wrap_vkGetPhysicalDeviceDisplayPropertiesKHR,
+    'vkGetPhysicalDeviceDisplayPlanePropertiesKHR': _wrap_vkGetPhysicalDeviceDisplayPlanePropertiesKHR,
+    'vkGetDisplayPlaneSupportedDisplaysKHR': _wrap_vkGetDisplayPlaneSupportedDisplaysKHR,
+    'vkGetDisplayModePropertiesKHR': _wrap_vkGetDisplayModePropertiesKHR,
+    'vkCreateDisplayModeKHR': _wrap_vkCreateDisplayModeKHR,
+    'vkGetDisplayPlaneCapabilitiesKHR': _wrap_vkGetDisplayPlaneCapabilitiesKHR,
+    'vkCreateDisplayPlaneSurfaceKHR': _wrap_vkCreateDisplayPlaneSurfaceKHR,
+    'vkCreateDebugReportCallbackEXT': _wrap_vkCreateDebugReportCallbackEXT,
+    'vkDestroyDebugReportCallbackEXT': _wrap_vkDestroyDebugReportCallbackEXT,
+    'vkDebugReportMessageEXT': _wrap_vkDebugReportMessageEXT,
+    'vkGetPhysicalDeviceExternalImageFormatPropertiesNV': _wrap_vkGetPhysicalDeviceExternalImageFormatPropertiesNV
     }
 
 _device_ext_funcs = {
-	'vkGetMemoryWin32HandleNV':_wrap_vkGetMemoryWin32HandleNV,
-	'vkCreateSwapchainKHR':_wrap_vkCreateSwapchainKHR,
-	'vkDestroySwapchainKHR':_wrap_vkDestroySwapchainKHR,
-	'vkGetSwapchainImagesKHR':_wrap_vkGetSwapchainImagesKHR,
-	'vkAcquireNextImageKHR':_wrap_vkAcquireNextImageKHR,
-	'vkQueuePresentKHR':_wrap_vkQueuePresentKHR,
-	'vkCreateSharedSwapchainsKHR':_wrap_vkCreateSharedSwapchainsKHR,
-	'vkDebugMarkerSetObjectTagEXT':_wrap_vkDebugMarkerSetObjectTagEXT,
-	'vkDebugMarkerSetObjectNameEXT':_wrap_vkDebugMarkerSetObjectNameEXT,
-	'vkCmdDebugMarkerBeginEXT':_wrap_vkCmdDebugMarkerBeginEXT,
-	'vkCmdDebugMarkerEndEXT':_wrap_vkCmdDebugMarkerEndEXT,
-	'vkCmdDebugMarkerInsertEXT':_wrap_vkCmdDebugMarkerInsertEXT,
-	'vkCmdDrawIndirectCountAMD':_wrap_vkCmdDrawIndirectCountAMD,
-	'vkCmdDrawIndexedIndirectCountAMD':_wrap_vkCmdDrawIndexedIndirectCountAMD
+    'vkGetMemoryWin32HandleNV': _wrap_vkGetMemoryWin32HandleNV,
+    'vkCreateSwapchainKHR': _wrap_vkCreateSwapchainKHR,
+    'vkDestroySwapchainKHR': _wrap_vkDestroySwapchainKHR,
+    'vkGetSwapchainImagesKHR': _wrap_vkGetSwapchainImagesKHR,
+    'vkAcquireNextImageKHR': _wrap_vkAcquireNextImageKHR,
+    'vkQueuePresentKHR': _wrap_vkQueuePresentKHR,
+    'vkCreateSharedSwapchainsKHR': _wrap_vkCreateSharedSwapchainsKHR,
+    'vkDebugMarkerSetObjectTagEXT': _wrap_vkDebugMarkerSetObjectTagEXT,
+    'vkDebugMarkerSetObjectNameEXT': _wrap_vkDebugMarkerSetObjectNameEXT,
+    'vkCmdDebugMarkerBeginEXT': _wrap_vkCmdDebugMarkerBeginEXT,
+    'vkCmdDebugMarkerEndEXT': _wrap_vkCmdDebugMarkerEndEXT,
+    'vkCmdDebugMarkerInsertEXT': _wrap_vkCmdDebugMarkerInsertEXT,
+    'vkCmdDrawIndirectCountAMD': _wrap_vkCmdDrawIndirectCountAMD,
+    'vkCmdDrawIndexedIndirectCountAMD': _wrap_vkCmdDrawIndexedIndirectCountAMD
     }
 
+
 def vkGetInstanceProcAddr(instance, pName):
-	fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
-	if fn==ffi.NULL:
-		raise ProcedureNotFoundError()
-	if not pName in _instance_ext_funcs:
-		raise ExtensionNotSupportedError()
-	fn = ffi.cast('PFN_'+pName, fn)
-	return _instance_ext_funcs[pName](fn)
+    fn = _callApi(_lib.vkGetInstanceProcAddr, instance, pName)
+    if fn == ffi.NULL:
+        raise ProcedureNotFoundError()
+    if not pName in _instance_ext_funcs:
+        raise ExtensionNotSupportedError()
+    fn = ffi.cast('PFN_' + pName, fn)
+    return _instance_ext_funcs[pName](fn)
+
 
 def vkGetDeviceProcAddr(device, pName):
-	fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
-	if fn==ffi.NULL:
-		raise ProcedureNotFoundError()
-	if not pName in _device_ext_funcs:
-		raise ExtensionNotSupportedError()
-	fn = ffi.cast('PFN_'+pName, fn)
-	return _device_ext_funcs[pName](fn)
+    fn = _callApi(_lib.vkGetDeviceProcAddr, device, pName)
+    if fn == ffi.NULL:
+        raise ProcedureNotFoundError()
+    if not pName in _device_ext_funcs:
+        raise ExtensionNotSupportedError()
+    fn = ffi.cast('PFN_' + pName, fn)
+    return _device_ext_funcs[pName](fn)

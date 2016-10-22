@@ -258,6 +258,7 @@ funcs_return_procaddr = set()
 all_successcodes = set()
 all_errorcodes = set()
 
+funcs_optional_params = {}
 funcs_len_autos = {}
 
 for i in tree.findall('commands/command'):
@@ -319,10 +320,22 @@ for i in tree.findall('commands/command'):
 
     param_names = [j.find('name').text for j in params]
 
+    funcs_optional_params[name] = set()
     funcs_len_autos[name] = {}
-    for j in params:
-        len_ = j.get('len')
+
+    add_optional = True
+    for j in params[::-1]:
         name_ = j.find('name').text
+
+        if add_optional:
+            optional = j.get('optional')
+            if optional is None or not 'true' in optional.split(','):
+                add_optional = False
+            else:
+                funcs_optional_params[name].add(name_)
+
+        len_ = j.get('len')
+
         if len_:
             lens = [i for i in len_.split(',') if i != 'null-terminated']
             if len(lens) == 1:
@@ -368,7 +381,7 @@ throwable_funcs = set(k for k, (v, _, _, _) in funcs.items() if v == 'VkResult')
 
 func_wrappers = {}
 for name, (type_, _, _, params) in funcs.items():
-    func_wrappers[name] = (type_, [i for i, _ in params], [i for _, i in params])
+    func_wrappers[name] = (type_, [i for i, _ in params], [i for _, i in params], funcs_optional_params[name])
 
 platform_vkapi_ptr = {'linux': '', 'win32': '__stdcall ', 'android': ''}
 platform_newline = {'linux': '\n', 'win32': '\n', 'android': '\n'}
