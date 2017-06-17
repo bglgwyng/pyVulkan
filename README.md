@@ -1,3 +1,4 @@
+This repository is no longer maintained. Please go over to [https://github.com/realitix/vulkan](https://github.com/realitix/vulkan)
 # pyVulkan
 Vulkan API bindings for Python
 
